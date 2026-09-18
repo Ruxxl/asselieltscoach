@@ -197,6 +197,11 @@
   @keyframes wv{0%,100%{height:6px;}50%{height:26px;}}
   @media (prefers-reduced-motion: reduce){.mic-btn.rec{animation:none;} .wave.animate i{animation:none; height:14px;}}
 
+  .liveCaption{display:none; width:100%; margin-top:10px; background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:10px 12px; font:500 13px/1.5 'Inter',sans-serif; color:#93A1AC; min-height:20px;}
+  .liveCaption.show{display:block;}
+  .liveCaption b{color:#5B9DFF; display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px;}
+  .liveCaption span{color:#D6DEE3;}
+
   .aiPanel{display:none; width:100%; margin-top:10px;}
   .aiPanel.show{display:block;}
   .transcript{background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:12px; font:500 13px/1.5 'Inter',sans-serif; color:#D6DEE3; margin-bottom:10px;}
@@ -420,6 +425,7 @@
       <div class="mic-label" id="micLabel">Нажми, ответь голосом и нажми ещё раз, чтобы остановить запись</div>
       <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
+    <div class="liveCaption" id="liveCaption"><b>Слышу вживую</b><span id="liveCaptionText">…</span></div>
     <div class="aiPanel" id="aiPanel"></div>
     <div class="spacer"></div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="toResultsBtn" style="display:none;" onclick="go('finalResult')">СМОТРЕТЬ ИТОГ ТЕСТА</button></div>
@@ -593,6 +599,42 @@
 
   let mediaRecorder = null, audioChunks = [], isRecording = false;
 
+  // Живая подпись во время записи — браузерное распознавание речи (Web Speech API).
+  // Работает независимо от финальной ИИ-проверки через Gemini: просто показывает,
+  // что микрофон вообще слышит речь, пока идёт запись. Есть не во всех WebView
+  // (например, часто недоступно в Telegram на iOS) — тогда блок остаётся скрытым.
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let liveRecognition = null;
+
+  function startLiveCaption(){
+    if (!SpeechRecognitionCtor) return;
+    const captionEl = document.getElementById('liveCaption');
+    const textEl = document.getElementById('liveCaptionText');
+    textEl.textContent = '…';
+    captionEl.classList.add('show');
+
+    liveRecognition = new SpeechRecognitionCtor();
+    liveRecognition.lang = 'en-US';
+    liveRecognition.continuous = true;
+    liveRecognition.interimResults = true;
+    liveRecognition.onresult = (event) => {
+      let text = '';
+      for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript;
+      textEl.textContent = text.trim() || '…';
+    };
+    liveRecognition.onerror = () => {};
+    try { liveRecognition.start(); } catch (e) { /* уже запущено / недоступно — игнорируем */ }
+  }
+
+  function stopLiveCaption(){
+    if (liveRecognition) {
+      liveRecognition.onresult = null;
+      liveRecognition.onerror = null;
+      try { liveRecognition.stop(); } catch (e) {}
+      liveRecognition = null;
+    }
+  }
+
   async function toggleRec(){
     if (!isRecording) {
       try {
@@ -607,6 +649,7 @@
         document.getElementById('micBtn').textContent = '⏹️';
         document.getElementById('wave').classList.add('animate');
         document.getElementById('micLabel').textContent = 'Идёт запись… нажми ещё раз, чтобы остановить';
+        startLiveCaption();
       } catch (e) {
         document.getElementById('micLabel').textContent = 'Нет доступа к микрофону: ' + e.message;
       }
@@ -614,6 +657,7 @@
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(t => t.stop());
       isRecording = false;
+      stopLiveCaption();
     }
   }
 
