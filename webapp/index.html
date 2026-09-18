@@ -41,6 +41,10 @@
     text-align:center; margin-bottom:6px; min-height:14px;
   }
 
+  .welcomeLogoWrap{display:flex; justify-content:center; margin:16px 0 24px;}
+  .welcomeLogo{width:96px; height:96px; object-fit:contain;}
+  .welcomeActions{display:flex; flex-direction:column; gap:10px;}
+
   .mascot-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:22px;}
   .bubble{
     background:#1A2129; border:1px solid #2C3742; border-radius:16px 16px 16px 4px;
@@ -251,10 +255,21 @@
 <body>
 <div class="app" id="app">
 
+  <!-- 0: welcome / landing -->
+  <section class="screen active" data-screen="welcome">
+    <div class="welcomeLogoWrap"><img src="/assets/logo.png" alt="Echo English" class="welcomeLogo"></div>
+    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble" id="greetingBubble">Привет! Я Эхо 🦜 — помогу подтянуть английский.</div></div>
+    <div class="spacer"></div>
+    <div class="welcomeActions">
+      <button class="btn btn-primary btn-wide" onclick="go('assess')">🚀 Пройти быстрый тест</button>
+      <button class="btn btn-ghost btn-wide" onclick="go('home')">📚 Перейти к курсам</button>
+    </div>
+  </section>
+
   <!-- 1: self-assessment -->
-  <section class="screen active" data-screen="assess">
-    <div class="topbar"><button class="xbtn" onclick="go('assess')">✕</button><div class="pbar"><i style="width:8%"></i></div></div>
-    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble" id="greetingBubble">Привет! Я Эхо — помогу подтянуть английский. Как ты оцениваешь свой уровень?</div></div>
+  <section class="screen" data-screen="assess">
+    <div class="topbar"><button class="xbtn" onclick="go('welcome')">✕</button><div class="pbar"><i style="width:8%"></i></div></div>
+    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Как ты оцениваешь свой английский?</div></div>
     <button class="opt level-1" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Совсем новичок</button>
     <button class="opt level-2" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Знаю базовые слова</button>
     <button class="opt level-3" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Поддержу простой разговор</button>
@@ -532,7 +547,7 @@
     const timeGreeting = hour < 5 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
     const name = tgUser?.first_name;
     const hello = name ? `${timeGreeting}, ${name}!` : `${timeGreeting}!`;
-    document.getElementById('greetingBubble').textContent = `${hello} Я Эхо 🦜 — помогу подтянуть английский. Как ты оцениваешь свой уровень?`;
+    document.getElementById('greetingBubble').textContent = `${hello} Я Эхо 🦜 — помогу подтянуть английский.`;
   })();
 
   function pick(el){
