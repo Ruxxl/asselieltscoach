@@ -1,12 +1,24 @@
 from pydantic import BaseModel
 
 
+class LessonBrief(BaseModel):
+    id: int
+    order: int
+    title: str
+    subtitle: str
+    read_minutes: int
+
+    class Config:
+        from_attributes = True
+
+
 class ModuleOut(BaseModel):
     id: int
     kind: str
     title: str
     lesson_count: int
     order: int
+    lessons: list[LessonBrief] = []
 
     class Config:
         from_attributes = True
@@ -23,6 +35,39 @@ class CourseOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class QuestionOut(BaseModel):
+    order: int
+    prompt: str
+    options: list[str]
+
+    class Config:
+        from_attributes = True
+
+
+class LessonDetail(BaseModel):
+    id: int
+    title: str
+    subtitle: str
+    content: list[str]
+    course_code: str
+    module_title: str
+    position: int  # порядковый номер урока в модуле, начиная с 1
+    total_in_module: int
+    prev_lesson_id: int | None
+    next_lesson_id: int | None
+    questions: list[QuestionOut]
+
+
+class AnswerCheckRequest(BaseModel):
+    answers: list[str]  # выбранный вариант на каждый вопрос по порядку
+
+
+class AnswerCheckResult(BaseModel):
+    correct_count: int
+    total: int
+    results: list[bool]  # правильность каждого ответа по порядку
 
 
 class ReadingCheckResult(BaseModel):

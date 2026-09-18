@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.config import BOT_TOKEN, WEBAPP_DIR
 from backend.database import SessionLocal, init_db
-from backend.routers import courses, reading_test
+from backend.routers import courses, lessons, reading_test
 from backend.seed_data import seed_if_empty
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Echo English API", lifespan=lifespan)
 
 app.include_router(courses.router)
+app.include_router(lessons.router)
 app.include_router(reading_test.router)
 
 

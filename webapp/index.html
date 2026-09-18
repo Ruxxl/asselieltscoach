@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Echo English</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
@@ -91,6 +94,16 @@
     color:#F1F5F3; cursor:pointer;
   }
   .wchip.used{opacity:.3; pointer-events:none;}
+  .wchip.sel{background:#152019; border-color:#3DDC84; color:#3DDC84;}
+
+  .lessonSublist{padding:2px 0 10px 42px;}
+  .lessonRow{display:flex; align-items:center; gap:10px; padding:9px 0; cursor:pointer;}
+  .lessonRow .lrIcon{font-size:14px; flex:none; opacity:.8;}
+  .lessonRow .lrTitle{font:700 12.5px 'Inter',sans-serif;}
+  .lessonRow .lrMeta{font:500 11px 'Inter',sans-serif; color:#6C7883;}
+  .lessonRow:hover .lrTitle{color:#3DDC84;}
+
+  .readerContent p{margin:0 0 12px; font:500 14px/1.65 'Inter',sans-serif; color:#D6DEE3;}
   .answerline{
     min-height:44px; border-bottom:2px solid #2C3742; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-bottom:8px; margin-bottom:6px;
   }
@@ -140,6 +153,7 @@
 
   .apphead{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:8px; font:800 16px 'Baloo 2',sans-serif;}
+  .brand img{width:26px; height:26px; object-fit:contain; flex:none;}
   .stat-pill{display:flex; align-items:center; gap:5px; background:#161C22; border:1px solid #2C3742; padding:6px 10px; border-radius:999px; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums;}
 
   .levelcard{
@@ -361,7 +375,7 @@
   <!-- 8: home/catalog (данные — реальный fetch к /api/courses) -->
   <section class="screen" data-screen="home">
     <div class="apphead">
-      <div class="brand">🦜 Echo English</div>
+      <div class="brand"><img src="/assets/logo.png" alt="Echo English"> Echo English</div>
       <div style="display:flex; gap:6px;">
         <div class="stat-pill">🔥 14</div>
         <div class="stat-pill">🪙 860</div>
@@ -412,6 +426,32 @@
       <div class="fsub">Present Perfect — действие началось в прошлом и продолжается сейчас.</div>
       <button class="btn btn-primary btn-wide" onclick="go('finalIntro')">К ФИНАЛЬНОМУ ТЕСТУ</button>
     </div>
+  </section>
+
+  <!-- 10b: lesson reader — реальный контент урока с backend (сейчас: A1 Vocabulary/Grammar) -->
+  <section class="screen" data-screen="lessonReader">
+    <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i id="readerProgress" style="width:0%"></i></div></div>
+    <div class="badge" id="readerBadge" style="color:#5B9DFF;">Module · Course</div>
+    <div style="font:800 20px 'Baloo 2',sans-serif; margin-bottom:4px;" id="readerTitle"></div>
+    <div style="font:500 13px 'Inter',sans-serif; color:#93A1AC; margin-bottom:16px;" id="readerSubtitle"></div>
+    <div class="readerContent" id="readerContent"></div>
+    <div class="spacer"></div>
+    <div class="bottombar" style="gap:8px;">
+      <button class="btn btn-ghost" id="readerPrevBtn" onclick="readerGo(-1)">НАЗАД</button>
+      <button class="btn btn-primary" id="readerTestBtn" onclick="openLessonTest()">ПРОЙТИ ТЕСТ</button>
+      <button class="btn btn-ghost" id="readerNextBtn" onclick="readerGo(1)">ВПЕРЁД</button>
+    </div>
+  </section>
+
+  <!-- 10c: lesson test — последовательные вопросы "заполни пропуск" по образцу study.ru -->
+  <section class="screen" data-screen="lessonTest">
+    <div class="topbar"><button class="xbtn" onclick="go('lessonReader')">✕</button><div class="pbar"><i id="testProgress" style="width:0%"></i></div></div>
+    <div class="badge" style="color:#5B9DFF;">Тест</div>
+    <div class="qtitle" id="testQuestionCounter">Вопрос 1/3</div>
+    <div class="fillline" id="testSentence"></div>
+    <div class="chips" id="testOptions"></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="testNextBtn" disabled onclick="submitTestAnswer()">ДАЛЕЕ</button></div>
   </section>
 
   <!-- 11: final test / reading with REAL voice recording + Gemini check -->
@@ -583,21 +623,49 @@
   let currentCourse = null;
   const purchasedCourses = new Set();
 
+  // Модуль с реальными уроками (сейчас: A1 Vocabulary/Grammar) разворачивается в список
+  // уроков по образцу study.ru; модуль без реального контента по-прежнему открывает
+  // единственный демо-урок (старое поведение) — так остальные курсы не ломаются.
   function renderCourseModules(c){
     const purchased = purchasedCourses.has(c.code);
     const modsEl = document.getElementById('courseModules');
     modsEl.innerHTML = '';
     c.modules.forEach((m, i) => {
       const unlocked = purchased || i === 0;
+      const hasRealLessons = !!(m.lessons && m.lessons.length);
       const row = document.createElement('div');
       row.className = 'modrow' + (unlocked ? '' : ' locked');
       row.style.cursor = unlocked ? 'pointer' : 'default';
       row.style.opacity = unlocked ? '1' : '.5';
       row.innerHTML = `<div class="mi">${MODULE_ICONS[m.kind] || '📘'}</div>
         <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${m.lesson_count} уроков${i === 0 && !purchased ? ' · бесплатно' : ''}</div></div>
-        <div class="ms">${unlocked ? '▶️' : '🔒'}</div>`;
-      if (unlocked) row.onclick = () => openLesson(c, m);
+        <div class="ms" id="ms-${c.code}-${m.id}">${unlocked ? (hasRealLessons ? '⌄' : '▶️') : '🔒'}</div>`;
       modsEl.appendChild(row);
+
+      if (!hasRealLessons) {
+        if (unlocked) row.onclick = () => openLesson(c, m);
+        return;
+      }
+
+      const sublist = document.createElement('div');
+      sublist.className = 'lessonSublist';
+      sublist.style.display = 'none';
+      m.lessons.forEach(l => {
+        const lrow = document.createElement('div');
+        lrow.className = 'lessonRow';
+        lrow.style.opacity = unlocked ? '1' : '.5';
+        lrow.innerHTML = `<div class="lrIcon">📖</div>
+          <div style="flex:1"><div class="lrTitle">${l.title}</div><div class="lrMeta">читать (${l.read_minutes} мин)</div></div>`;
+        if (unlocked) lrow.onclick = (e) => { e.stopPropagation(); openLessonReader(l.id); };
+        sublist.appendChild(lrow);
+      });
+      modsEl.appendChild(sublist);
+
+      row.onclick = () => {
+        const willOpen = sublist.style.display === 'none';
+        sublist.style.display = willOpen ? 'block' : 'none';
+        document.getElementById(`ms-${c.code}-${m.id}`).textContent = unlocked ? (willOpen ? '⌃' : '⌄') : '🔒';
+      };
     });
   }
 
@@ -623,12 +691,113 @@
     purchasedCourses.add(currentCourse.code);
     renderCourseModules(currentCourse);
     updateCourseBuyBtn(currentCourse);
-    openLesson(currentCourse, currentCourse.modules[0]);
+    const firstModule = currentCourse.modules[0];
+    if (firstModule.lessons && firstModule.lessons.length) openLessonReader(firstModule.lessons[0].id);
+    else openLesson(currentCourse, firstModule);
   }
 
   function openLesson(course, module){
     document.getElementById('lessonBadge').textContent = `${MODULE_ICONS[module.kind] || '📘'} ${module.title} · ${course.code}`;
     go('lesson');
+  }
+
+  // ---- Читалка реального урока + его тест (по образцу study.ru) ----
+  let currentLessonData = null;
+  let testQuestions = [], testIndex = 0, testAnswers = [], testSelectedOption = null;
+
+  async function openLessonReader(lessonId){
+    const res = await fetch('/api/lessons/' + lessonId);
+    if (!res.ok) return;
+    const data = await res.json();
+    currentLessonData = data;
+    document.getElementById('readerBadge').textContent = `${data.module_title} · ${data.course_code}`;
+    document.getElementById('readerTitle').textContent = data.title;
+    document.getElementById('readerSubtitle').textContent = data.subtitle;
+    document.getElementById('readerContent').innerHTML = data.content.map(p => `<p>${p}</p>`).join('');
+    document.getElementById('readerProgress').style.width = Math.round((data.position / data.total_in_module) * 100) + '%';
+    const prevBtn = document.getElementById('readerPrevBtn');
+    const nextBtn = document.getElementById('readerNextBtn');
+    prevBtn.disabled = !data.prev_lesson_id;
+    nextBtn.disabled = !data.next_lesson_id;
+    document.getElementById('readerTestBtn').style.display = data.questions.length ? '' : 'none';
+    go('lessonReader');
+  }
+
+  function readerGo(direction){
+    if (!currentLessonData) return;
+    const targetId = direction < 0 ? currentLessonData.prev_lesson_id : currentLessonData.next_lesson_id;
+    if (targetId) openLessonReader(targetId);
+  }
+
+  function openLessonTest(){
+    if (!currentLessonData || !currentLessonData.questions.length) return;
+    testQuestions = currentLessonData.questions;
+    testIndex = 0;
+    testAnswers = [];
+    renderTestQuestion();
+    go('lessonTest');
+  }
+
+  function renderTestQuestion(){
+    const q = testQuestions[testIndex];
+    testSelectedOption = null;
+    document.getElementById('testQuestionCounter').textContent = `Вопрос ${testIndex + 1}/${testQuestions.length}`;
+    document.getElementById('testProgress').style.width = Math.round(((testIndex) / testQuestions.length) * 100) + '%';
+    document.getElementById('testSentence').innerHTML = q.prompt.replace(
+      '{blank}', '<span class="blank" id="testBlank">___</span>'
+    );
+    const optsEl = document.getElementById('testOptions');
+    optsEl.innerHTML = '';
+    const nextBtn = document.getElementById('testNextBtn');
+    nextBtn.onclick = submitTestAnswer; // сбрасываем обработчик экрана результата предыдущего теста
+    nextBtn.setAttribute('disabled', '');
+    nextBtn.textContent = testIndex === testQuestions.length - 1 ? 'ЗАВЕРШИТЬ' : 'ДАЛЕЕ';
+    q.options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'wchip';
+      b.textContent = opt;
+      b.onclick = () => {
+        testSelectedOption = opt;
+        document.getElementById('testBlank').textContent = opt;
+        nextBtn.removeAttribute('disabled');
+        [...optsEl.children].forEach(c => c.classList.remove('sel'));
+        b.classList.add('sel');
+      };
+      optsEl.appendChild(b);
+    });
+  }
+
+  function submitTestAnswer(){
+    testAnswers.push(testSelectedOption);
+    if (testIndex < testQuestions.length - 1) {
+      testIndex++;
+      renderTestQuestion();
+    } else {
+      finishLessonTest();
+    }
+  }
+
+  async function finishLessonTest(){
+    document.getElementById('testProgress').style.width = '100%';
+    const res = await fetch(`/api/lessons/${currentLessonData.id}/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers: testAnswers }),
+    });
+    const result = await res.json();
+    document.getElementById('testQuestionCounter').textContent = 'Результат';
+    document.getElementById('testSentence').innerHTML =
+      `<b style="color:${result.correct_count === result.total ? '#3DDC84' : '#F5B942'}">${result.correct_count} из ${result.total} верно</b>`;
+    document.getElementById('testOptions').innerHTML = '';
+    const nextBtn = document.getElementById('testNextBtn');
+    nextBtn.removeAttribute('disabled');
+    nextBtn.textContent = currentLessonData.next_lesson_id ? 'СЛЕДУЮЩИЙ УРОК' : 'К КУРСУ';
+    nextBtn.onclick = () => {
+      nextBtn.onclick = null;
+      const goNextId = currentLessonData.next_lesson_id;
+      if (goNextId) openLessonReader(goNextId);
+      else go('course');
+    };
   }
 
   loadCourses();

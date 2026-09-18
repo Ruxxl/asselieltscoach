@@ -42,6 +42,47 @@ class Module(Base):
     order: Mapped[int] = mapped_column(Integer)
 
     course: Mapped["Course"] = relationship(back_populates="modules")
+    lessons: Mapped[list["Lesson"]] = relationship(
+        back_populates="module", cascade="all, delete-orphan", order_by="Lesson.order"
+    )
+
+
+class Lesson(Base):
+    """Реальный урок-статья внутри модуля курса (по образцу study.ru: тема -> список уроков).
+
+    Заполнено пока только для курса A1 (Vocabulary/Grammar) как демонстрация подхода —
+    остальные курсы/модули остаются с одним lesson_count без реального контента.
+    """
+
+    __tablename__ = "lessons"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    module_id: Mapped[int] = mapped_column(ForeignKey("modules.id"))
+    order: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String(128))
+    subtitle: Mapped[str] = mapped_column(String(255))
+    read_minutes: Mapped[int] = mapped_column(Integer, default=2)
+    content: Mapped[str] = mapped_column(Text)  # параграфы, разделённые "\n\n"
+
+    module: Mapped["Module"] = relationship(back_populates="lessons")
+    questions: Mapped[list["LessonQuestion"]] = relationship(
+        back_populates="lesson", cascade="all, delete-orphan", order_by="LessonQuestion.order"
+    )
+
+
+class LessonQuestion(Base):
+    """Один вопрос теста урока: предложение с пропуском + варианты слова на выбор."""
+
+    __tablename__ = "lesson_questions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.id"))
+    order: Mapped[int] = mapped_column(Integer)
+    prompt: Mapped[str] = mapped_column(Text)  # предложение с "{blank}" на месте пропуска
+    options: Mapped[str] = mapped_column(String(255))  # варианты через "|"
+    correct_option: Mapped[str] = mapped_column(String(64))
+
+    lesson: Mapped["Lesson"] = relationship(back_populates="questions")
 
 
 class TestAttempt(Base):
