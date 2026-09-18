@@ -165,6 +165,8 @@
     background:#161C22; border:1.5px solid #2C3742; border-radius:16px; padding:14px; margin-bottom:10px; cursor:pointer; position:relative;
   }
   .levelcard.reco{border-color:#3DDC84;}
+  .levelcard.locked{cursor:default; opacity:.5;}
+  .levelcard .lockTag{font:800 12.5px 'Inter',sans-serif; color:#6C7883;}
   .levelcard .lv{
     width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Baloo 2',sans-serif; flex:none; color:#0A1F13; background:#2C3742;
   }
@@ -624,15 +626,20 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const courses = await res.json();
       listEl.innerHTML = '';
+      // Реальный контент уроков пока есть только у A1 (см. backend/seed_data.py) —
+      // остальные уровни визуально заблокированы, пока не наполнены.
       courses.forEach(c => {
+        const unlocked = c.code === 'A1';
         const card = document.createElement('div');
-        card.className = 'levelcard' + (c.code === 'B1' ? ' reco' : '');
-        card.onclick = () => openCourse(c);
+        card.className = 'levelcard' + (unlocked ? ' reco' : ' locked');
+        if (unlocked) card.onclick = () => openCourse(c);
         card.innerHTML = `
-          ${c.code === 'B1' ? '<div class="recotag">Рекомендовано Эхо</div>' : ''}
+          ${unlocked ? '<div class="recotag">Начни здесь</div>' : ''}
           <div class="lv" style="background:${LEVEL_COLORS[c.code] || '#2C3742'};">${c.code}</div>
           <div><div class="tt">${c.title}</div><div class="ds">${c.description}</div></div>
-          <div class="rt"><span class="price">${c.price_rub.toLocaleString('ru-RU')} ₽</span></div>`;
+          <div class="rt">${unlocked
+            ? `<span class="price">${c.price_rub.toLocaleString('ru-RU')} ₽</span>`
+            : '<span class="lockTag">🔒 Скоро</span>'}</div>`;
         listEl.appendChild(card);
       });
     } catch (e) {
