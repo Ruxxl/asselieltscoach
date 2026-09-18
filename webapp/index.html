@@ -389,13 +389,13 @@
     <div class="sectiontitle">Программа курса</div>
     <div id="courseModules"></div>
     <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="go('lesson')">ПРОДОЛЖИТЬ УРОК</button></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="buyOrContinueCourse()">ПРОДОЛЖИТЬ УРОК</button></div>
   </section>
 
   <!-- 10: lesson (grammar fill) -->
   <section class="screen" data-screen="lesson">
     <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i style="width:40%"></i></div><div class="lives">❤️ 4</div></div>
-    <div class="badge" style="color:#F5B942; background:#2A2416; border-color:#4B4030;">Grammar · Present Perfect</div>
+    <div class="badge" style="color:#F5B942; background:#2A2416; border-color:#4B4030;" id="lessonBadge">Grammar · Present Perfect</div>
     <div class="fillline">She <span class="blank" id="blankSlot">___</span> in London since 2019.</div>
     <div class="chips">
       <button class="wchip" onclick="fillBlank(this,'has lived')">has lived</button>
@@ -575,22 +575,62 @@
     }
   }
   const MODULE_ICONS = {grammar:'📗', vocabulary:'🗂️', listening:'🎧', speaking:'🗣️', reading:'📖', writing:'✍️', pronunciation:'🔊'};
-  function openCourse(c){
-    document.getElementById('courseKicker').textContent = 'Уровень ' + c.code;
-    document.getElementById('courseTitle').textContent = c.title + ': ' + c.description;
-    document.getElementById('courseBuyBtn').textContent = 'ПРОДОЛЖИТЬ УРОК · ' + c.price_rub.toLocaleString('ru-RU') + ' ₽';
+
+  // Цепочка "курс → модуль → урок": первый модуль курса открыт как бесплатный
+  // превью, остальные — после условной "покупки" (реального платёжного провайдера
+  // пока нет, см. backend/models.py Payment). Состояние покупки — только в рамках
+  // текущей сессии Mini App, не сохраняется в БД (это отдельная задача).
+  let currentCourse = null;
+  const purchasedCourses = new Set();
+
+  function renderCourseModules(c){
+    const purchased = purchasedCourses.has(c.code);
     const modsEl = document.getElementById('courseModules');
     modsEl.innerHTML = '';
-    c.modules.forEach(m => {
+    c.modules.forEach((m, i) => {
+      const unlocked = purchased || i === 0;
       const row = document.createElement('div');
-      row.className = 'modrow';
+      row.className = 'modrow' + (unlocked ? '' : ' locked');
+      row.style.cursor = unlocked ? 'pointer' : 'default';
+      row.style.opacity = unlocked ? '1' : '.5';
       row.innerHTML = `<div class="mi">${MODULE_ICONS[m.kind] || '📘'}</div>
-        <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${m.lesson_count} уроков</div></div>
-        <div class="ms">🔒</div>`;
+        <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${m.lesson_count} уроков${i === 0 && !purchased ? ' · бесплатно' : ''}</div></div>
+        <div class="ms">${unlocked ? '▶️' : '🔒'}</div>`;
+      if (unlocked) row.onclick = () => openLesson(c, m);
       modsEl.appendChild(row);
     });
+  }
+
+  function updateCourseBuyBtn(c){
+    const purchased = purchasedCourses.has(c.code);
+    document.getElementById('courseBuyBtn').textContent = purchased
+      ? 'ПРОДОЛЖИТЬ УРОК'
+      : 'КУПИТЬ КУРС · ' + c.price_rub.toLocaleString('ru-RU') + ' ₽';
+  }
+
+  function openCourse(c){
+    currentCourse = c;
+    document.getElementById('courseKicker').textContent = 'Уровень ' + c.code;
+    document.getElementById('courseTitle').textContent = c.title + ': ' + c.description;
+    renderCourseModules(c);
+    updateCourseBuyBtn(c);
     go('course');
   }
+
+  function buyOrContinueCourse(){
+    if (!currentCourse) return;
+    // TODO: реальная оплата (Telegram Payments/внешний провайдер) — сейчас это заглушка.
+    purchasedCourses.add(currentCourse.code);
+    renderCourseModules(currentCourse);
+    updateCourseBuyBtn(currentCourse);
+    openLesson(currentCourse, currentCourse.modules[0]);
+  }
+
+  function openLesson(course, module){
+    document.getElementById('lessonBadge').textContent = `${MODULE_ICONS[module.kind] || '📘'} ${module.title} · ${course.code}`;
+    go('lesson');
+  }
+
   loadCourses();
 
   // ---- Финальный Reading-тест: реальная запись голоса + проверка через Gemini ----
