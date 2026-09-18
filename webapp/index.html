@@ -819,12 +819,19 @@
       form.append('reference_text', cfg.passage);
       if (cfg.kind) form.append('kind', cfg.kind);
 
+      // Backend сам обрывает вызов Gemini через 25с, но подстраховываемся и на фронте —
+      // без этого при зависшем соединении ученик смотрел бы на "Эхо слушает..." вечно.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
+
       try {
         const res = await fetch('/api/test/reading-check', {
           method: 'POST',
           headers: initData ? { 'X-Telegram-Init-Data': initData } : {},
           body: form,
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
 
@@ -844,8 +851,12 @@
           label.textContent = 'Ответ неточный — запиши ещё раз, попробуй увереннее сформулировать мысль';
         }
       } catch (e) {
+        clearTimeout(timeoutId);
         const panel = document.getElementById(cfg.aiPanelId);
-        panel.innerHTML = `<div class="aiError">Не удалось получить оценку ИИ: ${e.message}.<br>Проверьте, что в .env указан GEMINI_API_KEY.</div>`;
+        const message = e.name === 'AbortError'
+          ? 'Проверка заняла слишком много времени. Попробуй записать ответ ещё раз.'
+          : `Не удалось получить оценку ИИ: ${e.message}.`;
+        panel.innerHTML = `<div class="aiError">${message}</div>`;
         panel.classList.add('show');
         btn.textContent = '🎙️';
         btn.classList.remove('rec');

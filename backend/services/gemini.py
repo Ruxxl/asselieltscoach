@@ -44,12 +44,15 @@ async def grade_reading_answer(audio_bytes: bytes, mime_type: str, passage: str,
     model = genai.GenerativeModel(GEMINI_MODEL)
 
     prompt = _PROMPT_TEMPLATE.format(passage=passage, question=question)
+    # Без явного timeout запрос к Gemini может зависнуть без ответа и без ошибки —
+    # ученик будет бесконечно смотреть на "Эхо слушает и проверяет...".
     response = await model.generate_content_async(
         [
             {"mime_type": mime_type, "data": audio_bytes},
             prompt,
         ],
         generation_config={"response_mime_type": "application/json"},
+        request_options={"timeout": 25},
     )
 
     text = response.text.strip()

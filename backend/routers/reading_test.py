@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Form, Header, HTTPException, UploadFile
+from google.api_core.exceptions import DeadlineExceeded
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import UPLOADS_DIR
@@ -48,6 +49,10 @@ async def reading_check(
         result = await grade_reading_answer(audio_bytes, mime_type, reference_text, question)
     except GeminiNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except DeadlineExceeded as exc:
+        raise HTTPException(
+            status_code=504, detail="Проверка ИИ заняла слишком много времени. Попробуй записать ответ ещё раз."
+        ) from exc
     except Exception as exc:  # ошибка самого API Gemini / неподдерживаемый формат аудио
         raise HTTPException(status_code=502, detail=f"Ошибка проверки ИИ: {exc}") from exc
 
