@@ -51,32 +51,6 @@
     padding:12px 14px; font:600 14.5px/1.4 'Baloo 2',sans-serif; color:#F1F5F3; max-width:320px;
   }
 
-  .opt{
-    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
-    background:#161C22; border:1.5px solid #2C3742; border-radius:14px; padding:13px 14px; margin-bottom:10px;
-    color:#F1F5F3; font:600 14px/1.3 'Inter',sans-serif; cursor:pointer; transition:border-color .12s, background .12s;
-  }
-  .opt:hover{border-color:#3C4A57;}
-  .opt.selected{border-color:#3DDC84; background:#152019;}
-  .opt.correct{border-color:#3DDC84; background:#152019;}
-  .opt.wrong{border-color:#FF6B6B; background:#241717;}
-  .opt .bars{display:flex; align-items:flex-end; gap:2px; flex:none;}
-  .opt .bars i{display:block; width:4px; background:#3C4A57; border-radius:2px;}
-  .opt.level-1 .bars i:nth-child(1){background:#3DDC84;}
-  .opt.level-2 .bars i:nth-child(1),.opt.level-2 .bars i:nth-child(2){background:#3DDC84;}
-  .opt.level-3 .bars i:nth-child(1),.opt.level-3 .bars i:nth-child(2),.opt.level-3 .bars i:nth-child(3){background:#3DDC84;}
-  .opt.level-4 .bars i:nth-child(1),.opt.level-4 .bars i:nth-child(2),.opt.level-4 .bars i:nth-child(3),.opt.level-4 .bars i:nth-child(4){background:#3DDC84;}
-  .opt.level-5 .bars i{background:#3DDC84;}
-
-  .pathcard{
-    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
-    background:#161C22; border:1.5px solid #2C3742; border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer;
-  }
-  .pathcard:hover{border-color:#3DDC84;}
-  .pathcard .ic{width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:20px; flex:none;}
-  .pathcard .tt{font:700 14.5px 'Baloo 2',sans-serif; margin-bottom:2px;}
-  .pathcard .ds{font:500 12px 'Inter',sans-serif; color:#93A1AC;}
-
   .badge{
     display:inline-flex; align-items:center; gap:6px; font:800 10.5px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase;
     color:#5B9DFF; background:#131C2A; border:1px solid #223247; padding:5px 10px; border-radius:999px; margin-bottom:10px;
@@ -263,41 +237,14 @@
     <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble" id="greetingBubble">Привет! Я Эхо 🦜 — помогу подтянуть английский.</div></div>
     <div class="spacer"></div>
     <div class="welcomeActions">
-      <button class="btn btn-primary btn-wide" onclick="go('assess')">🚀 Пройти быстрый тест</button>
+      <button class="btn btn-primary btn-wide" onclick="go('exA')">🚀 Пройти быстрый тест</button>
       <button class="btn btn-ghost btn-wide" onclick="go('home')">📚 Перейти к курсам</button>
-    </div>
-  </section>
-
-  <!-- 1: self-assessment -->
-  <section class="screen" data-screen="assess">
-    <div class="topbar"><button class="xbtn" onclick="go('welcome')">✕</button><div class="pbar"><i style="width:8%"></i></div></div>
-    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Как ты оцениваешь свой английский?</div></div>
-    <button class="opt level-1" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Совсем новичок</button>
-    <button class="opt level-2" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Знаю базовые слова</button>
-    <button class="opt level-3" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Поддержу простой разговор</button>
-    <button class="opt level-4" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Свободно говорю на бытовые темы</button>
-    <button class="opt level-5" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Обсуждаю любые темы</button>
-    <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('path')">ДАЛЕЕ</button></div>
-  </section>
-
-  <!-- 2: path choice -->
-  <section class="screen" data-screen="path">
-    <div class="topbar"><button class="xbtn" onclick="go('assess')">←</button><div class="pbar"><i style="width:16%"></i></div></div>
-    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Отлично! Как начнём?</div></div>
-    <div class="pathcard" onclick="go('home')">
-      <div class="ic" style="background:#2A2416;">📘</div>
-      <div><div class="tt">С нуля</div><div class="ds">Вводный урок, начинаем с основ A1</div></div>
-    </div>
-    <div class="pathcard" onclick="go('exA')">
-      <div class="ic" style="background:#152019;">🧭</div>
-      <div><div class="tt">Быстрый тест</div><div class="ds">3 коротких вопроса — Эхо подберёт старт</div></div>
     </div>
   </section>
 
   <!-- 3: quick test Q1 — выбор правильного слова -->
   <section class="screen" data-screen="exA">
-    <div class="topbar"><button class="xbtn" onclick="go('path')">✕</button><div class="pbar"><i style="width:32%"></i></div></div>
+    <div class="topbar"><button class="xbtn" onclick="go('welcome')">✕</button><div class="pbar"><i style="width:32%"></i></div></div>
     <div class="qtitle">Вопрос 1 из 3 · выбери подходящее слово</div>
     <div class="fillline" id="quickQ1Sentence"></div>
     <div class="chips" id="quickQ1Options"></div>
@@ -520,11 +467,6 @@
     const hello = name ? `${timeGreeting}, ${name}!` : `${timeGreeting}!`;
     document.getElementById('greetingBubble').textContent = `${hello} Я Эхо 🦜 — помогу подтянуть английский.`;
   })();
-
-  function pick(el){
-    el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
-    el.classList.add('selected');
-  }
 
   // ---- Быстрый тест: вопросы 1-2 — выбор правильного слова в пропуск ----
   const QUICK_TEST_QUESTIONS = [
