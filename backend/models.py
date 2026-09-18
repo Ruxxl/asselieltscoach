@@ -25,7 +25,7 @@ class Course(Base):
     code: Mapped[str] = mapped_column(String(4), unique=True)  # A1..C2
     title: Mapped[str] = mapped_column(String(128))
     description: Mapped[str] = mapped_column(Text)
-    price_rub: Mapped[int] = mapped_column(Integer)
+    price_kzt: Mapped[int] = mapped_column(Integer)
     order: Mapped[int] = mapped_column(Integer)
 
     modules: Mapped[list["Module"]] = relationship(back_populates="course", cascade="all, delete-orphan")

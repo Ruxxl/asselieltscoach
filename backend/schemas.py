@@ -29,7 +29,7 @@ class CourseOut(BaseModel):
     code: str
     title: str
     description: str
-    price_rub: int
+    price_kzt: int
     order: int
     modules: list[ModuleOut] = []
 

@@ -161,7 +161,7 @@ COURSES = [
         "code": "A1",
         "title": "Beginner",
         "description": "Основы: алфавит, простые фразы, базовая грамматика.",
-        "price_rub": 2400,
+        "price_kzt": 5000,
         "order": 1,
         "modules": [
             ("vocabulary", "Vocabulary", A1_VOCABULARY_LESSONS),
@@ -173,7 +173,7 @@ COURSES = [
         "code": "A2",
         "title": "Elementary",
         "description": "Бытовые диалоги, настоящее и прошедшее время.",
-        "price_rub": 2600,
+        "price_kzt": 5000,
         "order": 2,
         "modules": [
             ("grammar", "Grammar", 10),
@@ -186,7 +186,7 @@ COURSES = [
         "code": "B1",
         "title": "Intermediate",
         "description": "Уверенная бытовая речь, Present Perfect, начало Reading/Writing.",
-        "price_rub": 2900,
+        "price_kzt": 5000,
         "order": 3,
         "modules": [
             ("grammar", "Grammar", 12),
@@ -201,7 +201,7 @@ COURSES = [
         "code": "B2",
         "title": "Upper-Intermediate",
         "description": "Свободные темы, деловой английский, сложные времена.",
-        "price_rub": 3400,
+        "price_kzt": 5000,
         "order": 4,
         "modules": [
             ("grammar", "Grammar", 12),
@@ -215,7 +215,7 @@ COURSES = [
         "code": "C1",
         "title": "Advanced",
         "description": "Нюансы, академический и деловой стиль, идиомы.",
-        "price_rub": 3900,
+        "price_kzt": 5000,
         "order": 5,
         "modules": [
             ("vocabulary", "Vocabulary", 14),
@@ -238,7 +238,7 @@ async def seed_if_empty(session: AsyncSession) -> None:
             code=c["code"],
             title=c["title"],
             description=c["description"],
-            price_rub=c["price_rub"],
+            price_kzt=c["price_kzt"],
             order=c["order"],
         )
         session.add(course)

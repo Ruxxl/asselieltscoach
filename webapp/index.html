@@ -543,7 +543,7 @@
           <div class="lv" style="background:${LEVEL_COLORS[c.code] || '#2C3742'};">${c.code}</div>
           <div><div class="tt">${c.title}</div><div class="ds">${c.description}</div></div>
           <div class="rt">${unlocked
-            ? `<span class="price">${c.price_rub.toLocaleString('ru-RU')} ₽</span>`
+            ? `<span class="price">${c.price_kzt.toLocaleString('ru-RU')} ₸</span>`
             : '<span class="lockTag">🔒 Скоро</span>'}</div>`;
         listEl.appendChild(card);
       });
@@ -610,7 +610,7 @@
     const purchased = purchasedCourses.has(c.code);
     document.getElementById('courseBuyBtn').textContent = purchased
       ? 'ПРОДОЛЖИТЬ УРОК'
-      : 'КУПИТЬ КУРС · ' + c.price_rub.toLocaleString('ru-RU') + ' ₽';
+      : 'КУПИТЬ КУРС · ' + c.price_kzt.toLocaleString('ru-RU') + ' ₸';
   }
 
   function openCourse(c){
