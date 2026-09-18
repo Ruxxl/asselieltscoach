@@ -285,82 +285,51 @@
   <section class="screen" data-screen="path">
     <div class="topbar"><button class="xbtn" onclick="go('assess')">←</button><div class="pbar"><i style="width:16%"></i></div></div>
     <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Отлично! Как начнём?</div></div>
-    <div class="pathcard" onclick="go('exA')">
+    <div class="pathcard" onclick="go('home')">
       <div class="ic" style="background:#2A2416;">📘</div>
       <div><div class="tt">С нуля</div><div class="ds">Вводный урок, начинаем с основ A1</div></div>
     </div>
     <div class="pathcard" onclick="go('exA')">
       <div class="ic" style="background:#152019;">🧭</div>
-      <div><div class="tt">Тест на уровень</div><div class="ds">Эхо задаст пару вопросов и подберёт старт</div></div>
+      <div><div class="tt">Быстрый тест</div><div class="ds">3 коротких вопроса — Эхо подберёт старт</div></div>
     </div>
   </section>
 
-  <!-- 3: exercise A - image match -->
+  <!-- 3: quick test Q1 — выбор правильного слова -->
   <section class="screen" data-screen="exA">
-    <div class="topbar"><button class="xbtn" onclick="go('path')">✕</button><div class="pbar"><i style="width:32%"></i></div><div class="lives">❤️ 5</div></div>
-    <div class="badge">Новое слово</div>
-    <div class="qtitle">Выбери картинку «чай»</div>
-    <div class="imgrow">
-      <div class="imgopt" data-correct="1" onclick="pickImg(this)"><div class="em">🍵</div><div class="wd">tea</div></div>
-      <div class="imgopt" onclick="pickImg(this)"><div class="em">🧂</div><div class="wd">sugar</div></div>
-      <div class="imgopt" onclick="pickImg(this)"><div class="em">☕</div><div class="wd">coffee</div></div>
-    </div>
+    <div class="topbar"><button class="xbtn" onclick="go('path')">✕</button><div class="pbar"><i style="width:32%"></i></div></div>
+    <div class="qtitle">Вопрос 1 из 3 · выбери подходящее слово</div>
+    <div class="fillline" id="quickQ1Sentence"></div>
+    <div class="chips" id="quickQ1Options"></div>
     <div class="spacer"></div>
-    <div class="bottombar">
-      <button class="btn btn-ghost" onclick="go('exB')">ПРОПУСТИТЬ</button>
-      <button class="btn btn-primary" id="check-exA" disabled onclick="checkImg()">ПРОВЕРИТЬ</button>
-    </div>
-    <div class="feedback ok" id="fb-exA">
-      <div class="ftitle">🎉 Здорово!</div>
-      <div class="fsub">«tea» — чай. Именно так это слово чаще всего встречается в меню кафе.</div>
-      <button class="btn btn-primary btn-wide" onclick="go('exB')">ДАЛЕЕ</button>
-    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="quickQ1Next" disabled onclick="go('exB')">ДАЛЕЕ</button></div>
   </section>
 
-  <!-- 4: exercise B - translate MCQ -->
+  <!-- 4: quick test Q2 — выбор правильного слова -->
   <section class="screen" data-screen="exB">
-    <div class="topbar"><button class="xbtn" onclick="go('exA')">✕</button><div class="pbar"><i style="width:48%"></i></div><div class="lives">❤️ 5</div></div>
-    <div class="mascot-row"><div style="font-size:34px;">🧑‍🦱</div><div class="bubble">Nice to meet you</div></div>
-    <div class="qtitle" style="font-size:15px; color:#93A1AC; font-family:Inter; font-weight:600;">Выбери верный перевод</div>
-    <button class="opt" data-correct="1" onclick="pickOpt(this)">Приятно познакомиться</button>
-    <button class="opt" onclick="pickOpt(this)">До скорой встречи</button>
-    <button class="opt" onclick="pickOpt(this)">Как у тебя дела</button>
+    <div class="topbar"><button class="xbtn" onclick="go('exA')">✕</button><div class="pbar"><i style="width:64%"></i></div></div>
+    <div class="qtitle">Вопрос 2 из 3 · выбери подходящее слово</div>
+    <div class="fillline" id="quickQ2Sentence"></div>
+    <div class="chips" id="quickQ2Options"></div>
     <div class="spacer"></div>
-    <div class="bottombar">
-      <button class="btn btn-ghost" onclick="go('exC')">ПРОПУСТИТЬ</button>
-      <button class="btn btn-primary" id="check-exB" disabled onclick="checkOpt('exB')">ПРОВЕРИТЬ</button>
-    </div>
-    <div class="feedback ok" id="fb-exB">
-      <div class="ftitle">✅ Верно!</div>
-      <div class="fsub">Стандартная фраза при первом знакомстве.</div>
-      <button class="btn btn-primary btn-wide" onclick="go('exC')">ДАЛЕЕ</button>
-    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="quickQ2Next" disabled onclick="go('exC')">ДАЛЕЕ</button></div>
   </section>
 
-  <!-- 5: exercise C - word bank -->
+  <!-- 5: quick test Q3 — Reading с микрофоном, реальная ИИ-проверка, без прохода дальше при ошибке -->
   <section class="screen" data-screen="exC">
-    <div class="topbar"><button class="xbtn" onclick="go('exB')">✕</button><div class="pbar"><i style="width:64%"></i></div><div class="lives">❤️ 5</div></div>
-    <div class="qtitle">Собери перевод: «Она читает книгу»</div>
-    <div class="answerline" id="answerline"></div>
-    <div class="hint">Нажимай на слова по порядку</div>
-    <div class="chips" id="wordbank">
-      <button class="wchip" onclick="addChip(this,'reading')">reading</button>
-      <button class="wchip" onclick="addChip(this,'a')">a</button>
-      <button class="wchip" onclick="addChip(this,'She')">She</button>
-      <button class="wchip" onclick="addChip(this,'quickly')">quickly</button>
-      <button class="wchip" onclick="addChip(this,'is')">is</button>
-      <button class="wchip" onclick="addChip(this,'book')">book</button>
+    <div class="topbar"><button class="xbtn" onclick="go('exB')">✕</button><div class="pbar"><i style="width:96%"></i></div></div>
+    <div class="badge" style="color:#5B9DFF;">Вопрос 3 из 3 · Reading</div>
+    <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b>"Every weekend, Maria visits her grandmother and they cook dinner together."</b></div>
+    <div class="askline">🎤 Что Мария делает каждые выходные и с кем?</div>
+    <div class="mic-wrap" id="quickMicWrap">
+      <button class="mic-btn" id="quickMicBtn" onclick="quickVoiceTest.toggle()">🎙️</button>
+      <div class="mic-label" id="quickMicLabel">Нажми, ответь голосом и нажми ещё раз, чтобы остановить запись</div>
+      <div class="wave" id="quickWave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
+    <div class="liveCaption" id="quickLiveCaption"><b>Слышу вживую</b><span id="quickLiveCaptionText">…</span></div>
+    <div class="aiPanel" id="quickAiPanel"></div>
     <div class="spacer"></div>
-    <div class="bottombar">
-      <button class="btn btn-ghost" onclick="resetChips()">СБРОСИТЬ</button>
-      <button class="btn btn-primary" id="check-exC" disabled onclick="checkChips()">ПРОВЕРИТЬ</button>
-    </div>
-    <div class="feedback ok" id="fb-exC">
-      <div class="ftitle">🎉 Замечательно!</div>
-      <div class="fsub">She is reading a book — верный порядок слов.</div>
-      <button class="btn btn-primary btn-wide" onclick="go('calc')">ДАЛЕЕ</button>
-    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="quickReadingNext" style="display:none;" onclick="go('calc')">ДАЛЕЕ</button></div>
   </section>
 
   <!-- 6: loading -->
@@ -478,7 +447,7 @@
     <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b id="passageText">"The train to Manchester leaves platform 4 at half past nine every morning."</b></div>
     <div class="askline" id="questionText">🎤 Во сколько и с какой платформы отправляется поезд?</div>
     <div class="mic-wrap" id="micWrap">
-      <button class="mic-btn" id="micBtn" onclick="toggleRec()">🎙️</button>
+      <button class="mic-btn" id="micBtn" onclick="finalVoiceTest.toggle()">🎙️</button>
       <div class="mic-label" id="micLabel">Нажми, ответь голосом и нажми ещё раз, чтобы остановить запись</div>
       <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
@@ -557,55 +526,45 @@
     el.classList.add('selected');
   }
 
-  function pickOpt(el){
-    el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('check-exB').removeAttribute('disabled');
-  }
-  function checkOpt(id){
-    const scr = document.querySelector('[data-screen="'+id+'"]');
-    scr.querySelectorAll('.opt').forEach(o=>{
-      if(o.dataset.correct) o.classList.add('correct');
-      else if(o.classList.contains('selected')) o.classList.add('wrong');
-    });
-    document.getElementById('fb-'+id).classList.add('show');
-  }
+  // ---- Быстрый тест: вопросы 1-2 — выбор правильного слова в пропуск ----
+  const QUICK_TEST_QUESTIONS = [
+    { prompt: "My brother {blank} a doctor.", options: ["is", "am", "are"], correct: "is" },
+    { prompt: "She has {blank} umbrella.", options: ["a", "an", "the"], correct: "an" },
+  ];
 
-  function pickImg(el){
-    el.parentElement.querySelectorAll('.imgopt').forEach(o=>o.classList.remove('selected'));
-    el.classList.add('selected');
-    el.dataset.picked = "1";
-    Array.from(el.parentElement.children).forEach(c=>{ if(c!==el) delete c.dataset.picked; });
-    document.getElementById('check-exA').removeAttribute('disabled');
-  }
-  function checkImg(){
-    document.querySelectorAll('#exA-imgrow .imgopt, .imgrow .imgopt').forEach(o=>{
-      if(o.dataset.correct) o.classList.add('correct');
-      else if(o.dataset.picked) o.classList.add('wrong');
+  function renderQuickQuestion(index, sentenceId, optionsId, nextBtnId){
+    const q = QUICK_TEST_QUESTIONS[index];
+    const blankId = sentenceId + '-blank';
+    document.getElementById(sentenceId).innerHTML = q.prompt.replace(
+      '{blank}', `<span class="blank" id="${blankId}">___</span>`
+    );
+    const optsEl = document.getElementById(optionsId);
+    optsEl.innerHTML = '';
+    const nextBtn = document.getElementById(nextBtnId);
+    nextBtn.setAttribute('disabled', '');
+    q.options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'wchip';
+      b.textContent = opt;
+      b.onclick = () => {
+        const blankEl = document.getElementById(blankId);
+        blankEl.textContent = opt;
+        [...optsEl.children].forEach(c => c.disabled = true);
+        if (opt === q.correct) {
+          b.classList.add('sel');
+          blankEl.style.color = '#3DDC84';
+          blankEl.style.borderColor = '#3DDC84';
+        } else {
+          b.style.borderColor = '#FF6B6B';
+          b.style.color = '#FF8B8B';
+          blankEl.style.color = '#FF8B8B';
+          blankEl.style.borderColor = '#FF6B6B';
+          [...optsEl.children].find(c => c.textContent === q.correct)?.classList.add('sel');
+        }
+        nextBtn.removeAttribute('disabled');
+      };
+      optsEl.appendChild(b);
     });
-    document.getElementById('fb-exA').classList.add('show');
-  }
-
-  const target = ['She','is','reading','a','book'];
-  let built = [];
-  function addChip(el,word){
-    if(el.classList.contains('used')) return;
-    el.classList.add('used');
-    built.push(word);
-    const line = document.getElementById('answerline');
-    const tag = document.createElement('span');
-    tag.className='wchip'; tag.textContent=word;
-    line.appendChild(tag);
-    if(built.length === target.length) document.getElementById('check-exC').removeAttribute('disabled');
-  }
-  function resetChips(){
-    built = [];
-    document.getElementById('answerline').innerHTML='';
-    document.querySelectorAll('#wordbank .wchip').forEach(c=>c.classList.remove('used'));
-    document.getElementById('check-exC').setAttribute('disabled','');
-  }
-  function checkChips(){
-    document.getElementById('fb-exC').classList.add('show');
   }
 
   function fillBlank(el,word){
@@ -834,113 +793,141 @@
 
   loadCourses();
 
-  // ---- Финальный Reading-тест: реальная запись голоса + проверка через Gemini ----
-  const READING_PASSAGE = "The train to Manchester leaves platform 4 at half past nine every morning.";
-  const READING_QUESTION = "What time does the train leave, and from which platform?";
-
-  let mediaRecorder = null, audioChunks = [], isRecording = false;
-
-  // Живая подпись во время записи — браузерное распознавание речи (Web Speech API).
-  // Работает независимо от финальной ИИ-проверки через Gemini: просто показывает,
-  // что микрофон вообще слышит речь, пока идёт запись. Есть не во всех WebView
-  // (например, часто недоступно в Telegram на iOS) — тогда блок остаётся скрытым.
+  // ---- Голосовая проверка (mic + Web Speech live-caption + реальная оценка через Gemini) ----
+  // Переиспользуемая фабрика: одна и та же логика питает и финальный Reading-тест курса,
+  // и 3-й вопрос быстрого теста — отличаются только тексты/id элементов и то, блокируем ли
+  // переход дальше при неверном ответе.
   const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let liveRecognition = null;
 
-  function startLiveCaption(){
-    if (!SpeechRecognitionCtor) return;
-    const captionEl = document.getElementById('liveCaption');
-    const textEl = document.getElementById('liveCaptionText');
-    textEl.textContent = '…';
-    captionEl.classList.add('show');
+  function createVoiceTest(cfg){
+    let mediaRecorder = null, audioChunks = [], isRecording = false, liveRecognition = null;
 
-    liveRecognition = new SpeechRecognitionCtor();
-    liveRecognition.lang = 'en-US';
-    liveRecognition.continuous = true;
-    liveRecognition.interimResults = true;
-    liveRecognition.onresult = (event) => {
-      let text = '';
-      for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript;
-      textEl.textContent = text.trim() || '…';
-    };
-    liveRecognition.onerror = () => {};
-    try { liveRecognition.start(); } catch (e) { /* уже запущено / недоступно — игнорируем */ }
-  }
+    function startLiveCaption(){
+      if (!SpeechRecognitionCtor) return;
+      const captionEl = document.getElementById(cfg.liveCaptionId);
+      const textEl = document.getElementById(cfg.liveCaptionTextId);
+      textEl.textContent = '…';
+      captionEl.classList.add('show');
 
-  function stopLiveCaption(){
-    if (liveRecognition) {
-      liveRecognition.onresult = null;
-      liveRecognition.onerror = null;
-      try { liveRecognition.stop(); } catch (e) {}
-      liveRecognition = null;
+      liveRecognition = new SpeechRecognitionCtor();
+      liveRecognition.lang = 'en-US';
+      liveRecognition.continuous = true;
+      liveRecognition.interimResults = true;
+      liveRecognition.onresult = (event) => {
+        let text = '';
+        for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript;
+        textEl.textContent = text.trim() || '…';
+      };
+      liveRecognition.onerror = () => {};
+      try { liveRecognition.start(); } catch (e) { /* уже запущено / недоступно — игнорируем */ }
     }
-  }
 
-  async function toggleRec(){
-    if (!isRecording) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = onRecordingStop;
-        mediaRecorder.start();
-        isRecording = true;
-        document.getElementById('micBtn').classList.add('rec');
-        document.getElementById('micBtn').textContent = '⏹️';
-        document.getElementById('wave').classList.add('animate');
-        document.getElementById('micLabel').textContent = 'Идёт запись… нажми ещё раз, чтобы остановить';
-        startLiveCaption();
-      } catch (e) {
-        document.getElementById('micLabel').textContent = 'Нет доступа к микрофону: ' + e.message;
+    function stopLiveCaption(){
+      if (liveRecognition) {
+        liveRecognition.onresult = null;
+        liveRecognition.onerror = null;
+        try { liveRecognition.stop(); } catch (e) {}
+        liveRecognition = null;
       }
-    } else {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach(t => t.stop());
-      isRecording = false;
-      stopLiveCaption();
     }
+
+    async function toggle(){
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = onRecordingStop;
+          mediaRecorder.start();
+          isRecording = true;
+          const btn = document.getElementById(cfg.micBtnId);
+          btn.classList.add('rec');
+          btn.textContent = '⏹️';
+          document.getElementById(cfg.waveId).classList.add('animate');
+          document.getElementById(cfg.labelId).textContent = 'Идёт запись… нажми ещё раз, чтобы остановить';
+          startLiveCaption();
+        } catch (e) {
+          document.getElementById(cfg.labelId).textContent = 'Нет доступа к микрофону: ' + e.message;
+        }
+      } else {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        isRecording = false;
+        stopLiveCaption();
+      }
+    }
+
+    async function onRecordingStop(){
+      const btn = document.getElementById(cfg.micBtnId);
+      const wave = document.getElementById(cfg.waveId);
+      const label = document.getElementById(cfg.labelId);
+      wave.classList.remove('animate');
+      btn.textContent = '⏳';
+      label.textContent = 'Эхо слушает и проверяет ответ…';
+
+      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      const form = new FormData();
+      form.append('audio', blob, 'answer.webm');
+      form.append('question', cfg.question);
+      form.append('reference_text', cfg.passage);
+      if (cfg.kind) form.append('kind', cfg.kind);
+
+      try {
+        const res = await fetch('/api/test/reading-check', {
+          method: 'POST',
+          headers: initData ? { 'X-Telegram-Init-Data': initData } : {},
+          body: form,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+
+        const panel = document.getElementById(cfg.aiPanelId);
+        panel.innerHTML = `
+          <div class="transcript"><b>Распознанный ответ</b>"${data.transcript}"</div>
+          <div class="verdict ${data.is_correct ? '' : 'bad'}">${data.is_correct ? '✅ Ответ верный' : '❌ Ответ неточный'} · ${Math.round(data.accuracy_score)}%</div>
+          <div class="aiFeedback">${data.feedback}</div>`;
+        panel.classList.add('show');
+
+        if (data.is_correct || !cfg.blockOnWrong) {
+          document.getElementById(cfg.micWrapId).style.display = 'none';
+          if (cfg.nextBtnId) document.getElementById(cfg.nextBtnId).style.display = 'block';
+        } else {
+          btn.textContent = '🎙️';
+          btn.classList.remove('rec');
+          label.textContent = 'Ответ неточный — запиши ещё раз, попробуй увереннее сформулировать мысль';
+        }
+      } catch (e) {
+        const panel = document.getElementById(cfg.aiPanelId);
+        panel.innerHTML = `<div class="aiError">Не удалось получить оценку ИИ: ${e.message}.<br>Проверьте, что в .env указан GEMINI_API_KEY.</div>`;
+        panel.classList.add('show');
+        btn.textContent = '🎙️';
+        btn.classList.remove('rec');
+        label.textContent = 'Нажми и попробуй снова';
+      }
+    }
+
+    return { toggle };
   }
 
-  async function onRecordingStop(){
-    const btn = document.getElementById('micBtn');
-    const wave = document.getElementById('wave');
-    const label = document.getElementById('micLabel');
-    wave.classList.remove('animate');
-    btn.textContent = '⏳';
-    label.textContent = 'Эхо слушает и проверяет ответ…';
+  const finalVoiceTest = createVoiceTest({
+    micBtnId: 'micBtn', waveId: 'wave', labelId: 'micLabel', micWrapId: 'micWrap',
+    liveCaptionId: 'liveCaption', liveCaptionTextId: 'liveCaptionText', aiPanelId: 'aiPanel',
+    nextBtnId: 'toResultsBtn', blockOnWrong: false, kind: 'final',
+    passage: "The train to Manchester leaves platform 4 at half past nine every morning.",
+    question: "What time does the train leave, and from which platform?",
+  });
 
-    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-    const form = new FormData();
-    form.append('audio', blob, 'answer.webm');
-    form.append('question', READING_QUESTION);
-    form.append('reference_text', READING_PASSAGE);
+  const quickVoiceTest = createVoiceTest({
+    micBtnId: 'quickMicBtn', waveId: 'quickWave', labelId: 'quickMicLabel', micWrapId: 'quickMicWrap',
+    liveCaptionId: 'quickLiveCaption', liveCaptionTextId: 'quickLiveCaptionText', aiPanelId: 'quickAiPanel',
+    nextBtnId: 'quickReadingNext', blockOnWrong: true, kind: 'placement',
+    passage: "Every weekend, Maria visits her grandmother and they cook dinner together.",
+    question: "What does Maria do every weekend, and with whom?",
+  });
 
-    try {
-      const res = await fetch('/api/test/reading-check', {
-        method: 'POST',
-        headers: initData ? { 'X-Telegram-Init-Data': initData } : {},
-        body: form,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-
-      const panel = document.getElementById('aiPanel');
-      panel.innerHTML = `
-        <div class="transcript"><b>Распознанный ответ</b>"${data.transcript}"</div>
-        <div class="verdict ${data.is_correct ? '' : 'bad'}">${data.is_correct ? '✅ Ответ верный' : '❌ Ответ неточный'} · ${Math.round(data.accuracy_score)}%</div>
-        <div class="aiFeedback">${data.feedback}</div>`;
-      panel.classList.add('show');
-      document.getElementById('toResultsBtn').style.display = 'block';
-      document.getElementById('micWrap').style.display = 'none';
-    } catch (e) {
-      const panel = document.getElementById('aiPanel');
-      panel.innerHTML = `<div class="aiError">Не удалось получить оценку ИИ: ${e.message}.<br>Проверьте, что в .env указан GEMINI_API_KEY.</div>`;
-      panel.classList.add('show');
-      btn.textContent = '🎙️';
-      label.textContent = 'Нажми и попробуй снова';
-    }
-  }
+  renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
+  renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
 </script>
 </body>
 </html>

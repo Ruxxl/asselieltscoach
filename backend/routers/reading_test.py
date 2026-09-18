@@ -34,6 +34,7 @@ async def reading_check(
     audio: UploadFile,
     question: str = Form(...),
     reference_text: str = Form(...),
+    kind: str = Form("final"),  # "final" (курс) или "placement" (быстрый тест)
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
@@ -55,7 +56,7 @@ async def reading_check(
     audio_path.write_bytes(audio_bytes)
 
     user = await _get_or_create_user(session, x_telegram_init_data)
-    attempt = TestAttempt(user_id=user.id if user else None, kind="final")
+    attempt = TestAttempt(user_id=user.id if user else None, kind=kind)
     session.add(attempt)
     await session.flush()
     session.add(
