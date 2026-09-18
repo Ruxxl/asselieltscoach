@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Echo English</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0; height:100%;}
+  body{
+    background:#10151A; color:#F1F5F3;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2','Inter',system-ui,sans-serif;}
+
+  .app{max-width:520px; margin:0 auto; position:relative; min-height:100vh;}
+
+  .screen{
+    display:none; flex-direction:column; min-height:100vh;
+    padding:22px 20px calc(18px + env(safe-area-inset-bottom));
+  }
+  .screen.active{display:flex;}
+
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
+  .xbtn{
+    width:26px; height:26px; border-radius:8px; border:none; background:transparent; color:#5C6875;
+    font-size:16px; cursor:pointer; flex:none; display:grid; place-items:center;
+  }
+  .xbtn:hover{color:#93A1AC;}
+  .pbar{flex:1; height:10px; border-radius:999px; background:#232B34; overflow:hidden;}
+  .pbar > i{display:block; height:100%; background:linear-gradient(90deg,#1E9C5C,#3DDC84); border-radius:999px; transition:width .3s;}
+  .lives{display:flex; align-items:center; gap:4px; flex:none; font:800 13px/1 'Inter',sans-serif; color:#FF6B6B;}
+
+  .streakline{
+    font:800 11px/1 'Inter',sans-serif; letter-spacing:.06em; color:#3DDC84; text-transform:uppercase;
+    text-align:center; margin-bottom:6px; min-height:14px;
+  }
+
+  .mascot-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:22px;}
+  .bubble{
+    background:#1A2129; border:1px solid #2C3742; border-radius:16px 16px 16px 4px;
+    padding:12px 14px; font:600 14.5px/1.4 'Baloo 2',sans-serif; color:#F1F5F3; max-width:320px;
+  }
+
+  .opt{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:#161C22; border:1.5px solid #2C3742; border-radius:14px; padding:13px 14px; margin-bottom:10px;
+    color:#F1F5F3; font:600 14px/1.3 'Inter',sans-serif; cursor:pointer; transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:#3C4A57;}
+  .opt.selected{border-color:#3DDC84; background:#152019;}
+  .opt.correct{border-color:#3DDC84; background:#152019;}
+  .opt.wrong{border-color:#FF6B6B; background:#241717;}
+  .opt .bars{display:flex; align-items:flex-end; gap:2px; flex:none;}
+  .opt .bars i{display:block; width:4px; background:#3C4A57; border-radius:2px;}
+  .opt.level-1 .bars i:nth-child(1){background:#3DDC84;}
+  .opt.level-2 .bars i:nth-child(1),.opt.level-2 .bars i:nth-child(2){background:#3DDC84;}
+  .opt.level-3 .bars i:nth-child(1),.opt.level-3 .bars i:nth-child(2),.opt.level-3 .bars i:nth-child(3){background:#3DDC84;}
+  .opt.level-4 .bars i:nth-child(1),.opt.level-4 .bars i:nth-child(2),.opt.level-4 .bars i:nth-child(3),.opt.level-4 .bars i:nth-child(4){background:#3DDC84;}
+  .opt.level-5 .bars i{background:#3DDC84;}
+
+  .pathcard{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:#161C22; border:1.5px solid #2C3742; border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer;
+  }
+  .pathcard:hover{border-color:#3DDC84;}
+  .pathcard .ic{width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:20px; flex:none;}
+  .pathcard .tt{font:700 14.5px 'Baloo 2',sans-serif; margin-bottom:2px;}
+  .pathcard .ds{font:500 12px 'Inter',sans-serif; color:#93A1AC;}
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; font:800 10.5px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase;
+    color:#5B9DFF; background:#131C2A; border:1px solid #223247; padding:5px 10px; border-radius:999px; margin-bottom:10px;
+  }
+  .qtitle{font:700 19px/1.3 'Baloo 2',sans-serif; margin:0 0 20px; text-wrap:balance;}
+
+  .imgrow{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  .imgopt{
+    background:#161C22; border:1.5px solid #2C3742; border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer;
+  }
+  .imgopt .em{font-size:30px; margin-bottom:8px;}
+  .imgopt .wd{font:600 12.5px 'Inter',sans-serif;}
+  .imgopt.correct{border-color:#3DDC84; background:#152019;}
+  .imgopt.wrong{border-color:#FF6B6B; background:#241717;}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .wchip{
+    background:#161C22; border:1.5px solid #2C3742; border-radius:10px; padding:9px 13px; font:600 14px 'Inter',sans-serif;
+    color:#F1F5F3; cursor:pointer;
+  }
+  .wchip.used{opacity:.3; pointer-events:none;}
+  .answerline{
+    min-height:44px; border-bottom:2px solid #2C3742; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-bottom:8px; margin-bottom:6px;
+  }
+  .answerline .wchip{background:#152019; border-color:#3DDC84;}
+  .hint{font:500 12px 'Inter',sans-serif; color:#6C7883; margin-top:6px;}
+
+  .spacer{flex:1;}
+  .bottombar{display:flex; align-items:center; gap:12px; padding-top:14px; border-top:1px solid #202830; margin-top:auto;}
+  .btn{
+    font:800 13px 'Inter',sans-serif; letter-spacing:.04em; text-transform:uppercase; border-radius:14px; padding:13px 16px;
+    cursor:pointer; border:2px solid transparent; text-align:center;
+  }
+  .btn-ghost{background:transparent; border-color:#2C3742; color:#93A1AC; flex:none;}
+  .btn-ghost:hover{border-color:#3C4A57; color:#F1F5F3;}
+  .btn-primary{background:#3DDC84; color:#0A1F13; flex:1;}
+  .btn-primary[disabled]{background:#232B34; color:#4B565F; cursor:not-allowed;}
+  .btn-primary:not([disabled]):hover{background:#31C874;}
+  .btn-wide{width:100%;}
+
+  .feedback{
+    position:sticky; left:0; right:0; bottom:0; padding:18px 0 4px; transform:translateY(110%); transition:transform .25s ease;
+    border-top:1px solid; margin-top:14px;
+  }
+  .feedback.show{transform:translateY(0);}
+  .feedback.ok{background:#0F2A1C; border-color:#1E9C5C;}
+  .feedback.bad{background:#2A1414; border-color:#7A2E2E;}
+  .feedback .ftitle{display:flex; align-items:center; gap:8px; font:800 16px 'Baloo 2',sans-serif; margin-bottom:4px;}
+  .feedback.ok .ftitle{color:#3DDC84;}
+  .feedback.bad .ftitle{color:#FF8B8B;}
+  .feedback .fsub{font:500 13px 'Inter',sans-serif; color:#B9C4CC; margin-bottom:12px;}
+
+  .center-col{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; flex:1;}
+  .mascot-big{font-size:64px; margin-bottom:18px;}
+  .loading-fact{
+    background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:14px; font:500 12.5px/1.5 'Inter',sans-serif; color:#93A1AC; margin-top:22px;
+  }
+  .spin{animation:spin 1.1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){.spin{animation:none;}}
+
+  .resultlevel{font:800 46px 'Baloo 2',sans-serif; color:#3DDC84; margin:6px 0 2px;}
+  .skillrow{display:flex; align-items:center; gap:10px; width:100%; margin-bottom:10px;}
+  .skillrow .sl{width:82px; text-align:left; font:600 12.5px 'Inter',sans-serif; color:#93A1AC; flex:none;}
+  .skillrow .sb{flex:1; height:9px; border-radius:999px; background:#232B34; overflow:hidden;}
+  .skillrow .sb i{display:block; height:100%; border-radius:999px;}
+  .skillrow .sv{width:34px; text-align:right; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums; flex:none;}
+
+  .apphead{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .brand{display:flex; align-items:center; gap:8px; font:800 16px 'Baloo 2',sans-serif;}
+  .stat-pill{display:flex; align-items:center; gap:5px; background:#161C22; border:1px solid #2C3742; padding:6px 10px; border-radius:999px; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums;}
+
+  .levelcard{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:#161C22; border:1.5px solid #2C3742; border-radius:16px; padding:14px; margin-bottom:10px; cursor:pointer; position:relative;
+  }
+  .levelcard.reco{border-color:#3DDC84;}
+  .levelcard .lv{
+    width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Baloo 2',sans-serif; flex:none; color:#0A1F13; background:#2C3742;
+  }
+  .levelcard .tt{font:700 14.5px 'Baloo 2',sans-serif; margin-bottom:2px;}
+  .levelcard .ds{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
+  .levelcard .rt{margin-left:auto; text-align:right; flex:none;}
+  .levelcard .price{font:800 12.5px 'Inter',sans-serif; color:#3DDC84;}
+  .recotag{
+    position:absolute; top:-9px; right:12px; background:#3DDC84; color:#0A1F13; font:800 9.5px 'Inter',sans-serif;
+    letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:999px;
+  }
+
+  .coursehead{margin-bottom:16px;}
+  .coursehead .kicker{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#3DDC84; margin-bottom:6px;}
+  .coursehead h2{font:800 20px 'Baloo 2',sans-serif; margin:0 0 8px; text-wrap:balance;}
+  .instructor{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .avatar{width:34px; height:34px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:16px; flex:none;}
+  .instructor .nm{font:700 12.5px 'Inter',sans-serif;}
+  .instructor .rl{font:500 11px 'Inter',sans-serif; color:#93A1AC;}
+
+  .modrow{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #202830;}
+  .modrow .mi{width:30px; height:30px; border-radius:9px; background:#1E262E; display:grid; place-items:center; font-size:14px; flex:none;}
+  .modrow .mt{font:700 13px 'Inter',sans-serif;}
+  .modrow .mc{font:500 11px 'Inter',sans-serif; color:#93A1AC;}
+  .modrow .ms{margin-left:auto; font-size:15px;}
+
+  .fillline{font:600 16px/1.6 'Baloo 2',sans-serif; margin-bottom:18px;}
+  .fillline .blank{display:inline-block; min-width:80px; border-bottom:2px solid #3DDC84; text-align:center; color:#3DDC84; padding:0 4px;}
+
+  .passage{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:14px; font:500 13.5px/1.6 'Inter',sans-serif; color:#D6DEE3; margin-bottom:14px;}
+  .passage b{color:#F1F5F3;}
+  .askline{font:700 15px/1.4 'Baloo 2',sans-serif; margin-bottom:22px;}
+
+  .mic-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:16px;}
+  .mic-btn{
+    width:88px; height:88px; border-radius:50%; border:none; background:#3DDC84; color:#0A1F13; font-size:30px;
+    display:grid; place-items:center; cursor:pointer; box-shadow:0 0 0 0 rgba(61,220,132,.5); position:relative;
+  }
+  .mic-btn.rec{animation:pulse 1.1s ease-out infinite; background:#FF6B6B; color:#2A0F0F;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,.5);}70%{box-shadow:0 0 0 22px rgba(255,107,107,0);}100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}}
+  .mic-label{font:600 12.5px 'Inter',sans-serif; color:#93A1AC; text-align:center;}
+  .wave{display:flex; align-items:center; gap:3px; height:28px;}
+  .wave i{width:3px; border-radius:2px; background:#FF6B6B; height:6px;}
+  .wave.animate i{animation:wv 0.8s ease-in-out infinite;}
+  .wave i:nth-child(1){animation-delay:0s;} .wave i:nth-child(2){animation-delay:.1s;} .wave i:nth-child(3){animation-delay:.2s;}
+  .wave i:nth-child(4){animation-delay:.3s;} .wave i:nth-child(5){animation-delay:.4s;} .wave i:nth-child(6){animation-delay:.3s;}
+  .wave i:nth-child(7){animation-delay:.2s;} .wave i:nth-child(8){animation-delay:.1s;} .wave i:nth-child(9){animation-delay:0s;}
+  @keyframes wv{0%,100%{height:6px;}50%{height:26px;}}
+  @media (prefers-reduced-motion: reduce){.mic-btn.rec{animation:none;} .wave.animate i{animation:none; height:14px;}}
+
+  .aiPanel{display:none; width:100%; margin-top:10px;}
+  .aiPanel.show{display:block;}
+  .transcript{background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:12px; font:500 13px/1.5 'Inter',sans-serif; color:#D6DEE3; margin-bottom:10px;}
+  .transcript b{color:#5B9DFF; display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px;}
+  .verdict{display:flex; align-items:center; gap:8px; font:800 14px 'Baloo 2',sans-serif; color:#3DDC84; margin-bottom:8px;}
+  .verdict.bad{color:#FF8B8B;}
+  .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:#93A1AC;}
+  .aiError{color:#FF8B8B; font:600 12.5px/1.5 'Inter',sans-serif;}
+
+  .certcard{
+    background:linear-gradient(160deg,#152019,#161C22); border:1.5px solid #3DDC84; border-radius:16px; padding:20px; text-align:center; width:100%; margin:14px 0;
+  }
+  .certcard .cm{font-size:30px; margin-bottom:8px;}
+  .certcard .ct{font:800 15px 'Baloo 2',sans-serif; margin-bottom:4px;}
+  .certcard .cd{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
+
+  .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
+  .pavatar{width:56px; height:56px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:26px; flex:none;}
+  .pname{font:800 16px 'Baloo 2',sans-serif;}
+  .psub{font:500 12px 'Inter',sans-serif; color:#93A1AC;}
+  .statgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;}
+  .statcard{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:12px; text-align:center;}
+  .statcard .sv2{font:800 20px 'Baloo 2',sans-serif; font-variant-numeric:tabular-nums;}
+  .statcard .sl2{font:600 10.5px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:#93A1AC; margin-top:2px;}
+  .sectiontitle{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#6C7883; margin:4px 0 10px;}
+  .mycourse{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #202830;}
+  .mycourse .ic{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font:800 12px 'Baloo 2',sans-serif; color:#0A1F13; flex:none;}
+  .mycourse .tt{font:700 12.5px 'Inter',sans-serif;}
+  .mycourse .pb{height:6px; border-radius:999px; background:#232B34; margin-top:5px; overflow:hidden;}
+  .mycourse .pb i{display:block; height:100%; background:#3DDC84;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- 1: self-assessment -->
+  <section class="screen active" data-screen="assess">
+    <div class="topbar"><button class="xbtn" onclick="go('assess')">✕</button><div class="pbar"><i style="width:8%"></i></div></div>
+    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Привет! Как ты оцениваешь свой английский?</div></div>
+    <button class="opt level-1" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Совсем новичок</button>
+    <button class="opt level-2" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Знаю базовые слова</button>
+    <button class="opt level-3" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Поддержу простой разговор</button>
+    <button class="opt level-4" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Свободно говорю на бытовые темы</button>
+    <button class="opt level-5" onclick="pick(this)"><span class="bars"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:17px"></i></span>Обсуждаю любые темы</button>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('path')">ДАЛЕЕ</button></div>
+  </section>
+
+  <!-- 2: path choice -->
+  <section class="screen" data-screen="path">
+    <div class="topbar"><button class="xbtn" onclick="go('assess')">←</button><div class="pbar"><i style="width:16%"></i></div></div>
+    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble">Отлично! Как начнём?</div></div>
+    <div class="pathcard" onclick="go('exA')">
+      <div class="ic" style="background:#2A2416;">📘</div>
+      <div><div class="tt">С нуля</div><div class="ds">Вводный урок, начинаем с основ A1</div></div>
+    </div>
+    <div class="pathcard" onclick="go('exA')">
+      <div class="ic" style="background:#152019;">🧭</div>
+      <div><div class="tt">Тест на уровень</div><div class="ds">Эхо задаст пару вопросов и подберёт старт</div></div>
+    </div>
+  </section>
+
+  <!-- 3: exercise A - image match -->
+  <section class="screen" data-screen="exA">
+    <div class="topbar"><button class="xbtn" onclick="go('path')">✕</button><div class="pbar"><i style="width:32%"></i></div><div class="lives">❤️ 5</div></div>
+    <div class="badge">Новое слово</div>
+    <div class="qtitle">Выбери картинку «чай»</div>
+    <div class="imgrow">
+      <div class="imgopt" data-correct="1" onclick="pickImg(this)"><div class="em">🍵</div><div class="wd">tea</div></div>
+      <div class="imgopt" onclick="pickImg(this)"><div class="em">🧂</div><div class="wd">sugar</div></div>
+      <div class="imgopt" onclick="pickImg(this)"><div class="em">☕</div><div class="wd">coffee</div></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" onclick="go('exB')">ПРОПУСТИТЬ</button>
+      <button class="btn btn-primary" id="check-exA" disabled onclick="checkImg()">ПРОВЕРИТЬ</button>
+    </div>
+    <div class="feedback ok" id="fb-exA">
+      <div class="ftitle">🎉 Здорово!</div>
+      <div class="fsub">«tea» — чай. Именно так это слово чаще всего встречается в меню кафе.</div>
+      <button class="btn btn-primary btn-wide" onclick="go('exB')">ДАЛЕЕ</button>
+    </div>
+  </section>
+
+  <!-- 4: exercise B - translate MCQ -->
+  <section class="screen" data-screen="exB">
+    <div class="topbar"><button class="xbtn" onclick="go('exA')">✕</button><div class="pbar"><i style="width:48%"></i></div><div class="lives">❤️ 5</div></div>
+    <div class="mascot-row"><div style="font-size:34px;">🧑‍🦱</div><div class="bubble">Nice to meet you</div></div>
+    <div class="qtitle" style="font-size:15px; color:#93A1AC; font-family:Inter; font-weight:600;">Выбери верный перевод</div>
+    <button class="opt" data-correct="1" onclick="pickOpt(this)">Приятно познакомиться</button>
+    <button class="opt" onclick="pickOpt(this)">До скорой встречи</button>
+    <button class="opt" onclick="pickOpt(this)">Как у тебя дела</button>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" onclick="go('exC')">ПРОПУСТИТЬ</button>
+      <button class="btn btn-primary" id="check-exB" disabled onclick="checkOpt('exB')">ПРОВЕРИТЬ</button>
+    </div>
+    <div class="feedback ok" id="fb-exB">
+      <div class="ftitle">✅ Верно!</div>
+      <div class="fsub">Стандартная фраза при первом знакомстве.</div>
+      <button class="btn btn-primary btn-wide" onclick="go('exC')">ДАЛЕЕ</button>
+    </div>
+  </section>
+
+  <!-- 5: exercise C - word bank -->
+  <section class="screen" data-screen="exC">
+    <div class="topbar"><button class="xbtn" onclick="go('exB')">✕</button><div class="pbar"><i style="width:64%"></i></div><div class="lives">❤️ 5</div></div>
+    <div class="qtitle">Собери перевод: «Она читает книгу»</div>
+    <div class="answerline" id="answerline"></div>
+    <div class="hint">Нажимай на слова по порядку</div>
+    <div class="chips" id="wordbank">
+      <button class="wchip" onclick="addChip(this,'reading')">reading</button>
+      <button class="wchip" onclick="addChip(this,'a')">a</button>
+      <button class="wchip" onclick="addChip(this,'She')">She</button>
+      <button class="wchip" onclick="addChip(this,'quickly')">quickly</button>
+      <button class="wchip" onclick="addChip(this,'is')">is</button>
+      <button class="wchip" onclick="addChip(this,'book')">book</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" onclick="resetChips()">СБРОСИТЬ</button>
+      <button class="btn btn-primary" id="check-exC" disabled onclick="checkChips()">ПРОВЕРИТЬ</button>
+    </div>
+    <div class="feedback ok" id="fb-exC">
+      <div class="ftitle">🎉 Замечательно!</div>
+      <div class="fsub">She is reading a book — верный порядок слов.</div>
+      <button class="btn btn-primary btn-wide" onclick="go('calc')">ДАЛЕЕ</button>
+    </div>
+  </section>
+
+  <!-- 6: loading -->
+  <section class="screen" data-screen="calc">
+    <div class="center-col">
+      <div class="mascot-big spin">🦜</div>
+      <div class="display" style="font-weight:700; font-size:16px;">Эхо считает результат…</div>
+      <div class="loading-fact">Совет: чтение вслух — один из лучших способов навсегда закрепить произношение новых слов.</div>
+    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('placeResult')">ГОТОВО</button></div>
+  </section>
+
+  <!-- 7: placement result -->
+  <section class="screen" data-screen="placeResult">
+    <div class="center-col">
+      <div style="font-size:44px;">🦜</div>
+      <div style="font:600 13px 'Inter',sans-serif; color:#93A1AC; margin-top:8px;">Твой уровень</div>
+      <div class="resultlevel">B1</div>
+      <div style="font:600 13px 'Inter',sans-serif; color:#93A1AC; margin-bottom:20px;">Intermediate</div>
+      <div style="width:100%;">
+        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:64%; background:#3DDC84;"></i></div><div class="sv">64%</div></div>
+        <div class="skillrow"><div class="sl">Vocabulary</div><div class="sb"><i style="width:71%; background:#5B9DFF;"></i></div><div class="sv">71%</div></div>
+        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:58%; background:#F5B942;"></i></div><div class="sv">58%</div></div>
+      </div>
+    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('home')">СМОТРЕТЬ КУРСЫ</button></div>
+  </section>
+
+  <!-- 8: home/catalog (данные — реальный fetch к /api/courses) -->
+  <section class="screen" data-screen="home">
+    <div class="apphead">
+      <div class="brand">🦜 Echo English</div>
+      <div style="display:flex; gap:6px;">
+        <div class="stat-pill">🔥 14</div>
+        <div class="stat-pill">🪙 860</div>
+      </div>
+    </div>
+    <div class="sectiontitle">Курсы по уровням</div>
+    <div id="courseList">
+      <div style="color:#6C7883; font-size:13px;">Загружаю курсы…</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-ghost btn-wide" onclick="go('profile')">👤 ПРОФИЛЬ</button></div>
+  </section>
+
+  <!-- 9: course detail -->
+  <section class="screen" data-screen="course">
+    <div class="topbar"><button class="xbtn" onclick="go('home')">←</button></div>
+    <div class="coursehead">
+      <div class="kicker" id="courseKicker">Уровень B1</div>
+      <h2 id="courseTitle">Intermediate: уверенный бытовой английский</h2>
+    </div>
+    <div class="instructor">
+      <div class="avatar">👩‍🏫</div>
+      <div><div class="nm">Анна К.</div><div class="rl">CELTA-сертифицированный преподаватель</div></div>
+    </div>
+    <div class="sectiontitle">Программа курса</div>
+    <div id="courseModules"></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="go('lesson')">ПРОДОЛЖИТЬ УРОК</button></div>
+  </section>
+
+  <!-- 10: lesson (grammar fill) -->
+  <section class="screen" data-screen="lesson">
+    <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i style="width:40%"></i></div><div class="lives">❤️ 4</div></div>
+    <div class="badge" style="color:#F5B942; background:#2A2416; border-color:#4B4030;">Grammar · Present Perfect</div>
+    <div class="fillline">She <span class="blank" id="blankSlot">___</span> in London since 2019.</div>
+    <div class="chips">
+      <button class="wchip" onclick="fillBlank(this,'has lived')">has lived</button>
+      <button class="wchip" onclick="fillBlank(this,'lived')">lived</button>
+      <button class="wchip" onclick="fillBlank(this,'is living')">is living</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" onclick="go('finalIntro')">ПРОПУСТИТЬ</button>
+      <button class="btn btn-primary" id="check-lesson" disabled onclick="checkLesson()">ПРОВЕРИТЬ</button>
+    </div>
+    <div class="feedback ok" id="fb-lesson">
+      <div class="ftitle">✅ Точно!</div>
+      <div class="fsub">Present Perfect — действие началось в прошлом и продолжается сейчас.</div>
+      <button class="btn btn-primary btn-wide" onclick="go('finalIntro')">К ФИНАЛЬНОМУ ТЕСТУ</button>
+    </div>
+  </section>
+
+  <!-- 11: final test / reading with REAL voice recording + Gemini check -->
+  <section class="screen" data-screen="finalIntro">
+    <div class="topbar"><button class="xbtn" onclick="go('lesson')">✕</button><div class="pbar"><i style="width:86%"></i></div></div>
+    <div class="badge" style="color:#5B9DFF;">Финальный тест · Reading</div>
+    <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b id="passageText">"The train to Manchester leaves platform 4 at half past nine every morning."</b></div>
+    <div class="askline" id="questionText">🎤 Во сколько и с какой платформы отправляется поезд?</div>
+    <div class="mic-wrap" id="micWrap">
+      <button class="mic-btn" id="micBtn" onclick="toggleRec()">🎙️</button>
+      <div class="mic-label" id="micLabel">Нажми, ответь голосом и нажми ещё раз, чтобы остановить запись</div>
+      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="aiPanel" id="aiPanel"></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="toResultsBtn" style="display:none;" onclick="go('finalResult')">СМОТРЕТЬ ИТОГ ТЕСТА</button></div>
+  </section>
+
+  <!-- 12: final results / certificate -->
+  <section class="screen" data-screen="finalResult">
+    <div class="center-col" style="padding-top:6px;">
+      <div style="font-size:16px; font-weight:800; font-family:'Baloo 2';">Тест пройден!</div>
+      <div class="resultlevel" style="font-size:38px;">89%</div>
+      <div style="width:100%; margin:10px 0 6px;">
+        <div class="skillrow"><div class="sl">Reading</div><div class="sb"><i style="width:92%; background:#3DDC84;"></i></div><div class="sv">92%</div></div>
+        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:85%; background:#5B9DFF;"></i></div><div class="sv">85%</div></div>
+        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:78%; background:#F5B942;"></i></div><div class="sv">78%</div></div>
+        <div class="skillrow"><div class="sl">Speaking</div><div class="sb"><i style="width:88%; background:#FF6B6B;"></i></div><div class="sv">88%</div></div>
+      </div>
+      <div class="certcard">
+        <div class="cm">🏅</div>
+        <div class="ct">Сертификат B1 Intermediate</div>
+        <div class="cd">Echo English</div>
+      </div>
+    </div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('profile')">В ПРОФИЛЬ</button></div>
+  </section>
+
+  <!-- 13: profile -->
+  <section class="screen" data-screen="profile">
+    <div class="topbar"><button class="xbtn" onclick="go('home')">←</button></div>
+    <div class="profilehead">
+      <div class="pavatar">🙂</div>
+      <div><div class="pname" id="profileName">Гость</div><div class="psub">Добро пожаловать в Echo English</div></div>
+    </div>
+    <div class="statgrid">
+      <div class="statcard"><div class="sv2">🔥 14</div><div class="sl2">дней подряд</div></div>
+      <div class="statcard"><div class="sv2">🪙 860</div><div class="sl2">очков опыта</div></div>
+    </div>
+    <div class="sectiontitle">Мои курсы</div>
+    <div class="mycourse"><div class="ic" style="background:#3DDC84;">B1</div><div style="flex:1"><div class="tt">Intermediate</div><div class="pb"><i style="width:74%"></i></div></div></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-ghost btn-wide" onclick="go('home')">🏠 НА ГЛАВНУЮ</button></div>
+  </section>
+
+</div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+  const initData = tg?.initData || '';
+
+  function go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
+    window.scrollTo(0,0);
+  }
+
+  if (tg?.initDataUnsafe?.user) {
+    const u = tg.initDataUnsafe.user;
+    document.getElementById('profileName').textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гость';
+  }
+
+  function pick(el){
+    el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function pickOpt(el){
+    el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('check-exB').removeAttribute('disabled');
+  }
+  function checkOpt(id){
+    const scr = document.querySelector('[data-screen="'+id+'"]');
+    scr.querySelectorAll('.opt').forEach(o=>{
+      if(o.dataset.correct) o.classList.add('correct');
+      else if(o.classList.contains('selected')) o.classList.add('wrong');
+    });
+    document.getElementById('fb-'+id).classList.add('show');
+  }
+
+  function pickImg(el){
+    el.parentElement.querySelectorAll('.imgopt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    el.dataset.picked = "1";
+    Array.from(el.parentElement.children).forEach(c=>{ if(c!==el) delete c.dataset.picked; });
+    document.getElementById('check-exA').removeAttribute('disabled');
+  }
+  function checkImg(){
+    document.querySelectorAll('#exA-imgrow .imgopt, .imgrow .imgopt').forEach(o=>{
+      if(o.dataset.correct) o.classList.add('correct');
+      else if(o.dataset.picked) o.classList.add('wrong');
+    });
+    document.getElementById('fb-exA').classList.add('show');
+  }
+
+  const target = ['She','is','reading','a','book'];
+  let built = [];
+  function addChip(el,word){
+    if(el.classList.contains('used')) return;
+    el.classList.add('used');
+    built.push(word);
+    const line = document.getElementById('answerline');
+    const tag = document.createElement('span');
+    tag.className='wchip'; tag.textContent=word;
+    line.appendChild(tag);
+    if(built.length === target.length) document.getElementById('check-exC').removeAttribute('disabled');
+  }
+  function resetChips(){
+    built = [];
+    document.getElementById('answerline').innerHTML='';
+    document.querySelectorAll('#wordbank .wchip').forEach(c=>c.classList.remove('used'));
+    document.getElementById('check-exC').setAttribute('disabled','');
+  }
+  function checkChips(){
+    document.getElementById('fb-exC').classList.add('show');
+  }
+
+  function fillBlank(el,word){
+    document.getElementById('blankSlot').textContent = word;
+    document.getElementById('blankSlot').style.color = word==='has lived' ? '#3DDC84' : '#FF6B6B';
+    document.getElementById('check-lesson').removeAttribute('disabled');
+  }
+  function checkLesson(){
+    document.getElementById('fb-lesson').classList.add('show');
+  }
+
+  // ---- Каталог курсов: реальный запрос к backend ----
+  const LEVEL_COLORS = {A1:'#4B4030', A2:'#3B4C3A', B1:'#3DDC84', B2:'#2C3742', C1:'#2C3742', C2:'#2C3742'};
+  async function loadCourses(){
+    const listEl = document.getElementById('courseList');
+    try {
+      const res = await fetch('/api/courses');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const courses = await res.json();
+      listEl.innerHTML = '';
+      courses.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'levelcard' + (c.code === 'B1' ? ' reco' : '');
+        card.onclick = () => openCourse(c);
+        card.innerHTML = `
+          ${c.code === 'B1' ? '<div class="recotag">Рекомендовано Эхо</div>' : ''}
+          <div class="lv" style="background:${LEVEL_COLORS[c.code] || '#2C3742'};">${c.code}</div>
+          <div><div class="tt">${c.title}</div><div class="ds">${c.description}</div></div>
+          <div class="rt"><span class="price">${c.price_rub.toLocaleString('ru-RU')} ₽</span></div>`;
+        listEl.appendChild(card);
+      });
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:#FF8B8B; font-size:13px;">Не удалось загрузить курсы (backend не запущен?). ' + e.message + '</div>';
+    }
+  }
+  const MODULE_ICONS = {grammar:'📗', vocabulary:'🗂️', listening:'🎧', speaking:'🗣️', reading:'📖', writing:'✍️', pronunciation:'🔊'};
+  function openCourse(c){
+    document.getElementById('courseKicker').textContent = 'Уровень ' + c.code;
+    document.getElementById('courseTitle').textContent = c.title + ': ' + c.description;
+    document.getElementById('courseBuyBtn').textContent = 'ПРОДОЛЖИТЬ УРОК · ' + c.price_rub.toLocaleString('ru-RU') + ' ₽';
+    const modsEl = document.getElementById('courseModules');
+    modsEl.innerHTML = '';
+    c.modules.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'modrow';
+      row.innerHTML = `<div class="mi">${MODULE_ICONS[m.kind] || '📘'}</div>
+        <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${m.lesson_count} уроков</div></div>
+        <div class="ms">🔒</div>`;
+      modsEl.appendChild(row);
+    });
+    go('course');
+  }
+  loadCourses();
+
+  // ---- Финальный Reading-тест: реальная запись голоса + проверка через Gemini ----
+  const READING_PASSAGE = "The train to Manchester leaves platform 4 at half past nine every morning.";
+  const READING_QUESTION = "What time does the train leave, and from which platform?";
+
+  let mediaRecorder = null, audioChunks = [], isRecording = false;
+
+  async function toggleRec(){
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = onRecordingStop;
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('micBtn').classList.add('rec');
+        document.getElementById('micBtn').textContent = '⏹️';
+        document.getElementById('wave').classList.add('animate');
+        document.getElementById('micLabel').textContent = 'Идёт запись… нажми ещё раз, чтобы остановить';
+      } catch (e) {
+        document.getElementById('micLabel').textContent = 'Нет доступа к микрофону: ' + e.message;
+      }
+    } else {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      isRecording = false;
+    }
+  }
+
+  async function onRecordingStop(){
+    const btn = document.getElementById('micBtn');
+    const wave = document.getElementById('wave');
+    const label = document.getElementById('micLabel');
+    wave.classList.remove('animate');
+    btn.textContent = '⏳';
+    label.textContent = 'Эхо слушает и проверяет ответ…';
+
+    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    const form = new FormData();
+    form.append('audio', blob, 'answer.webm');
+    form.append('question', READING_QUESTION);
+    form.append('reference_text', READING_PASSAGE);
+
+    try {
+      const res = await fetch('/api/test/reading-check', {
+        method: 'POST',
+        headers: initData ? { 'X-Telegram-Init-Data': initData } : {},
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+
+      const panel = document.getElementById('aiPanel');
+      panel.innerHTML = `
+        <div class="transcript"><b>Распознанный ответ</b>"${data.transcript}"</div>
+        <div class="verdict ${data.is_correct ? '' : 'bad'}">${data.is_correct ? '✅ Ответ верный' : '❌ Ответ неточный'} · ${Math.round(data.accuracy_score)}%</div>
+        <div class="aiFeedback">${data.feedback}</div>`;
+      panel.classList.add('show');
+      document.getElementById('toResultsBtn').style.display = 'block';
+      document.getElementById('micWrap').style.display = 'none';
+    } catch (e) {
+      const panel = document.getElementById('aiPanel');
+      panel.innerHTML = `<div class="aiError">Не удалось получить оценку ИИ: ${e.message}.<br>Проверьте, что в .env указан GEMINI_API_KEY.</div>`;
+      panel.classList.add('show');
+      btn.textContent = '🎙️';
+      label.textContent = 'Нажми и попробуй снова';
+    }
+  }
+</script>
+</body>
+</html>
