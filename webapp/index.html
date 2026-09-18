@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
   *{box-sizing:border-box;}
   html,body{margin:0; height:100%;}
@@ -16,7 +16,7 @@
     background:#10151A; color:#F1F5F3;
     font-family:'Inter',system-ui,-apple-system,sans-serif;
   }
-  h1,h2,h3,.display{font-family:'Baloo 2','Inter',system-ui,sans-serif;}
+  h1,h2,h3,.display{font-family:'Nunito','Inter',system-ui,sans-serif;}
 
   .app{max-width:520px; margin:0 auto; position:relative; min-height:100vh;}
 
@@ -48,14 +48,14 @@
   .mascot-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:22px;}
   .bubble{
     background:#1A2129; border:1px solid #2C3742; border-radius:16px 16px 16px 4px;
-    padding:12px 14px; font:600 14.5px/1.4 'Baloo 2',sans-serif; color:#F1F5F3; max-width:320px;
+    padding:12px 14px; font:600 14.5px/1.4 'Nunito',sans-serif; color:#F1F5F3; max-width:320px;
   }
 
   .badge{
     display:inline-flex; align-items:center; gap:6px; font:800 10.5px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase;
     color:#5B9DFF; background:#131C2A; border:1px solid #223247; padding:5px 10px; border-radius:999px; margin-bottom:10px;
   }
-  .qtitle{font:700 19px/1.3 'Baloo 2',sans-serif; margin:0 0 20px; text-wrap:balance;}
+  .qtitle{font:700 19px/1.3 'Nunito',sans-serif; margin:0 0 20px; text-wrap:balance;}
 
   .imgrow{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
   .imgopt{
@@ -108,7 +108,7 @@
   .feedback.show{transform:translateY(0);}
   .feedback.ok{background:#0F2A1C; border-color:#1E9C5C;}
   .feedback.bad{background:#2A1414; border-color:#7A2E2E;}
-  .feedback .ftitle{display:flex; align-items:center; gap:8px; font:800 16px 'Baloo 2',sans-serif; margin-bottom:4px;}
+  .feedback .ftitle{display:flex; align-items:center; gap:8px; font:800 16px 'Nunito',sans-serif; margin-bottom:4px;}
   .feedback.ok .ftitle{color:#3DDC84;}
   .feedback.bad .ftitle{color:#FF8B8B;}
   .feedback .fsub{font:500 13px 'Inter',sans-serif; color:#B9C4CC; margin-bottom:12px;}
@@ -122,7 +122,7 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){.spin{animation:none;}}
 
-  .resultlevel{font:800 46px 'Baloo 2',sans-serif; color:#3DDC84; margin:6px 0 2px;}
+  .resultlevel{font:800 46px 'Nunito',sans-serif; color:#3DDC84; margin:6px 0 2px;}
   .skillrow{display:flex; align-items:center; gap:10px; width:100%; margin-bottom:10px;}
   .skillrow .sl{width:82px; text-align:left; font:600 12.5px 'Inter',sans-serif; color:#93A1AC; flex:none;}
   .skillrow .sb{flex:1; height:9px; border-radius:999px; background:#232B34; overflow:hidden;}
@@ -130,7 +130,7 @@
   .skillrow .sv{width:34px; text-align:right; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums; flex:none;}
 
   .apphead{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
-  .brand{display:flex; align-items:center; gap:8px; font:800 16px 'Baloo 2',sans-serif;}
+  .brand{display:flex; align-items:center; gap:8px; font:800 16px 'Nunito',sans-serif;}
   .brand img{width:26px; height:26px; object-fit:contain; flex:none;}
   .stat-pill{display:flex; align-items:center; gap:5px; background:#161C22; border:1px solid #2C3742; padding:6px 10px; border-radius:999px; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums;}
 
@@ -142,9 +142,9 @@
   .levelcard.locked{cursor:default; opacity:.5;}
   .levelcard .lockTag{font:800 12.5px 'Inter',sans-serif; color:#6C7883;}
   .levelcard .lv{
-    width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Baloo 2',sans-serif; flex:none; color:#0A1F13; background:#2C3742;
+    width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Nunito',sans-serif; flex:none; color:#0A1F13; background:#2C3742;
   }
-  .levelcard .tt{font:700 14.5px 'Baloo 2',sans-serif; margin-bottom:2px;}
+  .levelcard .tt{font:700 14.5px 'Nunito',sans-serif; margin-bottom:2px;}
   .levelcard .ds{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
   .levelcard .rt{margin-left:auto; text-align:right; flex:none;}
   .levelcard .price{font:800 12.5px 'Inter',sans-serif; color:#3DDC84;}
@@ -155,7 +155,7 @@
 
   .coursehead{margin-bottom:16px;}
   .coursehead .kicker{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#3DDC84; margin-bottom:6px;}
-  .coursehead h2{font:800 20px 'Baloo 2',sans-serif; margin:0 0 8px; text-wrap:balance;}
+  .coursehead h2{font:800 20px 'Nunito',sans-serif; margin:0 0 8px; text-wrap:balance;}
   .instructor{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
   .avatar{width:34px; height:34px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:16px; flex:none;}
   .instructor .nm{font:700 12.5px 'Inter',sans-serif;}
@@ -167,12 +167,12 @@
   .modrow .mc{font:500 11px 'Inter',sans-serif; color:#93A1AC;}
   .modrow .ms{margin-left:auto; font-size:15px;}
 
-  .fillline{font:600 16px/1.6 'Baloo 2',sans-serif; margin-bottom:18px;}
+  .fillline{font:600 16px/1.6 'Nunito',sans-serif; margin-bottom:18px;}
   .fillline .blank{display:inline-block; min-width:80px; border-bottom:2px solid #3DDC84; text-align:center; color:#3DDC84; padding:0 4px;}
 
   .passage{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:14px; font:500 13.5px/1.6 'Inter',sans-serif; color:#D6DEE3; margin-bottom:14px;}
   .passage b{color:#F1F5F3;}
-  .askline{font:700 15px/1.4 'Baloo 2',sans-serif; margin-bottom:22px;}
+  .askline{font:700 15px/1.4 'Nunito',sans-serif; margin-bottom:22px;}
 
   .mic-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:16px;}
   .mic-btn{
@@ -200,7 +200,7 @@
   .aiPanel.show{display:block;}
   .transcript{background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:12px; font:500 13px/1.5 'Inter',sans-serif; color:#D6DEE3; margin-bottom:10px;}
   .transcript b{color:#5B9DFF; display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px;}
-  .verdict{display:flex; align-items:center; gap:8px; font:800 14px 'Baloo 2',sans-serif; color:#3DDC84; margin-bottom:8px;}
+  .verdict{display:flex; align-items:center; gap:8px; font:800 14px 'Nunito',sans-serif; color:#3DDC84; margin-bottom:8px;}
   .verdict.bad{color:#FF8B8B;}
   .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:#93A1AC;}
   .aiError{color:#FF8B8B; font:600 12.5px/1.5 'Inter',sans-serif;}
@@ -209,21 +209,21 @@
     background:linear-gradient(160deg,#152019,#161C22); border:1.5px solid #3DDC84; border-radius:16px; padding:20px; text-align:center; width:100%; margin:14px 0;
   }
   .certcard .cm{font-size:30px; margin-bottom:8px;}
-  .certcard .ct{font:800 15px 'Baloo 2',sans-serif; margin-bottom:4px;}
+  .certcard .ct{font:800 15px 'Nunito',sans-serif; margin-bottom:4px;}
   .certcard .cd{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
 
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
   .pavatar{width:56px; height:56px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
   .pavatar img{width:100%; height:100%; object-fit:cover;}
-  .pname{font:800 16px 'Baloo 2',sans-serif;}
+  .pname{font:800 16px 'Nunito',sans-serif;}
   .psub{font:500 12px 'Inter',sans-serif; color:#93A1AC;}
   .statgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;}
   .statcard{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:12px; text-align:center;}
-  .statcard .sv2{font:800 20px 'Baloo 2',sans-serif; font-variant-numeric:tabular-nums;}
+  .statcard .sv2{font:800 20px 'Nunito',sans-serif; font-variant-numeric:tabular-nums;}
   .statcard .sl2{font:600 10.5px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:#93A1AC; margin-top:2px;}
   .sectiontitle{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#6C7883; margin:4px 0 10px;}
   .mycourse{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #202830;}
-  .mycourse .ic{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font:800 12px 'Baloo 2',sans-serif; color:#0A1F13; flex:none;}
+  .mycourse .ic{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font:800 12px 'Nunito',sans-serif; color:#0A1F13; flex:none;}
   .mycourse .tt{font:700 12.5px 'Inter',sans-serif;}
   .mycourse .pb{height:6px; border-radius:999px; background:#232B34; margin-top:5px; overflow:hidden;}
   .mycourse .pb i{display:block; height:100%; background:#3DDC84;}
@@ -366,7 +366,7 @@
   <section class="screen" data-screen="lessonReader">
     <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i id="readerProgress" style="width:0%"></i></div></div>
     <div class="badge" id="readerBadge" style="color:#5B9DFF;">Module · Course</div>
-    <div style="font:800 20px 'Baloo 2',sans-serif; margin-bottom:4px;" id="readerTitle"></div>
+    <div style="font:800 20px 'Nunito',sans-serif; margin-bottom:4px;" id="readerTitle"></div>
     <div style="font:500 13px 'Inter',sans-serif; color:#93A1AC; margin-bottom:16px;" id="readerSubtitle"></div>
     <div class="readerContent" id="readerContent"></div>
     <div class="spacer"></div>
@@ -408,7 +408,7 @@
   <!-- 12: final results / certificate -->
   <section class="screen" data-screen="finalResult">
     <div class="center-col" style="padding-top:6px;">
-      <div style="font-size:16px; font-weight:800; font-family:'Baloo 2';">Тест пройден!</div>
+      <div style="font-size:16px; font-weight:800; font-family:'Nunito';">Тест пройден!</div>
       <div class="resultlevel" style="font-size:38px;">89%</div>
       <div style="width:100%; margin:10px 0 6px;">
         <div class="skillrow"><div class="sl">Reading</div><div class="sb"><i style="width:92%; background:#3DDC84;"></i></div><div class="sv">92%</div></div>
