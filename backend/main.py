@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from backend.config import BOT_TOKEN, WEBAPP_DIR
+from backend.config import BOT_TOKEN, DISABLE_BOT_POLLING, WEBAPP_DIR
 from backend.database import SessionLocal, init_db
 from backend.routers import courses, lessons, reading_test
 from backend.seed_data import seed_if_empty
@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     async with SessionLocal() as session:
         await seed_if_empty(session)
 
-    bot_task = asyncio.create_task(_run_bot_forever()) if BOT_TOKEN else None
+    bot_task = asyncio.create_task(_run_bot_forever()) if BOT_TOKEN and not DISABLE_BOT_POLLING else None
     try:
         yield
     finally:

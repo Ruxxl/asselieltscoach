@@ -32,6 +32,7 @@ class CourseOut(BaseModel):
     price_kzt: int
     order: int
     modules: list[ModuleOut] = []
+    owned: bool = False  # куплен ли курс текущим пользователем (по X-Telegram-Init-Data)
 
     class Config:
         from_attributes = True
@@ -75,3 +76,7 @@ class ReadingCheckResult(BaseModel):
     is_correct: bool
     accuracy_score: float
     feedback: str
+
+
+class PurchaseResult(BaseModel):
+    owned: bool

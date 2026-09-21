@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
@@ -83,6 +83,24 @@ class LessonQuestion(Base):
     correct_option: Mapped[str] = mapped_column(String(64))
 
     lesson: Mapped["Lesson"] = relationship(back_populates="questions")
+
+
+class CoursePurchase(Base):
+    """Факт покупки курса — реальная запись владения, не клиентская заглушка.
+
+    Оплата сейчас — мгновенная заглушка без реального эквайринга (см. Payment ниже
+    и бэкенд-задачу подключить провайдера, напр. ioka.kz); эта таблица уже даёт
+    настоящую серверную проверку доступа к урокам независимо от способа оплаты.
+    """
+
+    __tablename__ = "course_purchases"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_course_purchase_user_course"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    price_paid: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class TestAttempt(Base):
