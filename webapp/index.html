@@ -1299,7 +1299,24 @@
     const { Room, RoomEvent, Track } = LivekitClient;
     speakingRoom = new Room();
 
+    // Бесплатный агент-сервис (Render free) иногда не успевает поднять воркер (холодный
+    // старт/перезапуск) — без этого таймаута экран звонка молча "зависал бы" навсегда,
+    // если экзаменатор так и не зашёл в комнату.
+    let agentJoined = false;
+    let agentJoinTimer = null;
+
+    function onAgentJoined(){
+      if (agentJoined) return;
+      agentJoined = true;
+      if (agentJoinTimer) { clearTimeout(agentJoinTimer); agentJoinTimer = null; }
+      setSpeakingStatus('Зажми кнопку внизу и говори');
+      const holdBtn = document.getElementById('speakingHoldBtn');
+      if (holdBtn) holdBtn.disabled = false;
+    }
+
+    speakingRoom.on(RoomEvent.ParticipantConnected, onAgentJoined);
     speakingRoom.on(RoomEvent.TrackSubscribed, (track) => {
+      onAgentJoined();
       if (track.kind === Track.Kind.Audio) {
         const el = track.attach();
         el.autoplay = true;
@@ -1313,6 +1330,7 @@
       orb.classList.toggle('speaking', agentSpeaking);
     });
     speakingRoom.on(RoomEvent.Disconnected, () => {
+      if (agentJoinTimer) { clearTimeout(agentJoinTimer); agentJoinTimer = null; }
       onSpeakingRoomEnded();
     });
 
@@ -1328,9 +1346,16 @@
     try {
       await speakingRoom.connect(livekitUrl, token);
       await speakingRoom.localParticipant.setMicrophoneEnabled(false); // push-to-talk — включаем только пока зажата кнопка
-      setSpeakingStatus('Зажми кнопку внизу и говори');
-      const holdBtn = document.getElementById('speakingHoldBtn');
-      holdBtn.disabled = false;
+      if (speakingRoom.remoteParticipants.size > 0) {
+        onAgentJoined();
+      } else {
+        setSpeakingStatus('Жду подключения экзаменатора…');
+        agentJoinTimer = setTimeout(() => {
+          if (agentJoined || !speakingRoom) return;
+          setSpeakingStatus('⚠️ Экзаменатор не подключился. Попробуй завершить и начать заново через минуту.');
+          document.getElementById('speakingHoldBtn').disabled = true;
+        }, 20000);
+      }
     } catch (e) {
       setSpeakingStatus('Не удалось подключиться: ' + e.message);
       document.getElementById('speakingEndBtn').disabled = true;
