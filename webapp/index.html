@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.22.3/dist/livekit-client.umd.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
   :root{
@@ -285,7 +286,43 @@
   .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:var(--text-secondary);}
   .aiError{color:var(--red); font:600 12.5px/1.5 'Inter',sans-serif;}
 
-  .speakingStatus{text-align:center; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-top:8px;}
+  .speakingStatus{text-align:center; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-top:14px; margin-bottom:14px;}
+  .speakingOrb{
+    position:relative; width:116px; height:116px; border-radius:50%; margin:10px auto 0; flex:none;
+    background:radial-gradient(circle at 35% 30%, var(--accent-strong), var(--accent) 70%);
+    box-shadow:0 10px 30px rgba(90,79,217,.3);
+    transition:transform .4s ease, box-shadow .4s ease;
+    animation:orbBreathe 3.2s ease-in-out infinite;
+  }
+  .speakingOrb::before{
+    content:''; position:absolute; inset:-16px; border-radius:50%; z-index:-1;
+    background:conic-gradient(from 0deg, var(--accent-strong), var(--blue), var(--accent-strong), var(--accent));
+    filter:blur(10px); opacity:0; transition:opacity .4s ease; animation:orbSpin 5s linear infinite;
+  }
+  .speakingOrb.speaking{
+    animation:orbPulse 1.4s ease-in-out infinite;
+    box-shadow:0 16px 46px rgba(90,79,217,.55);
+  }
+  .speakingOrb.speaking::before{opacity:.5;}
+  @keyframes orbBreathe{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
+  @keyframes orbPulse{0%,100%{transform:scale(1.03);}50%{transform:scale(1.12);}}
+  @keyframes orbSpin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){.speakingOrb, .speakingOrb.speaking, .speakingOrb::before{animation:none;}}
+
+  .holdTalkBtn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:15px 20px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); box-shadow:var(--shadow-card);
+    font:600 14px 'Inter',sans-serif; color:var(--text-secondary); cursor:pointer;
+    -webkit-user-select:none; user-select:none; touch-action:none; transition:background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .holdTalkBtn .kbd{
+    font:700 12px 'Inter',sans-serif; color:var(--text); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:8px; padding:4px 10px;
+  }
+  .holdTalkBtn.active{background:var(--accent-tint); border-color:var(--accent-strong); color:var(--accent); transform:scale(0.98);}
+  .holdTalkBtn.active .kbd{background:var(--accent-strong); border-color:var(--accent-strong); color:var(--on-accent);}
+  .holdTalkBtn[disabled]{opacity:.5; pointer-events:none;}
 
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
   .pavatar{width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
@@ -489,17 +526,18 @@
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingStartBtn" onclick="startSpeakingSession()">НАЧАТЬ</button></div>
   </section>
 
-  <!-- 17: speaking practice — пошаговый диалог с ИИ-экзаменатором (см. backend/services/speaking.py):
-       ученик записывает ответ голосом -> Gemini расшифровывает + отвечает текстом ->
-       ответ озвучивается браузерным speechSynthesis. Не live-аудио стрим. -->
+  <!-- 17: speaking practice — живой голосовой звонок с ИИ-экзаменатором через LiveKit
+       (см. backend/services/speaking_agent.py: LiveKit Agents + Deepgram STT/TTS + Groq LLM).
+       Микрофон стримится в комнату непрерывно, как настоящий звонок — без ручной записи хода. -->
   <section class="screen" data-screen="speakingSession">
     <div class="topbar"><button class="xbtn" onclick="exitSpeakingSession()">✕</button><div class="badge" id="speakingSessionBadge">Speaking</div></div>
+    <div class="speakingOrb" id="speakingOrb"></div>
+    <div class="speakingStatus" id="speakingStatus">Подключаюсь…</div>
     <div class="chatWrap" id="speakingTranscript"></div>
-    <div class="mic-wrap" style="flex:none; padding:14px 0 4px;">
-      <button class="mic-btn" id="speakingMicBtn" onclick="toggleSpeakingMic()">🎙️</button>
-      <div class="speakingStatus" id="speakingStatus">Нажми и ответь голосом</div>
+    <div class="bottombar" style="flex-direction:column; gap:10px;">
+      <button class="holdTalkBtn" id="speakingHoldBtn" disabled>Зажми <span class="kbd">и говори</span></button>
+      <button class="btn btn-ghost btn-wide" id="speakingEndBtn" onclick="endSpeakingCall()">ЗАВЕРШИТЬ</button>
     </div>
-    <div class="bottombar"><button class="btn btn-ghost btn-wide" id="speakingEndBtn" onclick="finishSpeakingCall()">ЗАВЕРШИТЬ ДОСРОЧНО</button></div>
   </section>
 
   <!-- 18: speaking practice — отчёт с оценкой по критериям IELTS -->
@@ -598,7 +636,7 @@
 
   function go(id){
     const prevScreen = document.querySelector('.screen.active')?.dataset.screen;
-    if (prevScreen === 'speakingSession' && id !== 'speakingSession') stopSpeakingMic();
+    if (prevScreen === 'speakingSession' && id !== 'speakingSession') abandonSpeakingCall();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
     const showTabbar = TABBAR_SCREENS.has(id);
     document.body.classList.toggle('has-tabbar', showTabbar);
@@ -1178,11 +1216,12 @@
   renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
   renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
 
-  // ---- Speaking Practice: пошаговый диалог с ИИ-экзаменатором (не live-аудио) ----
-  // Каждый ход: запись голоса (MediaRecorder, как в createVoiceTest) -> POST аудио на
-  // /api/speaking/{id}/turn -> Gemini одним запросом расшифровывает + отвечает текстом ->
-  // ответ озвучивается браузерным speechSynthesis (бесплатно, без внешнего API).
-  // См. backend/routers/speaking.py и backend/services/speaking.py.
+  // ---- Speaking Practice: живой голосовой звонок с ИИ-экзаменатором через LiveKit ----
+  // Микрофон стримится в LiveKit-комнату непрерывно (livekit-client, WebRTC) — без ручной
+  // записи хода. Агент (backend/services/speaking_agent.py: LiveKit Agents + Deepgram
+  // STT/TTS + Groq LLM) сам слышит, отвечает голосом и решает, когда закончить часть.
+  // Оценка по 4 критериям IELTS считается на бэкенде, когда комната закрывается.
+  // См. backend/routers/speaking.py.
 
   const SPEAKING_PARTS = [
     { id: 'part1', icon: '1️⃣', title: 'IELTS Speaking Part 1', desc: 'Короткие вопросы о себе · ~5 мин' },
@@ -1192,6 +1231,7 @@
 
   let speakingChoice = { part: 'part1' };
   let currentSpeakingSessionId = null;
+  let speakingRoom = null;
 
   function renderSpeakingSetup(){
     const presetsEl = document.getElementById('speakingPresets');
@@ -1224,10 +1264,12 @@
       document.getElementById('speakingSessionBadge').textContent = partLabel;
       document.getElementById('speakingTranscript').innerHTML = '';
       document.getElementById('speakingEndBtn').disabled = false;
-      appendSpeakingBubble('ai', data.ai_message);
-      speakSpeakingText(data.ai_message);
-      setSpeakingStatus('Нажми и ответь голосом');
+      const holdBtn = document.getElementById('speakingHoldBtn');
+      holdBtn.disabled = true;
+      holdBtn.classList.remove('active');
+      document.getElementById('speakingOrb')?.classList.remove('speaking');
       go('speakingSession');
+      await connectSpeakingRoom(data.livekit_url, data.token);
     } catch (e) {
       errEl.textContent = 'Не удалось начать: ' + e.message;
       errEl.style.display = 'block';
@@ -1246,106 +1288,141 @@
     wrap.scrollTop = wrap.scrollHeight;
   }
 
-  function speakSpeakingText(text){
-    if (!window.speechSynthesis || !text) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    window.speechSynthesis.speak(utter);
-  }
-
   function setSpeakingStatus(text){
     const el = document.getElementById('speakingStatus');
     if (el) el.textContent = text;
   }
 
-  // ---- Запись хода ученика — тот же MediaRecorder-паттерн, что и в createVoiceTest ----
-  let speakingRecorder = null, speakingAudioChunks = [], speakingIsRecording = false;
+  // ---- Живой звонок: LiveKit комната, микрофон стримится непрерывно ----
+  async function connectSpeakingRoom(livekitUrl, token){
+    setSpeakingStatus('Подключаюсь…');
+    const { Room, RoomEvent, Track } = LivekitClient;
+    speakingRoom = new Room();
 
-  async function toggleSpeakingMic(){
-    const btn = document.getElementById('speakingMicBtn');
-    if (!speakingIsRecording) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        speakingAudioChunks = [];
-        speakingRecorder = new MediaRecorder(stream);
-        speakingRecorder.ondataavailable = e => speakingAudioChunks.push(e.data);
-        speakingRecorder.onstop = onSpeakingRecordingStop;
-        speakingRecorder.start();
-        speakingIsRecording = true;
-        btn.classList.add('rec');
-        btn.textContent = '⏹️';
-        setSpeakingStatus('Идёт запись… нажми ещё раз, чтобы остановить');
-      } catch (e) {
-        setSpeakingStatus('Нет доступа к микрофону: ' + e.message);
+    speakingRoom.on(RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind === Track.Kind.Audio) {
+        const el = track.attach();
+        el.autoplay = true;
+        document.body.appendChild(el);
       }
-    } else {
-      speakingRecorder.stop();
-      speakingRecorder.stream.getTracks().forEach(t => t.stop());
-      speakingIsRecording = false;
-    }
-  }
-
-  async function onSpeakingRecordingStop(){
-    const btn = document.getElementById('speakingMicBtn');
-    btn.classList.remove('rec');
-    btn.textContent = '⏳';
-    setSpeakingStatus('Ассель слушает и отвечает…');
-
-    const blob = new Blob(speakingAudioChunks, { type: speakingRecorder.mimeType || 'audio/webm' });
-    const form = new FormData();
-    form.append('audio', blob, 'turn.webm');
+    });
+    speakingRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+      const orb = document.getElementById('speakingOrb');
+      if (!orb) return;
+      const agentSpeaking = speakers.some(p => p.identity !== speakingRoom.localParticipant.identity);
+      orb.classList.toggle('speaking', agentSpeaking);
+    });
+    speakingRoom.on(RoomEvent.Disconnected, () => {
+      onSpeakingRoomEnded();
+    });
 
     try {
-      const res = await fetch(`/api/speaking/${currentSpeakingSessionId}/turn`, {
-        method: 'POST', headers: authHeaders(), body: form,
+      speakingRoom.registerTextStreamHandler('lk.transcription', async (reader, participantInfo) => {
+        const text = await reader.readAll();
+        if (!text) return;
+        const isLocal = participantInfo.identity === speakingRoom.localParticipant.identity;
+        appendSpeakingBubble(isLocal ? 'user' : 'ai', text);
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-      if (data.student_said) appendSpeakingBubble('user', data.student_said);
-      appendSpeakingBubble('ai', data.ai_message);
-      speakSpeakingText(data.ai_message);
-      btn.textContent = '🎙️';
-      if (data.finished) {
-        setSpeakingStatus('Часть завершена — считаю оценку…');
-        document.getElementById('speakingEndBtn').disabled = true;
-        finishSpeakingCall();
-      } else {
-        setSpeakingStatus('Нажми и ответь голосом');
-      }
+    } catch (e) { /* субтитры — необязательная часть, звонок и без них работает */ }
+
+    try {
+      await speakingRoom.connect(livekitUrl, token);
+      await speakingRoom.localParticipant.setMicrophoneEnabled(false); // push-to-talk — включаем только пока зажата кнопка
+      setSpeakingStatus('Зажми кнопку внизу и говори');
+      const holdBtn = document.getElementById('speakingHoldBtn');
+      holdBtn.disabled = false;
     } catch (e) {
-      btn.textContent = '🎙️';
-      setSpeakingStatus('⚠️ ' + e.message);
+      setSpeakingStatus('Не удалось подключиться: ' + e.message);
+      document.getElementById('speakingEndBtn').disabled = true;
     }
   }
 
-  function stopSpeakingMic(){
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    if (speakingIsRecording && speakingRecorder) {
-      try { speakingRecorder.stop(); speakingRecorder.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
-      speakingIsRecording = false;
+  // ---- Push-to-talk: зажал — микрофон включён, отпустил — выключен (как в референсе) ----
+  let speakingHoldActive = false;
+
+  async function speakingHoldStart(e){
+    e.preventDefault();
+    if (speakingHoldActive || !speakingRoom) return;
+    speakingHoldActive = true;
+    const btn = document.getElementById('speakingHoldBtn');
+    btn.classList.add('active');
+    setSpeakingStatus('Слушаю…');
+    try {
+      await speakingRoom.localParticipant.setMicrophoneEnabled(true);
+    } catch (e) { /* ignore — кнопка отпустится, попробуем снова на следующем нажатии */ }
+  }
+
+  async function speakingHoldEnd(e){
+    if (e) e.preventDefault();
+    if (!speakingHoldActive) return;
+    speakingHoldActive = false;
+    const btn = document.getElementById('speakingHoldBtn');
+    btn.classList.remove('active');
+    setSpeakingStatus('Зажми кнопку внизу и говори');
+    if (speakingRoom) {
+      try { await speakingRoom.localParticipant.setMicrophoneEnabled(false); } catch (e) {}
     }
+  }
+
+  (function initSpeakingHoldBtn(){
+    const btn = document.getElementById('speakingHoldBtn');
+    if (!btn) return;
+    btn.addEventListener('mousedown', speakingHoldStart);
+    btn.addEventListener('touchstart', speakingHoldStart, { passive: false });
+    btn.addEventListener('mouseup', speakingHoldEnd);
+    btn.addEventListener('mouseleave', speakingHoldEnd);
+    btn.addEventListener('touchend', speakingHoldEnd);
+    btn.addEventListener('touchcancel', speakingHoldEnd);
+  })();
+
+  function onSpeakingRoomEnded(){
+    const wasActive = document.querySelector('.screen.active')?.dataset.screen === 'speakingSession';
+    speakingRoom = null;
+    speakingHoldActive = false;
+    document.getElementById('speakingHoldBtn')?.classList.remove('active');
+    if (document.getElementById('speakingHoldBtn')) document.getElementById('speakingHoldBtn').disabled = true;
+    if (wasActive && currentSpeakingSessionId) {
+      go('speakingReport');
+      pollSpeakingReport(currentSpeakingSessionId);
+    }
+  }
+
+  function endSpeakingCall(){
+    document.getElementById('speakingEndBtn').disabled = true;
+    document.getElementById('speakingHoldBtn').disabled = true;
+    setSpeakingStatus('Завершаю и считаю оценку…');
+    if (speakingRoom) speakingRoom.disconnect();
+  }
+
+  function abandonSpeakingCall(){
+    speakingHoldActive = false;
+    document.getElementById('speakingHoldBtn')?.classList.remove('active');
+    if (speakingRoom) { speakingRoom.disconnect(); speakingRoom = null; }
   }
 
   function exitSpeakingSession(){
-    stopSpeakingMic();
+    abandonSpeakingCall();
     go('speaking');
   }
 
-  async function finishSpeakingCall(){
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    go('speakingReport');
+  async function pollSpeakingReport(sessionId){
     const reportEl = document.getElementById('speakingReportBody');
     reportEl.innerHTML = '<div class="hint">Считаю оценку…</div>';
-    try {
-      const res = await fetch(`/api/speaking/${currentSpeakingSessionId}/finish`, { method: 'POST', headers: authHeaders() });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-      renderSpeakingReport(data);
-    } catch (e) {
-      reportEl.innerHTML = `<div class="aiError">${escapeHtml(e.message)}</div>`;
+    for (let i = 0; i < 30; i++) {
+      try {
+        const res = await fetch(`/api/speaking/${sessionId}`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'done') { renderSpeakingReport(data); return; }
+          if (data.status === 'error') {
+            reportEl.innerHTML = `<div class="aiError">${escapeHtml(data.error_message || 'Не удалось получить оценку.')}</div>`;
+            return;
+          }
+        }
+      } catch (e) { /* сеть моргнула — просто попробуем ещё раз */ }
+      await new Promise(r => setTimeout(r, 2000));
     }
+    reportEl.innerHTML = '<div class="aiError">Не удалось дождаться оценки. Загляни в отчёт ещё раз чуть позже.</div>';
   }
 
   function renderSpeakingReport(data){

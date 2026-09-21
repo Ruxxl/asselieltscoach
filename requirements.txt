@@ -1,4 +1,8 @@
-aiogram==3.15.0
+aiogram==3.16.0
+# Явный пин: aiogram допускает aiohttp<3.12,>=3.9.0, но pip сам не подтягивает более
+# новую совместимую версию если старая уже "satisfies" диапазон — а livekit-agents
+# на рантайме требует ClientSession(proxy=...), появившийся только в aiohttp 3.11.
+aiohttp==3.11.11
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
@@ -8,3 +12,7 @@ python-dotenv==1.0.1
 google-generativeai==0.8.3
 python-multipart==0.0.20
 pydantic>=2.7,<2.10
+
+# Speaking Practice: живой голосовой ИИ-экзаменатор (backend/services/speaking_agent.py)
+livekit-agents[deepgram,groq,silero]==1.8.2
+livekit-api==1.2.1

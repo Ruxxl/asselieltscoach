@@ -22,3 +22,13 @@ TEACHER_CHAT_ID = int(os.environ.get("TEACHER_CHAT_ID", "998292747"))
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/assel_ielts.db")
 WEBAPP_DIR = BASE_DIR / "webapp"
 UPLOADS_DIR = BASE_DIR / "uploads"
+
+# Live-голосовой ИИ-экзаменатор для Speaking Practice (backend/services/speaking_agent.py):
+# LiveKit Cloud (free Build tier) для WebRTC-транспорта + Deepgram ($200 free credit, STT+TTS)
+# + Groq (free tier LLM) — вместо Gemini Live/preview-моделей, которые дважды подводили
+# квотами в этом проекте (см. память сессии). Все три — бесплатные тиры без карты.
+LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "")
+LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY", "")
+LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "")
+DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")

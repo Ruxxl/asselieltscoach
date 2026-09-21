@@ -19,3 +19,13 @@ services:
         value: "998292747"
       - key: DATABASE_URL
         value: sqlite+aiosqlite:///./echo_english.db
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

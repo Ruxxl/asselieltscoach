@@ -88,13 +88,8 @@ class SpeakingStartRequest(BaseModel):
 
 class SpeakingStartResult(BaseModel):
     session_id: int
-    ai_message: str  # первая реплика экзаменатора — открывающий вопрос "о чём поговорим?"
-
-
-class SpeakingTurnResult(BaseModel):
-    student_said: str
-    ai_message: str
-    finished: bool
+    livekit_url: str
+    token: str  # JWT для подключения браузера к LiveKit-комнате (livekit-client)
 
 
 class SpeakingSessionOut(BaseModel):

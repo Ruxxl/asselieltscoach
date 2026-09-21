@@ -24,18 +24,35 @@ async def _run_bot_forever() -> None:
         logger.exception("Bot polling stopped unexpectedly")
 
 
+async def _run_speaking_agent_forever() -> None:
+    # Та же причина, что и у бота выше: LiveKit Agents-воркер живёт в этом же процессе,
+    # а не отдельным Render-сервисом. job_executor_type=THREAD (см. speaking_agent.py)
+    # держит job'ы внутри процесса, а не в отдельных подпроцессах.
+    from backend.services.speaking_agent import server
+
+    try:
+        await server.run()
+    except Exception:
+        logger.exception("Speaking agent worker stopped unexpectedly")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     async with SessionLocal() as session:
         await seed_if_empty(session)
 
+    from backend.services.speaking_agent import is_configured as speaking_agent_configured
+
     bot_task = asyncio.create_task(_run_bot_forever()) if BOT_TOKEN and not DISABLE_BOT_POLLING else None
+    agent_task = asyncio.create_task(_run_speaking_agent_forever()) if speaking_agent_configured else None
     try:
         yield
     finally:
         if bot_task:
             bot_task.cancel()
+        if agent_task:
+            agent_task.cancel()
 
 
 app = FastAPI(title="Assel IELTS API", lifespan=lifespan)

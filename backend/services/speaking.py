@@ -1,11 +1,6 @@
-"""Speaking Practice: пошаговый диалог с ИИ-экзаменатором (не live-аудио стрим).
-
-Каждый ход ученика — один аудио-клип, отправленный ОДНИМ мультимодальным запросом
-в Gemini (тот же проверенный паттерн, что и в backend/services/gemini.py для
-reading-check): модель одновременно (1) расшифровывает речь ученика, (2) отвечает
-как экзаменатор — помогая со словами, если у ученика явный пробел, (3) решает,
-закончена ли эта часть. Обычный текстовый/мультимодальный запрос на ход — надёжнее
-и не зависит от квот preview-live-моделей (см. историю с gemini-3.6-flash/2.5-flash-lite).
+"""Speaking Practice: общая логика ИИ-экзаменатора, используемая живым голосовым агентом
+(backend/services/speaking_agent.py, LiveKit Agents + Deepgram + Groq) — персона/инструкции
+экзаменатора и финальная оценка по 4 критериям IELTS.
 """
 
 import json
@@ -36,78 +31,25 @@ _PART_GUIDANCE = {
 }
 
 
-def _system_instruction(part: str) -> str:
+def build_examiner_instructions(part: str) -> str:
     guidance = _PART_GUIDANCE.get(part, _PART_GUIDANCE["part1"])
-    return f"""You are Assel, a friendly but professional IELTS Speaking examiner running a practice \
+    return f"""You are Assel, a friendly but professional IELTS Speaking examiner having a real-time voice \
 conversation with a student, one topic at a time. {guidance}
 
 Rules:
 - Speak only in English, at a natural conversational pace.
-- Say or ask ONE thing at a time — keep your own turns short, you are the examiner, not the one being tested.
+- Say or ask ONE thing at a time, and keep your own turns short — you are the examiner, not the one being \
+tested. Wait for the student to fully finish speaking before you reply.
 - If the student's answer shows a clear gap — a wrong word, an awkward phrase, or they explicitly ask how \
 to say something — briefly and naturally give them the correct English word or phrase (just a few words), \
 then continue the conversation. Don't turn this into a long grammar lecture.
 - After a reasonable number of exchanges for this part (roughly 4-5 turns, or the long turn plus follow-ups \
-for Part 2), wrap up with one short, friendly closing line thanking the student, and mark the conversation \
-as finished.
+for Part 2), wrap up with one short, friendly closing line thanking the student for practicing.
 """
 
 
 def _history_to_text(history: list[dict]) -> str:
     return "\n".join(f"{'Student' if t['speaker'] == 'user' else 'Examiner'}: {t['text']}" for t in history)
-
-
-async def start_conversation(part: str) -> dict:
-    """Первая реплика экзаменатора — до того, как ученик вообще что-то сказал."""
-    if not GEMINI_API_KEY:
-        raise GeminiNotConfigured(
-            "GEMINI_API_KEY не задан в .env. Получить бесплатный ключ: https://aistudio.google.com/apikey"
-        )
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel(GEMINI_MODEL, system_instruction=_system_instruction(part))
-    response = await model.generate_content_async(
-        "(Greet the student briefly in one short sentence and ask what they'd like to talk about today. "
-        'Respond STRICTLY as JSON, no markdown: {"examiner_reply": "..."})',
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
-    return {"ai_message": data.get("examiner_reply") or "Hi! What would you like to talk about today?"}
-
-
-async def continue_conversation(part: str, history: list[dict], audio_bytes: bytes, mime_type: str) -> dict:
-    """Один ход: аудио-ответ ученика -> {student_said, ai_message, finished}."""
-    if not GEMINI_API_KEY:
-        raise GeminiNotConfigured(
-            "GEMINI_API_KEY не задан в .env. Получить бесплатный ключ: https://aistudio.google.com/apikey"
-        )
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel(GEMINI_MODEL, system_instruction=_system_instruction(part))
-
-    prompt = f"""Conversation so far:
-{_history_to_text(history) or "(nothing yet — this is the student's first answer)"}
-
-The attached audio is the student's spoken answer to your last message. Listen to it, then:
-1. Transcribe what the student said, in English. If the audio is silent or unintelligible, say so honestly \
-instead of guessing.
-2. Give your next reply as the examiner (see your instructions — help with any clear word/phrase gaps, then \
-continue naturally).
-3. Decide whether this part of the practice should now finish.
-
-Respond STRICTLY as JSON, no markdown:
-{{"student_said": "...", "examiner_reply": "...", "finished": true/false}}
-"""
-    response = await model.generate_content_async(
-        [{"mime_type": mime_type, "data": audio_bytes}, prompt],
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
-    return {
-        "student_said": data.get("student_said", ""),
-        "ai_message": data.get("examiner_reply", ""),
-        "finished": bool(data.get("finished", False)),
-    }
 
 
 _PART_LABELS = {
