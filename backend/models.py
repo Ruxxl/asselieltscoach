@@ -145,6 +145,46 @@ class TestAnswer(Base):
     attempt: Mapped["TestAttempt"] = relationship(back_populates="answers")
 
 
+class NewsPost(Base):
+    """Новость от преподавателя — публикуется командой /news в боте (см. bot/main.py)."""
+
+    __tablename__ = "news_posts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ChatMessage(Base):
+    """Сообщение в переписке ученика с преподавателем ("Обратиться к преподавателю").
+
+    telegram_message_id — id сообщения-уведомления, отправленного преподавателю в Telegram
+    (для sender='student'), по которому бот находит нужного ученика, когда преподаватель
+    отвечает Reply-ом в Telegram (см. bot/main.py).
+    """
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    sender: Mapped[str] = mapped_column(String(16))  # student / teacher
+    text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    voice_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    telegram_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class AppSettings(Base):
+    """Единственная строка (id=1) с рантайм-конфигом, который нельзя знать заранее —
+    например numeric id преподавателя в Telegram, узнаваемый только когда он сам
+    напишет боту (username -> id нельзя резолвить через Bot API заранее)."""
+
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_chat_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
 class Payment(Base):
     __tablename__ = "payments"
 

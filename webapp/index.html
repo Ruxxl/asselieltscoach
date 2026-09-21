@@ -66,6 +66,42 @@
 
   .soonTag{font:800 10px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2); padding:3px 8px; border-radius:999px;}
 
+  .newsCard{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; box-shadow:var(--shadow-card);}
+  .newsCard .txt{font:500 13.5px/1.55 'Inter',sans-serif; color:var(--text); white-space:pre-wrap;}
+  .newsCard .date{font:600 11px 'Inter',sans-serif; color:var(--text-muted); margin-top:8px;}
+
+  .chatWrap{flex:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-bottom:8px;}
+  .chatBubble{max-width:82%; padding:10px 13px; border-radius:16px; font:500 13.5px/1.5 'Inter',sans-serif; white-space:pre-wrap;}
+  .chatBubble.student{align-self:flex-end; background:var(--accent-strong); color:var(--on-dark); border-bottom-right-radius:4px;}
+  .chatBubble.teacher{align-self:flex-start; background:var(--surface); border:1px solid var(--border); color:var(--text); border-bottom-left-radius:4px; box-shadow:var(--shadow-card);}
+  .chatBubble audio{width:220px; max-width:100%; height:36px;}
+  .chatInputBar{display:flex; align-items:center; gap:8px; padding-top:10px; margin-top:auto;}
+  .chatTextInput{
+    flex:1; border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:11px 16px;
+    font:500 13.5px 'Inter',sans-serif; color:var(--text); outline:none;
+  }
+  .chatTextInput:focus{border-color:var(--accent-strong);}
+  .chatIconBtn{
+    width:42px; height:42px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text-secondary);
+    font-size:17px; display:grid; place-items:center; cursor:pointer; flex:none;
+  }
+  .chatIconBtn.rec{background:var(--red); color:var(--on-red);}
+  .chatSendBtn{background:var(--btn-dark); color:var(--on-dark);}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block; font:700 11px 'Inter',sans-serif; letter-spacing:.03em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;}
+  .field .input, .input{
+    width:100%; border:1px solid var(--border); background:var(--surface); border-radius:12px; padding:10px 12px;
+    font:500 13.5px 'Inter',sans-serif; color:var(--text); outline:none;
+  }
+  .field .input:focus, .input:focus{border-color:var(--accent-strong);}
+  textarea.input{resize:vertical; font-family:'Inter',sans-serif;}
+  .modFormRow{display:flex; gap:6px; margin-bottom:8px; align-items:center;}
+  .modFormRow .input{padding:9px 10px; font-size:12.5px;}
+  .modFormRow .modKind{flex:1;}
+  .modFormRow .modTitle{flex:1.4;}
+  .modFormRow .modCount{flex:0 0 58px; padding-left:8px;}
+
   .streakline{
     font:800 11px/1 'Inter',sans-serif; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;
     text-align:center; margin-bottom:6px; min-height:14px;
@@ -390,6 +426,23 @@
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="testNextBtn" disabled onclick="submitTestAnswer()">ДАЛЕЕ</button></div>
   </section>
 
+  <!-- 14: news -->
+  <section class="screen" data-screen="news">
+    <div class="apphead"><div class="brand">Новости</div></div>
+    <div id="newsList"><div class="hint">Загружаю…</div></div>
+  </section>
+
+  <!-- 15: teacher chat -->
+  <section class="screen" data-screen="teacherChat">
+    <div class="apphead"><div class="brand">Преподаватель</div></div>
+    <div class="chatWrap" id="chatMessages"><div class="hint">Загружаю…</div></div>
+    <div class="chatInputBar">
+      <input type="text" id="chatTextInput" class="chatTextInput" placeholder="Напишите сообщение…" onkeydown="if(event.key==='Enter')sendChatText();">
+      <button class="chatIconBtn" id="chatMicBtn" onclick="toggleChatMic()">🎙️</button>
+      <button class="chatIconBtn chatSendBtn" onclick="sendChatText()">➤</button>
+    </div>
+  </section>
+
   <!-- 13: profile -->
   <section class="screen" data-screen="profile">
     <div class="topbar"><button class="xbtn" onclick="go('home')">←</button></div>
@@ -405,14 +458,54 @@
     <div id="myCoursesList"><div class="hint">Загружаю…</div></div>
   </section>
 
+  <!-- 16: admin dashboard (только для TEACHER_USERNAME) -->
+  <section class="screen" data-screen="admin">
+    <div class="apphead"><div class="brand">Админка</div></div>
+    <div class="statgrid" id="adminStatGrid" style="grid-template-columns:1fr 1fr 1fr;"></div>
+    <div class="sectiontitle">Курсы</div>
+    <div id="adminCourseList"></div>
+    <button class="btn btn-ghost btn-wide" onclick="openAdminCourseForm(null)" style="margin-top:6px;">+ Добавить курс</button>
+    <div class="sectiontitle" style="margin-top:22px;">Пользователи</div>
+    <div id="adminUserList"></div>
+  </section>
+
+  <!-- 17: admin course create/edit form -->
+  <section class="screen" data-screen="adminCourseForm">
+    <div class="topbar"><button class="xbtn" onclick="go('admin')">←</button></div>
+    <div class="qtitle" id="adminFormTitle">Новый курс</div>
+    <div class="field"><label>Код курса</label><input id="acfCode" class="input" placeholder="B85"></div>
+    <div class="field"><label>Название</label><input id="acfTitle" class="input"></div>
+    <div class="field"><label>Описание</label><textarea id="acfDescription" class="input" rows="3"></textarea></div>
+    <div class="field"><label>Цена (₸)</label><input id="acfPrice" type="number" class="input"></div>
+    <div class="field"><label>Порядок</label><input id="acfOrder" type="number" class="input"></div>
+    <div class="sectiontitle">Модули</div>
+    <div id="acfModules"></div>
+    <button class="btn btn-ghost btn-wide" onclick="addAdminModuleRow()">+ Модуль</button>
+    <div class="aiError" id="acfError" style="display:none; margin-top:10px;"></div>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" id="acfDeleteBtn" onclick="deleteAdminCourse()" style="display:none;">Удалить</button>
+      <button class="btn btn-primary btn-wide" onclick="saveAdminCourse()">Сохранить</button>
+    </div>
+  </section>
+
 </div>
 
 <nav class="tabbar" id="tabbar">
   <button class="tabbtn" data-tab="home" onclick="go('home')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h5v-6h2v6h5v-9.5"/></svg></span>Курсы
   </button>
+  <button class="tabbtn" data-tab="news" onclick="go('news')">
+    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>Новости
+  </button>
+  <button class="tabbtn" data-tab="teacherChat" onclick="go('teacherChat')">
+    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 1 1 21 11.5Z"/></svg></span>Чат
+  </button>
   <button class="tabbtn" data-tab="profile" onclick="go('profile')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.4-4.2 4-6.2 7-6.2s5.6 2 7 6.2"/></svg></span>Профиль
+  </button>
+  <button class="tabbtn" id="adminTabBtn" data-tab="admin" onclick="go('admin')" style="display:none;">
+    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg></span>Админ
   </button>
 </nav>
 
@@ -427,8 +520,11 @@
     return h;
   }
 
-  const TABBAR_SCREENS = new Set(['home', 'course', 'profile']);
+  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'teacherChat', 'admin']);
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
+  const TEACHER_USERNAME = 'ISNVO'; // держим в синхроне с backend/config.py:TEACHER_USERNAME (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
+
+  let teacherChatPolling = null;
 
   function go(id){
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
@@ -442,7 +538,22 @@
     if (id === 'home') {
       try { localStorage.setItem(ONBOARDED_KEY, '1'); } catch (e) {}
     }
+    if (id === 'news') loadNews();
+    if (id === 'admin') loadAdmin();
+    if (id === 'teacherChat') {
+      loadChatMessages();
+      if (!teacherChatPolling) teacherChatPolling = setInterval(loadChatMessages, 8000);
+    } else if (teacherChatPolling) {
+      clearInterval(teacherChatPolling);
+      teacherChatPolling = null;
+    }
     window.scrollTo(0,0);
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
   }
 
   // Вернувшихся пользователей (уже видели онбординг хотя бы раз) сразу пускаем в каталог,
@@ -457,6 +568,9 @@
     document.getElementById('profileName').textContent = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'Гость';
     if (tgUser.photo_url) {
       document.getElementById('pavatar').innerHTML = `<img src="${tgUser.photo_url}" alt="${tgUser.first_name || 'Аватар'}">`;
+    }
+    if ((tgUser.username || '').toLowerCase() === TEACHER_USERNAME.toLowerCase()) {
+      document.getElementById('adminTabBtn').style.display = '';
     }
   }
 
@@ -941,6 +1055,227 @@
 
   renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
   renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
+
+  // ---- Новости от преподавателя ----
+  function formatDate(iso){
+    const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+    return d.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadNews(){
+    const el = document.getElementById('newsList');
+    try {
+      const res = await fetch('/api/news');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const news = await res.json();
+      if (!news.length) { el.innerHTML = '<div class="hint">Пока нет новостей.</div>'; return; }
+      el.innerHTML = news.map(n => `
+        <div class="newsCard"><div class="txt">${escapeHtml(n.text)}</div><div class="date">${formatDate(n.created_at)}</div></div>
+      `).join('');
+    } catch (e) {
+      el.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить новости. ' + e.message + '</div>';
+    }
+  }
+
+  // ---- Чат с преподавателем: история хранится на сервере, не теряется между визитами ----
+  async function loadChatMessages(){
+    const wrap = document.getElementById('chatMessages');
+    try {
+      const res = await fetch('/api/chat/messages', { headers: authHeaders() });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const msgs = await res.json();
+      if (!msgs.length) {
+        wrap.innerHTML = '<div class="hint">Напиши первое сообщение — преподаватель увидит его в Telegram и ответит прямо сюда.</div>';
+        return;
+      }
+      const wasNearBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
+      wrap.innerHTML = msgs.map(m => {
+        const cls = 'chatBubble ' + (m.sender === 'student' ? 'student' : 'teacher');
+        const body = m.voice_url ? `<audio controls src="${m.voice_url}"></audio>` : escapeHtml(m.text || '');
+        return `<div class="${cls}">${body}</div>`;
+      }).join('');
+      if (wasNearBottom) wrap.scrollTop = wrap.scrollHeight;
+    } catch (e) {
+      wrap.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить переписку.</div>';
+    }
+  }
+
+  async function sendChatText(){
+    const input = document.getElementById('chatTextInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    const form = new FormData();
+    form.append('text', text);
+    await fetch('/api/chat/messages', { method: 'POST', headers: authHeaders(), body: form });
+    await loadChatMessages();
+  }
+
+  let chatRecorder = null, chatAudioChunks = [], chatIsRecording = false;
+
+  async function toggleChatMic(){
+    const btn = document.getElementById('chatMicBtn');
+    if (!chatIsRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        chatAudioChunks = [];
+        chatRecorder = new MediaRecorder(stream);
+        chatRecorder.ondataavailable = e => chatAudioChunks.push(e.data);
+        chatRecorder.onstop = onChatRecordingStop;
+        chatRecorder.start();
+        chatIsRecording = true;
+        btn.classList.add('rec');
+        btn.textContent = '⏹️';
+      } catch (e) {
+        alert('Нет доступа к микрофону: ' + e.message);
+      }
+    } else {
+      chatRecorder.stop();
+      chatRecorder.stream.getTracks().forEach(t => t.stop());
+      chatIsRecording = false;
+    }
+  }
+
+  async function onChatRecordingStop(){
+    const btn = document.getElementById('chatMicBtn');
+    btn.classList.remove('rec');
+    btn.textContent = '🎙️';
+    const blob = new Blob(chatAudioChunks, { type: chatRecorder.mimeType || 'audio/webm' });
+    const form = new FormData();
+    form.append('voice', blob, 'voice.webm');
+    await fetch('/api/chat/messages', { method: 'POST', headers: authHeaders(), body: form });
+    await loadChatMessages();
+  }
+
+  // ---- Админка (только для TEACHER_USERNAME — настоящая проверка на backend) ----
+  async function loadAdmin(){
+    renderAdminCourseList();
+    try {
+      const [statsRes, usersRes] = await Promise.all([
+        fetch('/api/admin/stats', { headers: authHeaders() }),
+        fetch('/api/admin/users', { headers: authHeaders() }),
+      ]);
+      if (statsRes.ok) renderAdminStats(await statsRes.json());
+      if (usersRes.ok) renderAdminUsers(await usersRes.json());
+    } catch (e) { /* сеть недоступна — экран останется с уже отрисованным списком курсов */ }
+  }
+
+  function renderAdminStats(stats){
+    document.getElementById('adminStatGrid').innerHTML = `
+      <div class="statcard"><div class="sv2">${stats.total_users}</div><div class="sl2">пользователей</div></div>
+      <div class="statcard"><div class="sv2">${stats.purchases_count}</div><div class="sl2">покупок</div></div>
+      <div class="statcard"><div class="sv2">${stats.total_sales_kzt.toLocaleString('ru-RU')} ₸</div><div class="sl2">выручка</div></div>
+    `;
+  }
+
+  function renderAdminCourseList(){
+    const el = document.getElementById('adminCourseList');
+    el.innerHTML = '';
+    coursesCache.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'mycourse';
+      row.style.cursor = 'pointer';
+      row.innerHTML = `<div class="ic" style="background:${LEVEL_COLORS[c.code] || 'var(--surface-2)'};">${c.code}</div>
+        <div style="flex:1"><div class="tt">${escapeHtml(c.title)}</div><div class="hint">${c.price_kzt.toLocaleString('ru-RU')} ₸</div></div>`;
+      row.onclick = () => openAdminCourseForm(c);
+      el.appendChild(row);
+    });
+  }
+
+  function renderAdminUsers(users){
+    document.getElementById('adminUserList').innerHTML = users.map(u => `
+      <div class="mycourse">
+        <div style="flex:1">
+          <div class="tt">${escapeHtml(u.full_name || u.username || ('id' + u.id))}</div>
+          <div class="hint">${u.username ? '@' + escapeHtml(u.username) : 'без username'} · куплено курсов: ${u.owned_courses_count}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  let adminEditingCode = null;
+
+  function addAdminModuleRow(m){
+    const row = document.createElement('div');
+    row.className = 'modFormRow';
+    if (m && m.id) row.dataset.modId = m.id;
+    row.innerHTML = `
+      <input class="input modKind" placeholder="kind" value="${m ? escapeHtml(m.kind) : ''}">
+      <input class="input modTitle" placeholder="Название" value="${m ? escapeHtml(m.title) : ''}">
+      <input class="input modCount" type="number" placeholder="уроков" value="${m ? m.lesson_count : ''}">
+      <button class="xbtn" onclick="this.closest('.modFormRow').remove()">✕</button>
+    `;
+    document.getElementById('acfModules').appendChild(row);
+  }
+
+  function openAdminCourseForm(course){
+    adminEditingCode = course ? course.code : null;
+    document.getElementById('adminFormTitle').textContent = course ? 'Изменить курс' : 'Новый курс';
+    document.getElementById('acfCode').value = course ? course.code : '';
+    document.getElementById('acfCode').disabled = !!course;
+    document.getElementById('acfTitle').value = course ? course.title : '';
+    document.getElementById('acfDescription').value = course ? course.description : '';
+    document.getElementById('acfPrice').value = course ? course.price_kzt : '';
+    document.getElementById('acfOrder').value = course ? course.order : coursesCache.length;
+    document.getElementById('acfModules').innerHTML = '';
+    (course ? course.modules : []).forEach(m => addAdminModuleRow(m));
+    document.getElementById('acfDeleteBtn').style.display = course ? '' : 'none';
+    document.getElementById('acfError').style.display = 'none';
+    go('adminCourseForm');
+  }
+
+  function collectAdminModules(){
+    return [...document.querySelectorAll('#acfModules .modFormRow')].map((row, i) => ({
+      id: row.dataset.modId ? Number(row.dataset.modId) : null,
+      kind: row.querySelector('.modKind').value.trim(),
+      title: row.querySelector('.modTitle').value.trim(),
+      lesson_count: Number(row.querySelector('.modCount').value) || 0,
+      order: i,
+    }));
+  }
+
+  async function saveAdminCourse(){
+    const errEl = document.getElementById('acfError');
+    errEl.style.display = 'none';
+    const payload = {
+      title: document.getElementById('acfTitle').value.trim(),
+      description: document.getElementById('acfDescription').value.trim(),
+      price_kzt: Number(document.getElementById('acfPrice').value) || 0,
+      order: Number(document.getElementById('acfOrder').value) || 0,
+      modules: collectAdminModules(),
+    };
+    try {
+      let res;
+      if (adminEditingCode) {
+        res = await fetch(`/api/admin/courses/${adminEditingCode}`, {
+          method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
+        });
+      } else {
+        const code = document.getElementById('acfCode').value.trim().toUpperCase();
+        if (!code) throw new Error('Укажи код курса');
+        res = await fetch('/api/admin/courses', {
+          method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ code, ...payload }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Не удалось сохранить курс');
+      await loadCourses();
+      go('admin');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function deleteAdminCourse(){
+    if (!adminEditingCode || !confirm('Удалить курс ' + adminEditingCode + '?')) return;
+    const res = await fetch(`/api/admin/courses/${adminEditingCode}`, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.detail || 'Не удалось удалить курс'); return; }
+    await loadCourses();
+    go('admin');
+  }
 </script>
 </body>
 </html>

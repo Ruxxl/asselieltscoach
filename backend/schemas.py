@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -82,3 +84,73 @@ class ReadingCheckResult(BaseModel):
 
 class PurchaseResult(BaseModel):
     owned: bool
+
+
+class NewsPostOut(BaseModel):
+    id: int
+    text: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatMessageOut(BaseModel):
+    id: int
+    sender: str  # student / teacher
+    text: str | None = None
+    voice_url: str | None = None  # проставляется в роутере, если voice_path есть
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminCourseStatOut(BaseModel):
+    code: str
+    title: str
+    purchases_count: int
+    revenue_kzt: int
+
+
+class AdminStatsOut(BaseModel):
+    total_users: int
+    purchases_count: int
+    total_sales_kzt: int
+    by_course: list[AdminCourseStatOut]
+
+
+class AdminUserOut(BaseModel):
+    id: int
+    username: str | None
+    full_name: str | None
+    owned_courses_count: int = 0  # не в ORM-модели — проставляется в роутере после model_validate
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminModuleIn(BaseModel):
+    id: int | None = None  # None — новый модуль, добавляется при PATCH
+    kind: str
+    title: str
+    lesson_count: int
+    order: int
+
+
+class AdminCourseIn(BaseModel):
+    code: str
+    title: str
+    description: str
+    price_kzt: int
+    order: int
+    modules: list[AdminModuleIn] = []
+
+
+class AdminCoursePatch(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    price_kzt: int | None = None
+    order: int | None = None
+    modules: list[AdminModuleIn] | None = None  # если задано — полностью заменяет список модулей
