@@ -10,10 +10,22 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
+  :root{
+    --bg:#F5F3FC; --surface:#FFFFFF; --surface-2:#ECE8FA; --border:#E3DEF5;
+    --text:#1E1B2E; --text-secondary:#6B6580; --text-muted:#9C97AE;
+    --accent:#5A4FD9; --accent-strong:#6C5CE7; --accent-tint:#EEEBFC; --on-accent:#FFFFFF;
+    --blue:#2F7FE0; --blue-tint:#E7F0FD; --blue-border:#CFE1FA;
+    --yellow:#A8710E; --yellow-tint:#FBF0DC; --yellow-border:#EFD9A8;
+    --red:#D14343; --red-tint:#FCE8E6; --red-border:#F5C9C5; --on-red:#FFFFFF;
+    --shadow-card:0 6px 20px rgba(70,55,170,.12);
+    --btn-dark:#1C1B29; --btn-dark-hover:#2C2B42; --on-dark:#FFFFFF;
+  }
   *{box-sizing:border-box;}
   html,body{margin:0; height:100%;}
   body{
-    background:#10151A; color:#F1F5F3;
+    background-color:var(--bg); color:var(--text);
+    background-image:radial-gradient(ellipse 900px 600px at 12% -8%, rgba(108,92,231,.12), transparent 60%);
+    background-repeat:no-repeat;
     font-family:'Inter',system-ui,-apple-system,sans-serif;
   }
   h1,h2,h3,.display{font-family:'Nunito','Inter',system-ui,sans-serif;}
@@ -28,79 +40,80 @@
 
   .topbar{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
   .xbtn{
-    width:26px; height:26px; border-radius:8px; border:none; background:transparent; color:#5C6875;
+    width:26px; height:26px; border-radius:8px; border:none; background:transparent; color:var(--text-muted);
     font-size:16px; cursor:pointer; flex:none; display:grid; place-items:center;
   }
-  .xbtn:hover{color:#93A1AC;}
-  .pbar{flex:1; height:10px; border-radius:999px; background:#232B34; overflow:hidden;}
-  .pbar > i{display:block; height:100%; background:linear-gradient(90deg,#1E9C5C,#3DDC84); border-radius:999px; transition:width .3s;}
-  .lives{display:flex; align-items:center; gap:4px; flex:none; font:800 13px/1 'Inter',sans-serif; color:#FF6B6B;}
+  .xbtn:hover{color:var(--text);}
+  .pbar{flex:1; height:10px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
+  .pbar > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-strong)); border-radius:999px; transition:width .3s;}
+  .lives{display:flex; align-items:center; gap:4px; flex:none; font:800 13px/1 'Inter',sans-serif; color:var(--red);}
 
   .streakline{
-    font:800 11px/1 'Inter',sans-serif; letter-spacing:.06em; color:#3DDC84; text-transform:uppercase;
+    font:800 11px/1 'Inter',sans-serif; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;
     text-align:center; margin-bottom:6px; min-height:14px;
   }
 
   .welcomeLogoWrap{display:flex; justify-content:center; margin:16px 0 24px;}
-  .welcomeLogoText{font:800 22px 'Nunito',sans-serif; color:#F1F5F3; letter-spacing:-.01em;}
-  .welcomeLogoText b{color:#3DDC84;}
+  .welcomeLogoText{font:800 22px 'Nunito',sans-serif; color:var(--text); letter-spacing:-.01em;}
+  .welcomeLogoText b{color:var(--accent);}
   .welcomeActions{display:flex; flex-direction:column; gap:10px;}
 
   .mascot-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:22px;}
-  .mascot-avatar{width:44px; height:44px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:20px; flex:none;}
+  .mascot-avatar{width:44px; height:44px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:20px; flex:none; overflow:hidden;}
+  .mascot-avatar img{width:100%; height:100%; object-fit:cover;}
   .bubble{
-    background:#1A2129; border:1px solid #2C3742; border-radius:16px 16px 16px 4px;
-    padding:12px 14px; font:600 14.5px/1.4 'Nunito',sans-serif; color:#F1F5F3; max-width:320px;
+    background:var(--surface); border:1px solid var(--border); border-radius:16px 16px 16px 4px; box-shadow:var(--shadow-card);
+    padding:12px 14px; font:600 14.5px/1.4 'Nunito',sans-serif; color:var(--text); max-width:320px;
   }
 
   .badge{
     display:inline-flex; align-items:center; gap:6px; font:800 10.5px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase;
-    color:#5B9DFF; background:#131C2A; border:1px solid #223247; padding:5px 10px; border-radius:999px; margin-bottom:10px;
+    color:var(--blue); background:var(--blue-tint); border:1px solid var(--blue-border); padding:5px 10px; border-radius:999px; margin-bottom:10px;
   }
   .qtitle{font:700 19px/1.3 'Nunito',sans-serif; margin:0 0 20px; text-wrap:balance;}
 
   .imgrow{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
   .imgopt{
-    background:#161C22; border:1.5px solid #2C3742; border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer;
+    background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer;
   }
   .imgopt .em{font-size:30px; margin-bottom:8px;}
   .imgopt .wd{font:600 12.5px 'Inter',sans-serif;}
-  .imgopt.correct{border-color:#3DDC84; background:#152019;}
-  .imgopt.wrong{border-color:#FF6B6B; background:#241717;}
+  .imgopt.correct{border-color:var(--accent-strong); background:var(--accent-tint);}
+  .imgopt.wrong{border-color:var(--red); background:var(--red-tint);}
 
   .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
   .wchip{
-    background:#161C22; border:1.5px solid #2C3742; border-radius:10px; padding:9px 13px; font:600 14px 'Inter',sans-serif;
-    color:#F1F5F3; cursor:pointer;
+    background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:9px 13px; font:600 14px 'Inter',sans-serif;
+    color:var(--text); cursor:pointer;
   }
   .wchip.used{opacity:.3; pointer-events:none;}
-  .wchip.sel{background:#152019; border-color:#3DDC84; color:#3DDC84;}
+  .wchip.sel{background:var(--accent-tint); border-color:var(--accent-strong); color:var(--accent);}
 
   .lessonSublist{padding:2px 0 10px 42px;}
   .lessonRow{display:flex; align-items:center; gap:10px; padding:9px 0; cursor:pointer;}
   .lessonRow .lrIcon{font-size:14px; flex:none; opacity:.8;}
   .lessonRow .lrTitle{font:700 12.5px 'Inter',sans-serif;}
-  .lessonRow .lrMeta{font:500 11px 'Inter',sans-serif; color:#6C7883;}
-  .lessonRow:hover .lrTitle{color:#3DDC84;}
+  .lessonRow .lrMeta{font:500 11px 'Inter',sans-serif; color:var(--text-muted);}
+  .lessonRow:hover .lrTitle{color:var(--accent);}
 
-  .readerContent p{margin:0 0 12px; font:500 14px/1.65 'Inter',sans-serif; color:#D6DEE3;}
+  .readerContent p{margin:0 0 12px; font:500 14px/1.65 'Inter',sans-serif; color:var(--text-secondary);}
   .answerline{
-    min-height:44px; border-bottom:2px solid #2C3742; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-bottom:8px; margin-bottom:6px;
+    min-height:44px; border-bottom:2px solid var(--border); display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-bottom:8px; margin-bottom:6px;
   }
-  .answerline .wchip{background:#152019; border-color:#3DDC84;}
-  .hint{font:500 12px 'Inter',sans-serif; color:#6C7883; margin-top:6px;}
+  .answerline .wchip{background:var(--accent-tint); border-color:var(--accent-strong);}
+  .hint{font:500 12px 'Inter',sans-serif; color:var(--text-muted); margin-top:6px;}
 
   .spacer{flex:1;}
-  .bottombar{display:flex; align-items:center; gap:12px; padding-top:14px; border-top:1px solid #202830; margin-top:auto;}
+  .bottombar{display:flex; align-items:center; gap:12px; padding-top:14px; border-top:1px solid var(--border); margin-top:auto;}
   .btn{
-    font:800 13px 'Inter',sans-serif; letter-spacing:.04em; text-transform:uppercase; border-radius:14px; padding:13px 16px;
+    font:800 13px 'Inter',sans-serif; letter-spacing:.04em; text-transform:uppercase; border-radius:999px; padding:13px 16px;
     cursor:pointer; border:2px solid transparent; text-align:center;
   }
-  .btn-ghost{background:transparent; border-color:#2C3742; color:#93A1AC; flex:none;}
-  .btn-ghost:hover{border-color:#3C4A57; color:#F1F5F3;}
-  .btn-primary{background:#3DDC84; color:#0A1F13; flex:1;}
-  .btn-primary[disabled]{background:#232B34; color:#4B565F; cursor:not-allowed;}
-  .btn-primary:not([disabled]):hover{background:#31C874;}
+  .btn-ghost{background:transparent; border-color:var(--border); color:var(--text-secondary); flex:none;}
+  .btn-ghost:hover{background:var(--btn-dark); border-color:var(--btn-dark); color:var(--on-dark);}
+  .btn-primary{background:var(--btn-dark); color:var(--on-dark); flex:1; box-shadow:var(--shadow-card);}
+  .btn-primary[disabled]{background:var(--surface-2); color:var(--text-muted); cursor:not-allowed; box-shadow:none;}
+  .btn-primary:not([disabled]):hover{background:var(--btn-dark-hover);}
   .btn-wide{width:100%;}
 
   .feedback{
@@ -108,84 +121,85 @@
     border-top:1px solid; margin-top:14px;
   }
   .feedback.show{transform:translateY(0);}
-  .feedback.ok{background:#0F2A1C; border-color:#1E9C5C;}
-  .feedback.bad{background:#2A1414; border-color:#7A2E2E;}
+  .feedback.ok{background:var(--accent-tint); border-color:var(--accent);}
+  .feedback.bad{background:var(--red-tint); border-color:var(--red);}
   .feedback .ftitle{display:flex; align-items:center; gap:8px; font:800 16px 'Nunito',sans-serif; margin-bottom:4px;}
-  .feedback.ok .ftitle{color:#3DDC84;}
-  .feedback.bad .ftitle{color:#FF8B8B;}
-  .feedback .fsub{font:500 13px 'Inter',sans-serif; color:#B9C4CC; margin-bottom:12px;}
+  .feedback.ok .ftitle{color:var(--accent);}
+  .feedback.bad .ftitle{color:var(--red);}
+  .feedback .fsub{font:500 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:12px;}
 
   .center-col{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; flex:1;}
   .mascot-big{font-size:64px; margin-bottom:18px;}
   .loading-fact{
-    background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:14px; font:500 12.5px/1.5 'Inter',sans-serif; color:#93A1AC; margin-top:22px;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; font:500 12.5px/1.5 'Inter',sans-serif; color:var(--text-secondary); margin-top:22px;
   }
   .spin{animation:spin 1.1s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){.spin{animation:none;}}
 
-  .resultlevel{font:800 46px 'Nunito',sans-serif; color:#3DDC84; margin:6px 0 2px;}
+  .resultlevel{font:800 46px 'Nunito',sans-serif; color:var(--accent); margin:6px 0 2px;}
   .skillrow{display:flex; align-items:center; gap:10px; width:100%; margin-bottom:10px;}
-  .skillrow .sl{width:82px; text-align:left; font:600 12.5px 'Inter',sans-serif; color:#93A1AC; flex:none;}
-  .skillrow .sb{flex:1; height:9px; border-radius:999px; background:#232B34; overflow:hidden;}
+  .skillrow .sl{width:82px; text-align:left; font:600 12.5px 'Inter',sans-serif; color:var(--text-secondary); flex:none;}
+  .skillrow .sb{flex:1; height:9px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
   .skillrow .sb i{display:block; height:100%; border-radius:999px;}
   .skillrow .sv{width:34px; text-align:right; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums; flex:none;}
 
   .apphead{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:8px; font:800 16px 'Nunito',sans-serif;}
   .brand img{width:26px; height:26px; object-fit:contain; flex:none;}
-  .stat-pill{display:flex; align-items:center; gap:5px; background:#161C22; border:1px solid #2C3742; padding:6px 10px; border-radius:999px; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums;}
+  .stat-pill{display:flex; align-items:center; gap:5px; background:var(--surface); border:1px solid var(--border); padding:6px 10px; border-radius:999px; font:800 12.5px 'Inter',sans-serif; font-variant-numeric:tabular-nums;}
 
   .levelcard{
     display:flex; align-items:center; gap:12px; width:100%; text-align:left;
-    background:#161C22; border:1.5px solid #2C3742; border-radius:16px; padding:14px; margin-bottom:10px; cursor:pointer; position:relative;
+    background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:14px; margin-bottom:10px; cursor:pointer; position:relative; box-shadow:var(--shadow-card);
   }
-  .levelcard.reco{border-color:#3DDC84;}
+  .levelcard.reco{border-color:var(--accent-strong);}
   .levelcard.locked{cursor:default; opacity:.5;}
-  .levelcard .lockTag{font:800 12.5px 'Inter',sans-serif; color:#6C7883;}
+  .levelcard .lockTag{font:800 12.5px 'Inter',sans-serif; color:var(--text-muted);}
   .levelcard .lv{
-    width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Nunito',sans-serif; flex:none; color:#0A1F13; background:#2C3742;
+    width:46px; height:46px; border-radius:12px; display:grid; place-items:center; font:800 15px 'Nunito',sans-serif; flex:none; color:var(--text); background:var(--surface-2);
   }
   .levelcard .tt{font:700 14.5px 'Nunito',sans-serif; margin-bottom:2px;}
-  .levelcard .ds{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
+  .levelcard .ds{font:500 11.5px 'Inter',sans-serif; color:var(--text-secondary);}
   .levelcard .rt{margin-left:auto; text-align:right; flex:none;}
-  .levelcard .price{font:800 12.5px 'Inter',sans-serif; color:#3DDC84;}
+  .levelcard .price{font:800 12.5px 'Inter',sans-serif; color:var(--accent);}
   .recotag{
-    position:absolute; top:-9px; right:12px; background:#3DDC84; color:#0A1F13; font:800 9.5px 'Inter',sans-serif;
+    position:absolute; top:-9px; right:12px; background:var(--accent-strong); color:var(--on-accent); font:800 9.5px 'Inter',sans-serif;
     letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:999px;
   }
 
   .coursehead{margin-bottom:16px;}
-  .coursehead .kicker{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#3DDC84; margin-bottom:6px;}
+  .coursehead .kicker{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
   .coursehead h2{font:800 20px 'Nunito',sans-serif; margin:0 0 8px; text-wrap:balance;}
   .instructor{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
-  .avatar{width:34px; height:34px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:16px; flex:none;}
+  .avatar{width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:16px; flex:none; overflow:hidden;}
+  .avatar img{width:100%; height:100%; object-fit:cover;}
   .instructor .nm{font:700 12.5px 'Inter',sans-serif;}
-  .instructor .rl{font:500 11px 'Inter',sans-serif; color:#93A1AC;}
+  .instructor .rl{font:500 11px 'Inter',sans-serif; color:var(--text-secondary);}
 
-  .modrow{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #202830;}
-  .modrow .mi{width:30px; height:30px; border-radius:9px; background:#1E262E; display:grid; place-items:center; font-size:14px; flex:none;}
+  .modrow{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border);}
+  .modrow .mi{width:30px; height:30px; border-radius:9px; background:var(--surface-2); display:grid; place-items:center; font-size:14px; flex:none;}
   .modrow .mt{font:700 13px 'Inter',sans-serif;}
-  .modrow .mc{font:500 11px 'Inter',sans-serif; color:#93A1AC;}
+  .modrow .mc{font:500 11px 'Inter',sans-serif; color:var(--text-secondary);}
   .modrow .ms{margin-left:auto; font-size:15px;}
 
   .fillline{font:600 16px/1.6 'Nunito',sans-serif; margin-bottom:18px;}
-  .fillline .blank{display:inline-block; min-width:80px; border-bottom:2px solid #3DDC84; text-align:center; color:#3DDC84; padding:0 4px;}
+  .fillline .blank{display:inline-block; min-width:80px; border-bottom:2px solid var(--accent-strong); text-align:center; color:var(--accent); padding:0 4px;}
 
-  .passage{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:14px; font:500 13.5px/1.6 'Inter',sans-serif; color:#D6DEE3; margin-bottom:14px;}
-  .passage b{color:#F1F5F3;}
+  .passage{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; font:500 13.5px/1.6 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:14px; box-shadow:var(--shadow-card);}
+  .passage b{color:var(--text);}
   .askline{font:700 15px/1.4 'Nunito',sans-serif; margin-bottom:22px;}
 
   .mic-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:16px;}
   .mic-btn{
-    width:88px; height:88px; border-radius:50%; border:none; background:#3DDC84; color:#0A1F13; font-size:30px;
+    width:88px; height:88px; border-radius:50%; border:none; background:var(--accent-strong); color:var(--on-accent); font-size:30px;
     display:grid; place-items:center; cursor:pointer; box-shadow:0 0 0 0 rgba(61,220,132,.5); position:relative;
   }
-  .mic-btn.rec{animation:pulse 1.1s ease-out infinite; background:#FF6B6B; color:#2A0F0F;}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,.5);}70%{box-shadow:0 0 0 22px rgba(255,107,107,0);}100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}}
-  .mic-label{font:600 12.5px 'Inter',sans-serif; color:#93A1AC; text-align:center;}
+  .mic-btn.rec{animation:pulse 1.1s ease-out infinite; background:var(--red); color:var(--on-red);}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(194,59,59,.5);}70%{box-shadow:0 0 0 22px rgba(194,59,59,0);}100%{box-shadow:0 0 0 0 rgba(194,59,59,0);}}
+  .mic-label{font:600 12.5px 'Inter',sans-serif; color:var(--text-secondary); text-align:center;}
   .wave{display:flex; align-items:center; gap:3px; height:28px;}
-  .wave i{width:3px; border-radius:2px; background:#FF6B6B; height:6px;}
+  .wave i{width:3px; border-radius:2px; background:var(--red); height:6px;}
   .wave.animate i{animation:wv 0.8s ease-in-out infinite;}
   .wave i:nth-child(1){animation-delay:0s;} .wave i:nth-child(2){animation-delay:.1s;} .wave i:nth-child(3){animation-delay:.2s;}
   .wave i:nth-child(4){animation-delay:.3s;} .wave i:nth-child(5){animation-delay:.4s;} .wave i:nth-child(6){animation-delay:.3s;}
@@ -193,42 +207,42 @@
   @keyframes wv{0%,100%{height:6px;}50%{height:26px;}}
   @media (prefers-reduced-motion: reduce){.mic-btn.rec{animation:none;} .wave.animate i{animation:none; height:14px;}}
 
-  .liveCaption{display:none; width:100%; margin-top:10px; background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:10px 12px; font:500 13px/1.5 'Inter',sans-serif; color:#93A1AC; min-height:20px;}
+  .liveCaption{display:none; width:100%; margin-top:10px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; font:500 13px/1.5 'Inter',sans-serif; color:var(--text-secondary); min-height:20px; box-shadow:var(--shadow-card);}
   .liveCaption.show{display:block;}
-  .liveCaption b{color:#5B9DFF; display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px;}
-  .liveCaption span{color:#D6DEE3;}
+  .liveCaption b{color:var(--blue); display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px;}
+  .liveCaption span{color:var(--text-secondary);}
 
   .aiPanel{display:none; width:100%; margin-top:10px;}
   .aiPanel.show{display:block;}
-  .transcript{background:#161C22; border:1px solid #2C3742; border-radius:12px; padding:12px; font:500 13px/1.5 'Inter',sans-serif; color:#D6DEE3; margin-bottom:10px;}
-  .transcript b{color:#5B9DFF; display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px;}
-  .verdict{display:flex; align-items:center; gap:8px; font:800 14px 'Nunito',sans-serif; color:#3DDC84; margin-bottom:8px;}
-  .verdict.bad{color:#FF8B8B;}
-  .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:#93A1AC;}
-  .aiError{color:#FF8B8B; font:600 12.5px/1.5 'Inter',sans-serif;}
+  .transcript{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; font:500 13px/1.5 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:10px; box-shadow:var(--shadow-card);}
+  .transcript b{color:var(--blue); display:block; font:800 10px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px;}
+  .verdict{display:flex; align-items:center; gap:8px; font:800 14px 'Nunito',sans-serif; color:var(--accent); margin-bottom:8px;}
+  .verdict.bad{color:var(--red);}
+  .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:var(--text-secondary);}
+  .aiError{color:var(--red); font:600 12.5px/1.5 'Inter',sans-serif;}
 
   .certcard{
-    background:linear-gradient(160deg,#152019,#161C22); border:1.5px solid #3DDC84; border-radius:16px; padding:20px; text-align:center; width:100%; margin:14px 0;
+    background:linear-gradient(160deg,#FFFFFF,var(--bg)); border:1.5px solid var(--accent-strong); border-radius:16px; padding:20px; text-align:center; width:100%; margin:14px 0; box-shadow:var(--shadow-card);
   }
   .certcard .cm{font-size:30px; margin-bottom:8px;}
   .certcard .ct{font:800 15px 'Nunito',sans-serif; margin-bottom:4px;}
-  .certcard .cd{font:500 11.5px 'Inter',sans-serif; color:#93A1AC;}
+  .certcard .cd{font:500 11.5px 'Inter',sans-serif; color:var(--text-secondary);}
 
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
-  .pavatar{width:56px; height:56px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
+  .pavatar{width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
   .pavatar img{width:100%; height:100%; object-fit:cover;}
   .pname{font:800 16px 'Nunito',sans-serif;}
-  .psub{font:500 12px 'Inter',sans-serif; color:#93A1AC;}
+  .psub{font:500 12px 'Inter',sans-serif; color:var(--text-secondary);}
   .statgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;}
-  .statcard{background:#161C22; border:1px solid #2C3742; border-radius:14px; padding:12px; text-align:center;}
+  .statcard{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center; box-shadow:var(--shadow-card);}
   .statcard .sv2{font:800 20px 'Nunito',sans-serif; font-variant-numeric:tabular-nums;}
-  .statcard .sl2{font:600 10.5px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:#93A1AC; margin-top:2px;}
-  .sectiontitle{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#6C7883; margin:4px 0 10px;}
-  .mycourse{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #202830;}
-  .mycourse .ic{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font:800 12px 'Nunito',sans-serif; color:#0A1F13; flex:none;}
+  .statcard .sl2{font:600 10.5px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:var(--text-secondary); margin-top:2px;}
+  .sectiontitle{font:800 11px 'Inter',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:4px 0 10px;}
+  .mycourse{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);}
+  .mycourse .ic{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font:800 12px 'Nunito',sans-serif; color:var(--text); flex:none;}
   .mycourse .tt{font:700 12.5px 'Inter',sans-serif;}
-  .mycourse .pb{height:6px; border-radius:999px; background:#232B34; margin-top:5px; overflow:hidden;}
-  .mycourse .pb i{display:block; height:100%; background:#3DDC84;}
+  .mycourse .pb{height:6px; border-radius:999px; background:var(--surface-2); margin-top:5px; overflow:hidden;}
+  .mycourse .pb i{display:block; height:100%; background:var(--accent-strong);}
 </style>
 </head>
 <body>
@@ -238,8 +252,7 @@
   <section class="screen active" data-screen="welcome">
     <!-- Текстовый плейсхолдер вместо логотипа — заменить на реальный файл, когда он будет -->
     <div class="welcomeLogoWrap"><div class="welcomeLogoText">Assel <b>IELTS</b></div></div>
-    <!-- Аватар-эмодзи вместо фото Ассель — заменить на реальное фото репетитора -->
-    <div class="mascot-row"><div class="mascot-avatar">👩‍🏫</div><div class="bubble" id="greetingBubble">Привет! Я Ассель — помогу подготовиться к IELTS.</div></div>
+    <div class="mascot-row"><div class="mascot-avatar"><img src="/assets/assel.jpg" alt="Ассель"></div><div class="bubble" id="greetingBubble">Привет! Я Ассель — помогу подготовиться к IELTS.</div></div>
     <div class="spacer"></div>
     <div class="welcomeActions">
       <button class="btn btn-primary btn-wide" onclick="go('exA')">🚀 Пройти быстрый тест</button>
@@ -270,7 +283,7 @@
   <!-- 5: quick test Q3 — Reading с микрофоном, реальная ИИ-проверка, без прохода дальше при ошибке -->
   <section class="screen" data-screen="exC">
     <div class="topbar"><button class="xbtn" onclick="go('exB')">✕</button><div class="pbar"><i style="width:96%"></i></div></div>
-    <div class="badge" style="color:#5B9DFF;">Вопрос 3 из 3 · Reading</div>
+    <div class="badge">Вопрос 3 из 3 · Reading</div>
     <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b>"Every weekend, Maria visits her grandmother and they cook dinner together."</b></div>
     <div class="askline">🎤 Что Мария делает каждые выходные и с кем?</div>
     <div class="mic-wrap" id="quickMicWrap">
@@ -298,13 +311,13 @@
   <section class="screen" data-screen="placeResult">
     <div class="center-col">
       <div style="font-size:44px;">🦜</div>
-      <div style="font:600 13px 'Inter',sans-serif; color:#93A1AC; margin-top:8px;">Твой уровень</div>
+      <div style="font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-top:8px;">Твой уровень</div>
       <div class="resultlevel">B1</div>
-      <div style="font:600 13px 'Inter',sans-serif; color:#93A1AC; margin-bottom:20px;">Intermediate</div>
+      <div style="font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:20px;">Intermediate</div>
       <div style="width:100%;">
-        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:64%; background:#3DDC84;"></i></div><div class="sv">64%</div></div>
-        <div class="skillrow"><div class="sl">Vocabulary</div><div class="sb"><i style="width:71%; background:#5B9DFF;"></i></div><div class="sv">71%</div></div>
-        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:58%; background:#F5B942;"></i></div><div class="sv">58%</div></div>
+        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:64%; background:var(--accent-strong);"></i></div><div class="sv">64%</div></div>
+        <div class="skillrow"><div class="sl">Vocabulary</div><div class="sb"><i style="width:71%; background:var(--blue);"></i></div><div class="sv">71%</div></div>
+        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:58%; background:var(--yellow);"></i></div><div class="sv">58%</div></div>
       </div>
     </div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('home')">СМОТРЕТЬ КУРСЫ</button></div>
@@ -318,7 +331,7 @@
     </div>
     <div class="sectiontitle">Курсы по уровням</div>
     <div id="courseList">
-      <div style="color:#6C7883; font-size:13px;">Загружаю курсы…</div>
+      <div style="color:var(--text-muted); font-size:13px;">Загружаю курсы…</div>
     </div>
     <div class="spacer"></div>
     <div class="bottombar"><button class="btn btn-ghost btn-wide" onclick="go('profile')">👤 ПРОФИЛЬ</button></div>
@@ -332,8 +345,8 @@
       <h2 id="courseTitle">Intermediate: уверенный бытовой английский</h2>
     </div>
     <div class="instructor">
-      <div class="avatar">👩‍🏫</div>
-      <div><div class="nm">Анна К.</div><div class="rl">CELTA-сертифицированный преподаватель</div></div>
+      <div class="avatar"><img src="/assets/assel.jpg" alt="Ассель"></div>
+      <div><div class="nm">Ассель</div><div class="rl">CELTA-сертифицированный преподаватель</div></div>
     </div>
     <div class="sectiontitle">Программа курса</div>
     <div id="courseModules"></div>
@@ -345,7 +358,7 @@
   <!-- 10: lesson (grammar fill) -->
   <section class="screen" data-screen="lesson">
     <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i style="width:40%"></i></div><div class="lives">❤️ 4</div></div>
-    <div class="badge" style="color:#F5B942; background:#2A2416; border-color:#4B4030;" id="lessonBadge">Grammar · Present Perfect</div>
+    <div class="badge" style="color:var(--yellow); background:var(--yellow-tint); border-color:var(--yellow-border);" id="lessonBadge">Grammar · Present Perfect</div>
     <div class="fillline">She <span class="blank" id="blankSlot">___</span> in London since 2019.</div>
     <div class="chips">
       <button class="wchip" onclick="fillBlank(this,'has lived')">has lived</button>
@@ -367,9 +380,9 @@
   <!-- 10b: lesson reader — реальный контент урока с backend (сейчас: A1 Vocabulary/Grammar) -->
   <section class="screen" data-screen="lessonReader">
     <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i id="readerProgress" style="width:0%"></i></div></div>
-    <div class="badge" id="readerBadge" style="color:#5B9DFF;">Module · Course</div>
+    <div class="badge" id="readerBadge">Module · Course</div>
     <div style="font:800 20px 'Nunito',sans-serif; margin-bottom:4px;" id="readerTitle"></div>
-    <div style="font:500 13px 'Inter',sans-serif; color:#93A1AC; margin-bottom:16px;" id="readerSubtitle"></div>
+    <div style="font:500 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:16px;" id="readerSubtitle"></div>
     <div class="readerContent" id="readerContent"></div>
     <div class="spacer"></div>
     <div class="bottombar" style="gap:8px;">
@@ -382,7 +395,7 @@
   <!-- 10c: lesson test — последовательные вопросы "заполни пропуск" по образцу study.ru -->
   <section class="screen" data-screen="lessonTest">
     <div class="topbar"><button class="xbtn" onclick="go('lessonReader')">✕</button><div class="pbar"><i id="testProgress" style="width:0%"></i></div></div>
-    <div class="badge" style="color:#5B9DFF;">Тест</div>
+    <div class="badge">Тест</div>
     <div class="qtitle" id="testQuestionCounter">Вопрос 1/3</div>
     <div class="fillline" id="testSentence"></div>
     <div class="chips" id="testOptions"></div>
@@ -393,7 +406,7 @@
   <!-- 11: final test / reading with REAL voice recording + Gemini check -->
   <section class="screen" data-screen="finalIntro">
     <div class="topbar"><button class="xbtn" onclick="go('lesson')">✕</button><div class="pbar"><i style="width:86%"></i></div></div>
-    <div class="badge" style="color:#5B9DFF;">Финальный тест · Reading</div>
+    <div class="badge">Финальный тест · Reading</div>
     <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b id="passageText">"The train to Manchester leaves platform 4 at half past nine every morning."</b></div>
     <div class="askline" id="questionText">🎤 Во сколько и с какой платформы отправляется поезд?</div>
     <div class="mic-wrap" id="micWrap">
@@ -413,10 +426,10 @@
       <div style="font-size:16px; font-weight:800; font-family:'Nunito';">Тест пройден!</div>
       <div class="resultlevel" style="font-size:38px;">89%</div>
       <div style="width:100%; margin:10px 0 6px;">
-        <div class="skillrow"><div class="sl">Reading</div><div class="sb"><i style="width:92%; background:#3DDC84;"></i></div><div class="sv">92%</div></div>
-        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:85%; background:#5B9DFF;"></i></div><div class="sv">85%</div></div>
-        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:78%; background:#F5B942;"></i></div><div class="sv">78%</div></div>
-        <div class="skillrow"><div class="sl">Speaking</div><div class="sb"><i style="width:88%; background:#FF6B6B;"></i></div><div class="sv">88%</div></div>
+        <div class="skillrow"><div class="sl">Reading</div><div class="sb"><i style="width:92%; background:var(--accent-strong);"></i></div><div class="sv">92%</div></div>
+        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:85%; background:var(--blue);"></i></div><div class="sv">85%</div></div>
+        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:78%; background:var(--yellow);"></i></div><div class="sv">78%</div></div>
+        <div class="skillrow"><div class="sl">Speaking</div><div class="sb"><i style="width:88%; background:var(--red);"></i></div><div class="sv">88%</div></div>
       </div>
       <div class="certcard">
         <div class="cm">🏅</div>
@@ -506,13 +519,13 @@
         [...optsEl.children].forEach(c => c.disabled = true);
         if (opt === q.correct) {
           b.classList.add('sel');
-          blankEl.style.color = '#3DDC84';
-          blankEl.style.borderColor = '#3DDC84';
+          blankEl.style.color = 'var(--accent)';
+          blankEl.style.borderColor = 'var(--accent-strong)';
         } else {
-          b.style.borderColor = '#FF6B6B';
-          b.style.color = '#FF8B8B';
-          blankEl.style.color = '#FF8B8B';
-          blankEl.style.borderColor = '#FF6B6B';
+          b.style.borderColor = 'var(--red)';
+          b.style.color = 'var(--red)';
+          blankEl.style.color = 'var(--red)';
+          blankEl.style.borderColor = 'var(--red)';
           [...optsEl.children].find(c => c.textContent === q.correct)?.classList.add('sel');
         }
         nextBtn.removeAttribute('disabled');
@@ -523,7 +536,7 @@
 
   function fillBlank(el,word){
     document.getElementById('blankSlot').textContent = word;
-    document.getElementById('blankSlot').style.color = word==='has lived' ? '#3DDC84' : '#FF6B6B';
+    document.getElementById('blankSlot').style.color = word==='has lived' ? 'var(--accent)' : 'var(--red)';
     document.getElementById('check-lesson').removeAttribute('disabled');
   }
   function checkLesson(){
@@ -531,7 +544,7 @@
   }
 
   // ---- Каталог курсов: реальный запрос к backend, владение проверяется на сервере ----
-  const LEVEL_COLORS = {B55:'#4B4030', B65:'#3DDC84', B75:'#2C3742'};
+  const LEVEL_COLORS = {B55:'#FBE2D2', B65:'#E3DEFB', B75:'#D8F0EA'};
   let coursesCache = [];
 
   async function loadCourses(){
@@ -543,7 +556,7 @@
       renderCourseList();
       renderMyCourses();
     } catch (e) {
-      listEl.innerHTML = '<div style="color:#FF8B8B; font-size:13px;">Не удалось загрузить курсы (backend не запущен?). ' + e.message + '</div>';
+      listEl.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить курсы (backend не запущен?). ' + e.message + '</div>';
     }
   }
 
@@ -556,7 +569,7 @@
       card.onclick = () => openCourse(c);
       card.innerHTML = `
         ${c.owned ? '<div class="recotag">Куплено ✅</div>' : ''}
-        <div class="lv" style="background:${LEVEL_COLORS[c.code] || '#2C3742'};">${c.code}</div>
+        <div class="lv" style="background:${LEVEL_COLORS[c.code] || 'var(--surface-2)'};">${c.code}</div>
         <div><div class="tt">${c.title}</div><div class="ds">${c.description}</div></div>
         <div class="rt">${c.owned ? '' : `<span class="price">🔒 ${c.price_kzt.toLocaleString('ru-RU')} ₸</span>`}</div>`;
       listEl.appendChild(card);
@@ -577,7 +590,7 @@
       row.className = 'mycourse';
       row.style.cursor = 'pointer';
       row.onclick = () => openCourse(c);
-      row.innerHTML = `<div class="ic" style="background:${LEVEL_COLORS[c.code] || '#2C3742'};">${c.code}</div><div style="flex:1"><div class="tt">${c.title}</div></div>`;
+      row.innerHTML = `<div class="ic" style="background:${LEVEL_COLORS[c.code] || 'var(--surface-2)'};">${c.code}</div><div style="flex:1"><div class="tt">${c.title}</div></div>`;
       listEl.appendChild(row);
     });
   }
@@ -776,7 +789,7 @@
     const result = await res.json();
     document.getElementById('testQuestionCounter').textContent = 'Результат';
     document.getElementById('testSentence').innerHTML =
-      `<b style="color:${result.correct_count === result.total ? '#3DDC84' : '#F5B942'}">${result.correct_count} из ${result.total} верно</b>`;
+      `<b style="color:${result.correct_count === result.total ? 'var(--accent)' : 'var(--yellow)'}">${result.correct_count} из ${result.total} верно</b>`;
     document.getElementById('testOptions').innerHTML = '';
     const nextBtn = document.getElementById('testNextBtn');
     nextBtn.removeAttribute('disabled');
