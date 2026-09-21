@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Echo English</title>
+<title>Assel IELTS</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
@@ -42,10 +42,12 @@
   }
 
   .welcomeLogoWrap{display:flex; justify-content:center; margin:16px 0 24px;}
-  .welcomeLogo{width:96px; height:96px; object-fit:contain;}
+  .welcomeLogoText{font:800 22px 'Nunito',sans-serif; color:#F1F5F3; letter-spacing:-.01em;}
+  .welcomeLogoText b{color:#3DDC84;}
   .welcomeActions{display:flex; flex-direction:column; gap:10px;}
 
   .mascot-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:22px;}
+  .mascot-avatar{width:44px; height:44px; border-radius:50%; background:#232B34; display:grid; place-items:center; font-size:20px; flex:none;}
   .bubble{
     background:#1A2129; border:1px solid #2C3742; border-radius:16px 16px 16px 4px;
     padding:12px 14px; font:600 14.5px/1.4 'Nunito',sans-serif; color:#F1F5F3; max-width:320px;
@@ -234,8 +236,10 @@
 
   <!-- 0: welcome / landing -->
   <section class="screen active" data-screen="welcome">
-    <div class="welcomeLogoWrap"><img src="/assets/logo.png" alt="Echo English" class="welcomeLogo"></div>
-    <div class="mascot-row"><div style="font-size:40px;">🦜</div><div class="bubble" id="greetingBubble">Привет! Я Эхо 🦜 — помогу подтянуть английский.</div></div>
+    <!-- Текстовый плейсхолдер вместо логотипа — заменить на реальный файл, когда он будет -->
+    <div class="welcomeLogoWrap"><div class="welcomeLogoText">Assel <b>IELTS</b></div></div>
+    <!-- Аватар-эмодзи вместо фото Ассель — заменить на реальное фото репетитора -->
+    <div class="mascot-row"><div class="mascot-avatar">👩‍🏫</div><div class="bubble" id="greetingBubble">Привет! Я Ассель — помогу подготовиться к IELTS.</div></div>
     <div class="spacer"></div>
     <div class="welcomeActions">
       <button class="btn btn-primary btn-wide" onclick="go('exA')">🚀 Пройти быстрый тест</button>
@@ -283,8 +287,8 @@
   <!-- 6: loading -->
   <section class="screen" data-screen="calc">
     <div class="center-col">
-      <div class="mascot-big spin">🦜</div>
-      <div class="display" style="font-weight:700; font-size:16px;">Эхо считает результат…</div>
+      <div class="mascot-big spin">📊</div>
+      <div class="display" style="font-weight:700; font-size:16px;">Ассель считает результат…</div>
       <div class="loading-fact">Совет: чтение вслух — один из лучших способов навсегда закрепить произношение новых слов.</div>
     </div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('placeResult')">ГОТОВО</button></div>
@@ -309,7 +313,7 @@
   <!-- 8: home/catalog (данные — реальный fetch к /api/courses) -->
   <section class="screen" data-screen="home">
     <div class="apphead">
-      <div class="brand"><img src="/assets/logo.png" alt="Echo English"> Echo English</div>
+      <div class="brand">Assel IELTS</div>
       <div class="stat-pill">🔥 14</div>
     </div>
     <div class="sectiontitle">Курсы по уровням</div>
@@ -417,7 +421,7 @@
       <div class="certcard">
         <div class="cm">🏅</div>
         <div class="ct">Сертификат B1 Intermediate</div>
-        <div class="cd">Echo English</div>
+        <div class="cd">Assel IELTS</div>
       </div>
     </div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('profile')">В ПРОФИЛЬ</button></div>
@@ -428,7 +432,7 @@
     <div class="topbar"><button class="xbtn" onclick="go('home')">←</button></div>
     <div class="profilehead">
       <div class="pavatar" id="pavatar">🙂</div>
-      <div><div class="pname" id="profileName">Гость</div><div class="psub">Добро пожаловать в Echo English</div></div>
+      <div><div class="pname" id="profileName">Гость</div><div class="psub">Добро пожаловать в Assel IELTS</div></div>
     </div>
     <div class="statgrid">
       <div class="statcard"><div class="sv2">🔥 14</div><div class="sl2">дней подряд</div></div>
@@ -473,7 +477,7 @@
     const timeGreeting = hour < 5 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
     const name = tgUser?.first_name;
     const hello = name ? `${timeGreeting}, ${name}!` : `${timeGreeting}!`;
-    document.getElementById('greetingBubble').textContent = `${hello} Я Эхо 🦜 — помогу подтянуть английский.`;
+    document.getElementById('greetingBubble').textContent = `${hello} Я Ассель — помогу подготовиться к IELTS.`;
   })();
 
   // ---- Быстрый тест: вопросы 1-2 — выбор правильного слова в пропуск ----
@@ -858,7 +862,7 @@
       const label = document.getElementById(cfg.labelId);
       wave.classList.remove('animate');
       btn.textContent = '⏳';
-      label.textContent = 'Эхо слушает и проверяет ответ…';
+      label.textContent = 'Ассель слушает и проверяет ответ…';
 
       const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
       const form = new FormData();
@@ -868,7 +872,7 @@
       if (cfg.kind) form.append('kind', cfg.kind);
 
       // Backend сам обрывает вызов Gemini через 25с, но подстраховываемся и на фронте —
-      // без этого при зависшем соединении ученик смотрел бы на "Эхо слушает..." вечно.
+      // без этого при зависшем соединении ученик смотрел бы на "Ассель слушает..." вечно.
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 35000);
 

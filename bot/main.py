@@ -14,7 +14,7 @@ router_dp = Dispatcher()
 def _webapp_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🦜 Открыть Echo English", web_app=WebAppInfo(url=WEBAPP_URL))]
+            [InlineKeyboardButton(text="📚 Открыть Assel IELTS", web_app=WebAppInfo(url=WEBAPP_URL))]
         ]
     )
 
@@ -28,7 +28,7 @@ async def on_start(message: Message) -> None:
         )
         return
     await message.answer(
-        "Привет! Я Эхо 🦜 — помогу подтянуть английский.\n"
+        "Привет! Я Ассель — помогу подготовиться к IELTS.\n"
         "Всё обучение, тесты и голосовая проверка Reading — в мини-приложении ниже.",
         reply_markup=_webapp_keyboard(),
     )

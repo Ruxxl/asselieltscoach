@@ -45,7 +45,7 @@ async def grade_reading_answer(audio_bytes: bytes, mime_type: str, passage: str,
 
     prompt = _PROMPT_TEMPLATE.format(passage=passage, question=question)
     # Без явного timeout запрос к Gemini может зависнуть без ответа и без ошибки —
-    # ученик будет бесконечно смотреть на "Эхо слушает и проверяет...".
+    # ученик будет бесконечно смотреть на "Ассель слушает и проверяет...".
     response = await model.generate_content_async(
         [
             {"mime_type": mime_type, "data": audio_bytes},

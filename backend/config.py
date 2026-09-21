@@ -15,6 +15,6 @@ DISABLE_BOT_POLLING = os.environ.get("DISABLE_BOT_POLLING", "") == "1"
 WEBAPP_URL = os.environ.get("WEBAPP_URL", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/echo_english.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/assel_ielts.db")
 WEBAPP_DIR = BASE_DIR / "webapp"
 UPLOADS_DIR = BASE_DIR / "uploads"

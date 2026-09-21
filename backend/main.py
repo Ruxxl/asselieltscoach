@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
             bot_task.cancel()
 
 
-app = FastAPI(title="Echo English API", lifespan=lifespan)
+app = FastAPI(title="Assel IELTS API", lifespan=lifespan)
 
 app.include_router(courses.router)
 app.include_router(lessons.router)
