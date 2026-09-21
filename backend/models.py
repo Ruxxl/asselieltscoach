@@ -103,6 +103,18 @@ class CoursePurchase(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+class LessonProgress(Base):
+    """Факт прохождения теста урока пользователем — основа реального % прогресса курса."""
+
+    __tablename__ = "lesson_progress"
+    __table_args__ = (UniqueConstraint("user_id", "lesson_id", name="uq_lesson_progress_user_lesson"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.id"))
+    completed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class TestAttempt(Base):
     __tablename__ = "test_attempts"
 

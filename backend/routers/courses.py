@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.auth import get_or_create_user, require_user
 from backend.database import get_session
-from backend.models import Course, CoursePurchase, Module
+from backend.models import Course, CoursePurchase, LessonProgress, Module
 from backend.schemas import CourseOut, PurchaseResult
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
@@ -20,9 +20,25 @@ async def _owned_course_ids(session: AsyncSession, user_id: int | None) -> set[i
     return set(result.scalars().all())
 
 
-def _to_out(course: Course, owned_ids: set[int]) -> CourseOut:
+async def _completed_lesson_ids(session: AsyncSession, user_id: int | None) -> set[int]:
+    if not user_id:
+        return set()
+    result = await session.execute(select(LessonProgress.lesson_id).where(LessonProgress.user_id == user_id))
+    return set(result.scalars().all())
+
+
+def _to_out(course: Course, owned_ids: set[int], completed_ids: set[int]) -> CourseOut:
     out = CourseOut.model_validate(course)
     out.owned = course.id in owned_ids
+
+    total_real = 0
+    completed_real = 0
+    for module_out, module in zip(out.modules, course.modules):
+        module_out.completed_lessons = sum(1 for lesson in module.lessons if lesson.id in completed_ids)
+        total_real += len(module.lessons)
+        completed_real += module_out.completed_lessons
+    out.progress_percent = round(100 * completed_real / total_real) if total_real else None
+
     return out
 
 
@@ -33,8 +49,9 @@ async def list_courses(
 ):
     user = await get_or_create_user(session, x_telegram_init_data)
     owned_ids = await _owned_course_ids(session, user.id if user else None)
+    completed_ids = await _completed_lesson_ids(session, user.id if user else None)
     result = await session.execute(select(Course).options(_COURSE_OPTIONS).order_by(Course.order))
-    return [_to_out(c, owned_ids) for c in result.scalars().all()]
+    return [_to_out(c, owned_ids, completed_ids) for c in result.scalars().all()]
 
 
 @router.get("/{code}", response_model=CourseOut)
@@ -51,7 +68,8 @@ async def get_course(
         raise HTTPException(status_code=404, detail="Курс не найден")
     user = await get_or_create_user(session, x_telegram_init_data)
     owned_ids = await _owned_course_ids(session, user.id if user else None)
-    return _to_out(course, owned_ids)
+    completed_ids = await _completed_lesson_ids(session, user.id if user else None)
+    return _to_out(course, owned_ids, completed_ids)
 
 
 @router.post("/{code}/purchase", response_model=PurchaseResult)

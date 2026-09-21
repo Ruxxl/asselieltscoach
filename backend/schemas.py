@@ -19,6 +19,7 @@ class ModuleOut(BaseModel):
     lesson_count: int
     order: int
     lessons: list[LessonBrief] = []
+    completed_lessons: int = 0  # сколько уроков модуля пользователь уже сдал
 
     class Config:
         from_attributes = True
@@ -33,6 +34,7 @@ class CourseOut(BaseModel):
     order: int
     modules: list[ModuleOut] = []
     owned: bool = False  # куплен ли курс текущим пользователем (по X-Telegram-Init-Data)
+    progress_percent: int | None = None  # None — в курсе ещё нет реальных уроков, а не 0%
 
     class Config:
         from_attributes = True

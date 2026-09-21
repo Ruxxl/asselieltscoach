@@ -3,9 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from backend.auth import require_user
+from backend.auth import get_or_create_user, require_user
 from backend.database import get_session
-from backend.models import Course, CoursePurchase, Lesson, Module
+from backend.models import Course, CoursePurchase, Lesson, LessonProgress, Module
 from backend.schemas import AnswerCheckRequest, AnswerCheckResult, LessonDetail, QuestionOut
 
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
@@ -112,4 +112,16 @@ async def check_lesson_answers(
         given.strip().lower() == q.correct_option.strip().lower()
         for given, q in zip(payload.answers, lesson.questions)
     ]
+
+    # Прогресс считается по факту сдачи теста урока, а не по результату — так же, как
+    # сейчас не блокируется переход дальше при неверных ответах.
+    user = await get_or_create_user(session, x_telegram_init_data)
+    if user:
+        existing = await session.execute(
+            select(LessonProgress.id).where(LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id)
+        )
+        if not existing.first():
+            session.add(LessonProgress(user_id=user.id, lesson_id=lesson.id))
+            await session.commit()
+
     return AnswerCheckResult(correct_count=sum(results), total=len(results), results=results)

@@ -46,7 +46,22 @@
   .xbtn:hover{color:var(--text);}
   .pbar{flex:1; height:10px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
   .pbar > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-strong)); border-radius:999px; transition:width .3s;}
-  .lives{display:flex; align-items:center; gap:4px; flex:none; font:800 13px/1 'Inter',sans-serif; color:var(--red);}
+
+  .tabbar{
+    display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:520px;
+    background:var(--surface); border-top:1px solid var(--border); padding:10px 20px calc(10px + env(safe-area-inset-bottom));
+    gap:8px; box-shadow:0 -4px 16px rgba(70,55,170,.08); z-index:10;
+  }
+  .tabbar.show{display:flex;}
+  .tabbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; background:transparent; border:none;
+    cursor:pointer; font:700 11px 'Inter',sans-serif; color:var(--text-muted); padding:6px 0; border-radius:12px;
+  }
+  .tabbtn .tabicon{font-size:20px;}
+  .tabbtn.active{color:var(--accent);}
+  body.has-tabbar .screen.active{padding-bottom:calc(90px + env(safe-area-inset-bottom));}
+
+  .soonTag{font:800 10px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2); padding:3px 8px; border-radius:999px;}
 
   .streakline{
     font:800 11px/1 'Inter',sans-serif; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;
@@ -221,13 +236,6 @@
   .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:var(--text-secondary);}
   .aiError{color:var(--red); font:600 12.5px/1.5 'Inter',sans-serif;}
 
-  .certcard{
-    background:linear-gradient(160deg,#FFFFFF,var(--bg)); border:1.5px solid var(--accent-strong); border-radius:16px; padding:20px; text-align:center; width:100%; margin:14px 0; box-shadow:var(--shadow-card);
-  }
-  .certcard .cm{font-size:30px; margin-bottom:8px;}
-  .certcard .ct{font:800 15px 'Nunito',sans-serif; margin-bottom:4px;}
-  .certcard .cd{font:500 11.5px 'Inter',sans-serif; color:var(--text-secondary);}
-
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
   .pavatar{width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
   .pavatar img{width:100%; height:100%; object-fit:cover;}
@@ -249,7 +257,7 @@
 <div class="app" id="app">
 
   <!-- 0: welcome / landing -->
-  <section class="screen active" data-screen="welcome">
+  <section class="screen" data-screen="welcome">
     <!-- Текстовый плейсхолдер вместо логотипа — заменить на реальный файл, когда он будет -->
     <div class="welcomeLogoWrap"><div class="welcomeLogoText">Assel <b>IELTS</b></div></div>
     <div class="mascot-row"><div class="mascot-avatar"><img src="/assets/assel.jpg" alt="Ассель"></div><div class="bubble" id="greetingBubble">Привет! Я Ассель — помогу подготовиться к IELTS.</div></div>
@@ -327,14 +335,12 @@
   <section class="screen" data-screen="home">
     <div class="apphead">
       <div class="brand">Assel IELTS</div>
-      <div class="stat-pill">🔥 14</div>
+      <div class="stat-pill" id="homeStatPill">✅ 0</div>
     </div>
     <div class="sectiontitle">Курсы по уровням</div>
     <div id="courseList">
       <div style="color:var(--text-muted); font-size:13px;">Загружаю курсы…</div>
     </div>
-    <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-ghost btn-wide" onclick="go('profile')">👤 ПРОФИЛЬ</button></div>
   </section>
 
   <!-- 9: course detail -->
@@ -353,28 +359,6 @@
     <div class="aiError" id="courseBuyError" style="display:none; margin-top:6px;"></div>
     <div class="spacer"></div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="buyOrContinueCourse()">ПРОДОЛЖИТЬ УРОК</button></div>
-  </section>
-
-  <!-- 10: lesson (grammar fill) -->
-  <section class="screen" data-screen="lesson">
-    <div class="topbar"><button class="xbtn" onclick="go('course')">✕</button><div class="pbar"><i style="width:40%"></i></div><div class="lives">❤️ 4</div></div>
-    <div class="badge" style="color:var(--yellow); background:var(--yellow-tint); border-color:var(--yellow-border);" id="lessonBadge">Grammar · Present Perfect</div>
-    <div class="fillline">She <span class="blank" id="blankSlot">___</span> in London since 2019.</div>
-    <div class="chips">
-      <button class="wchip" onclick="fillBlank(this,'has lived')">has lived</button>
-      <button class="wchip" onclick="fillBlank(this,'lived')">lived</button>
-      <button class="wchip" onclick="fillBlank(this,'is living')">is living</button>
-    </div>
-    <div class="spacer"></div>
-    <div class="bottombar">
-      <button class="btn btn-ghost" onclick="go('finalIntro')">ПРОПУСТИТЬ</button>
-      <button class="btn btn-primary" id="check-lesson" disabled onclick="checkLesson()">ПРОВЕРИТЬ</button>
-    </div>
-    <div class="feedback ok" id="fb-lesson">
-      <div class="ftitle">✅ Точно!</div>
-      <div class="fsub">Present Perfect — действие началось в прошлом и продолжается сейчас.</div>
-      <button class="btn btn-primary btn-wide" onclick="go('finalIntro')">К ФИНАЛЬНОМУ ТЕСТУ</button>
-    </div>
   </section>
 
   <!-- 10b: lesson reader — реальный контент урока с backend (сейчас: A1 Vocabulary/Grammar) -->
@@ -403,43 +387,6 @@
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="testNextBtn" disabled onclick="submitTestAnswer()">ДАЛЕЕ</button></div>
   </section>
 
-  <!-- 11: final test / reading with REAL voice recording + Gemini check -->
-  <section class="screen" data-screen="finalIntro">
-    <div class="topbar"><button class="xbtn" onclick="go('lesson')">✕</button><div class="pbar"><i style="width:86%"></i></div></div>
-    <div class="badge">Финальный тест · Reading</div>
-    <div class="passage">Прочитай текст и ответь вслух голосовым сообщением:<br><br><b id="passageText">"The train to Manchester leaves platform 4 at half past nine every morning."</b></div>
-    <div class="askline" id="questionText">🎤 Во сколько и с какой платформы отправляется поезд?</div>
-    <div class="mic-wrap" id="micWrap">
-      <button class="mic-btn" id="micBtn" onclick="finalVoiceTest.toggle()">🎙️</button>
-      <div class="mic-label" id="micLabel">Нажми, ответь голосом и нажми ещё раз, чтобы остановить запись</div>
-      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    </div>
-    <div class="liveCaption" id="liveCaption"><b>Слышу вживую</b><span id="liveCaptionText">…</span></div>
-    <div class="aiPanel" id="aiPanel"></div>
-    <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="toResultsBtn" style="display:none;" onclick="go('finalResult')">СМОТРЕТЬ ИТОГ ТЕСТА</button></div>
-  </section>
-
-  <!-- 12: final results / certificate -->
-  <section class="screen" data-screen="finalResult">
-    <div class="center-col" style="padding-top:6px;">
-      <div style="font-size:16px; font-weight:800; font-family:'Nunito';">Тест пройден!</div>
-      <div class="resultlevel" style="font-size:38px;">89%</div>
-      <div style="width:100%; margin:10px 0 6px;">
-        <div class="skillrow"><div class="sl">Reading</div><div class="sb"><i style="width:92%; background:var(--accent-strong);"></i></div><div class="sv">92%</div></div>
-        <div class="skillrow"><div class="sl">Listening</div><div class="sb"><i style="width:85%; background:var(--blue);"></i></div><div class="sv">85%</div></div>
-        <div class="skillrow"><div class="sl">Grammar</div><div class="sb"><i style="width:78%; background:var(--yellow);"></i></div><div class="sv">78%</div></div>
-        <div class="skillrow"><div class="sl">Speaking</div><div class="sb"><i style="width:88%; background:var(--red);"></i></div><div class="sv">88%</div></div>
-      </div>
-      <div class="certcard">
-        <div class="cm">🏅</div>
-        <div class="ct">Сертификат B1 Intermediate</div>
-        <div class="cd">Assel IELTS</div>
-      </div>
-    </div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('profile')">В ПРОФИЛЬ</button></div>
-  </section>
-
   <!-- 13: profile -->
   <section class="screen" data-screen="profile">
     <div class="topbar"><button class="xbtn" onclick="go('home')">←</button></div>
@@ -448,16 +395,19 @@
       <div><div class="pname" id="profileName">Гость</div><div class="psub">Добро пожаловать в Assel IELTS</div></div>
     </div>
     <div class="statgrid">
-      <div class="statcard"><div class="sv2">🔥 14</div><div class="sl2">дней подряд</div></div>
+      <div class="statcard"><div class="sv2" id="completedStat">0</div><div class="sl2">уроков пройдено</div></div>
       <div class="statcard"><div class="sv2" id="ownedCountStat">0</div><div class="sl2">куплено курсов</div></div>
     </div>
     <div class="sectiontitle">Мои курсы</div>
     <div id="myCoursesList"><div class="hint">Загружаю…</div></div>
-    <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-ghost btn-wide" onclick="go('home')">🏠 НА ГЛАВНУЮ</button></div>
   </section>
 
 </div>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tabbtn" data-tab="home" onclick="go('home')"><span class="tabicon">📚</span>Курсы</button>
+  <button class="tabbtn" data-tab="profile" onclick="go('profile')"><span class="tabicon">👤</span>Профиль</button>
+</nav>
 
 <script>
   const tg = window.Telegram?.WebApp;
@@ -470,10 +420,29 @@
     return h;
   }
 
+  const TABBAR_SCREENS = new Set(['home', 'course', 'profile']);
+  const ONBOARDED_KEY = 'echoIeltsOnboarded';
+
   function go(id){
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
+    const showTabbar = TABBAR_SCREENS.has(id);
+    document.body.classList.toggle('has-tabbar', showTabbar);
+    document.getElementById('tabbar').classList.toggle('show', showTabbar);
+    if (showTabbar) {
+      const activeTab = id === 'course' ? 'home' : id;
+      document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab));
+    }
+    if (id === 'home') {
+      try { localStorage.setItem(ONBOARDED_KEY, '1'); } catch (e) {}
+    }
     window.scrollTo(0,0);
   }
+
+  // Вернувшихся пользователей (уже видели онбординг хотя бы раз) сразу пускаем в каталог,
+  // а не гоняем через приветствие/быстрый тест заново при каждом открытии мини-аппа.
+  let alreadyOnboarded = false;
+  try { alreadyOnboarded = localStorage.getItem(ONBOARDED_KEY) === '1'; } catch (e) {}
+  go(alreadyOnboarded ? 'home' : 'welcome');
 
   const tgUser = tg?.initDataUnsafe?.user || null;
 
@@ -534,15 +503,6 @@
     });
   }
 
-  function fillBlank(el,word){
-    document.getElementById('blankSlot').textContent = word;
-    document.getElementById('blankSlot').style.color = word==='has lived' ? 'var(--accent)' : 'var(--red)';
-    document.getElementById('check-lesson').removeAttribute('disabled');
-  }
-  function checkLesson(){
-    document.getElementById('fb-lesson').classList.add('show');
-  }
-
   // ---- Каталог курсов: реальный запрос к backend, владение проверяется на сервере ----
   const LEVEL_COLORS = {B55:'#FBE2D2', B65:'#E3DEFB', B75:'#D8F0EA'};
   let coursesCache = [];
@@ -555,9 +515,19 @@
       coursesCache = await res.json();
       renderCourseList();
       renderMyCourses();
+      updateProgressStat();
     } catch (e) {
       listEl.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить курсы (backend не запущен?). ' + e.message + '</div>';
     }
+  }
+
+  // Честная замена фейкового стрика: сумма реально пройденных (сданных) уроков по всем курсам.
+  function updateProgressStat(){
+    const total = coursesCache.reduce((sum, c) => sum + c.modules.reduce((s, m) => s + (m.completed_lessons || 0), 0), 0);
+    const homePill = document.getElementById('homeStatPill');
+    if (homePill) homePill.textContent = `✅ ${total}`;
+    const profileStat = document.getElementById('completedStat');
+    if (profileStat) profileStat.textContent = total;
   }
 
   function renderCourseList(){
@@ -590,7 +560,11 @@
       row.className = 'mycourse';
       row.style.cursor = 'pointer';
       row.onclick = () => openCourse(c);
-      row.innerHTML = `<div class="ic" style="background:${LEVEL_COLORS[c.code] || 'var(--surface-2)'};">${c.code}</div><div style="flex:1"><div class="tt">${c.title}</div></div>`;
+      const progressHtml = c.progress_percent === null
+        ? '<div class="hint" style="margin-top:2px;">Материалы курса скоро</div>'
+        : `<div class="pb"><i style="width:${c.progress_percent}%"></i></div>`;
+      row.innerHTML = `<div class="ic" style="background:${LEVEL_COLORS[c.code] || 'var(--surface-2)'};">${c.code}</div>
+        <div style="flex:1"><div class="tt">${c.title}</div>${progressHtml}</div>`;
       listEl.appendChild(row);
     });
   }
@@ -607,19 +581,23 @@
     const modsEl = document.getElementById('courseModules');
     modsEl.innerHTML = '';
     c.modules.forEach((m, i) => {
-      const unlocked = c.owned || i === 0;
       const hasRealLessons = !!(m.lessons && m.lessons.length);
+      const unlocked = hasRealLessons && (c.owned || i === 0);
       const row = document.createElement('div');
       row.className = 'modrow' + (unlocked ? '' : ' locked');
       row.style.cursor = unlocked ? 'pointer' : 'default';
       row.style.opacity = unlocked ? '1' : '.5';
+      const countLabel = hasRealLessons
+        ? `${m.completed_lessons}/${m.lesson_count} уроков${i === 0 && !c.owned ? ' · бесплатно' : ''}`
+        : `${m.lesson_count} уроков`;
+      const msContent = !hasRealLessons ? '<span class="soonTag">Скоро</span>' : (unlocked ? '⌄' : '🔒');
       row.innerHTML = `<div class="mi">${MODULE_ICONS[m.kind] || '📘'}</div>
-        <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${m.lesson_count} уроков${i === 0 && !c.owned ? ' · бесплатно' : ''}</div></div>
-        <div class="ms" id="ms-${c.code}-${m.id}">${unlocked ? (hasRealLessons ? '⌄' : '▶️') : '🔒'}</div>`;
+        <div style="flex:1"><div class="mt">${m.title}</div><div class="mc">${countLabel}</div></div>
+        <div class="ms" id="ms-${c.code}-${m.id}">${msContent}</div>`;
       modsEl.appendChild(row);
 
       if (!hasRealLessons) {
-        if (unlocked) row.onclick = () => openLesson(c, m);
+        // Модуль без реального контента — всегда "Скоро", без демо-заглушки вместо него.
         return;
       }
 
@@ -646,9 +624,18 @@
   }
 
   function updateCourseBuyBtn(c){
-    document.getElementById('courseBuyBtn').textContent = c.owned
-      ? 'ПРОДОЛЖИТЬ УРОК'
-      : 'КУПИТЬ КУРС · ' + c.price_kzt.toLocaleString('ru-RU') + ' ₸';
+    const btn = document.getElementById('courseBuyBtn');
+    const hasAnyRealLessons = c.modules.some(m => m.lessons && m.lessons.length);
+    if (!c.owned) {
+      btn.textContent = 'КУПИТЬ КУРС · ' + c.price_kzt.toLocaleString('ru-RU') + ' ₸';
+      btn.disabled = false;
+    } else if (hasAnyRealLessons) {
+      btn.textContent = 'ПРОДОЛЖИТЬ УРОК';
+      btn.disabled = false;
+    } else {
+      btn.textContent = 'Материалы курса скоро';
+      btn.disabled = true;
+    }
   }
 
   function openCourse(c){
@@ -692,14 +679,8 @@
       return;
     }
 
-    const firstModule = currentCourse.modules[0];
-    if (firstModule.lessons && firstModule.lessons.length) openLessonReader(firstModule.lessons[0].id);
-    else openLesson(currentCourse, firstModule);
-  }
-
-  function openLesson(course, module){
-    document.getElementById('lessonBadge').textContent = `${MODULE_ICONS[module.kind] || '📘'} ${module.title} · ${course.code}`;
-    go('lesson');
+    const nextModule = currentCourse.modules.find(m => m.lessons && m.lessons.length);
+    if (nextModule) openLessonReader(nextModule.lessons[0].id);
   }
 
   // ---- Читалка реального урока + его тест (по образцу study.ru) ----
@@ -760,7 +741,10 @@
       b.textContent = opt;
       b.onclick = () => {
         testSelectedOption = opt;
-        document.getElementById('testBlank').textContent = opt;
+        // Не у всех вопросов есть {blank} в prompt (например, обычный вопрос без пропуска) —
+        // testBlank тогда просто нет в разметке, и выбор показывает только подсветка чипа.
+        const blankEl = document.getElementById('testBlank');
+        if (blankEl) blankEl.textContent = opt;
         nextBtn.removeAttribute('disabled');
         [...optsEl.children].forEach(c => c.classList.remove('sel'));
         b.classList.add('sel');
@@ -783,7 +767,7 @@
     document.getElementById('testProgress').style.width = '100%';
     const res = await fetch(`/api/lessons/${currentLessonData.id}/check`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ answers: testAnswers }),
     });
     const result = await res.json();
@@ -794,20 +778,28 @@
     const nextBtn = document.getElementById('testNextBtn');
     nextBtn.removeAttribute('disabled');
     nextBtn.textContent = currentLessonData.next_lesson_id ? 'СЛЕДУЮЩИЙ УРОК' : 'К КУРСУ';
-    nextBtn.onclick = () => {
+    nextBtn.onclick = async () => {
       nextBtn.onclick = null;
       const goNextId = currentLessonData.next_lesson_id;
-      if (goNextId) openLessonReader(goNextId);
-      else go('course');
+      if (goNextId) { openLessonReader(goNextId); return; }
+      // Последний урок модуля сдан — подтягиваем свежий прогресс перед возвратом на экран курса.
+      await loadCourses();
+      const updated = coursesCache.find(item => item.code === currentCourse.code);
+      if (updated) {
+        currentCourse = updated;
+        renderCourseModules(currentCourse);
+        updateCourseBuyBtn(currentCourse);
+      }
+      go('course');
     };
   }
 
   loadCourses();
 
   // ---- Голосовая проверка (mic + Web Speech live-caption + реальная оценка через Gemini) ----
-  // Переиспользуемая фабрика: одна и та же логика питает и финальный Reading-тест курса,
-  // и 3-й вопрос быстрого теста — отличаются только тексты/id элементов и то, блокируем ли
-  // переход дальше при неверном ответе.
+  // Фабрика оставлена переиспользуемой: сейчас её использует только 3-й вопрос быстрого
+  // теста (quickVoiceTest), но конфиг через cfg позволяет так же подключить любой другой
+  // голосовой экран без переписывания логики записи/распознавания.
   const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   function createVoiceTest(cfg){
@@ -931,14 +923,6 @@
 
     return { toggle };
   }
-
-  const finalVoiceTest = createVoiceTest({
-    micBtnId: 'micBtn', waveId: 'wave', labelId: 'micLabel', micWrapId: 'micWrap',
-    liveCaptionId: 'liveCaption', liveCaptionTextId: 'liveCaptionText', aiPanelId: 'aiPanel',
-    nextBtnId: 'toResultsBtn', blockOnWrong: false, kind: 'final',
-    passage: "The train to Manchester leaves platform 4 at half past nine every morning.",
-    question: "What time does the train leave, and from which platform?",
-  });
 
   const quickVoiceTest = createVoiceTest({
     micBtnId: 'quickMicBtn', waveId: 'quickWave', labelId: 'quickMicLabel', micWrapId: 'quickMicWrap',
