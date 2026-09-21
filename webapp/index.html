@@ -285,16 +285,7 @@
   .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:var(--text-secondary);}
   .aiError{color:var(--red); font:600 12.5px/1.5 'Inter',sans-serif;}
 
-  .speakingOrb{
-    width:120px; height:120px; border-radius:50%; margin:10px auto 18px;
-    background:radial-gradient(circle at 35% 30%, var(--accent-strong), var(--accent) 70%);
-    box-shadow:0 10px 30px rgba(90,79,217,.35); transition:transform .2s ease; flex:none;
-  }
-  .speakingOrb.speaking{animation:orbPulse 1s ease-in-out infinite;}
-  @keyframes orbPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
-  @media (prefers-reduced-motion: reduce){.speakingOrb.speaking{animation:none;}}
-  .speakingStatus{text-align:center; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:14px;}
-  .speakingTranscriptWrap{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; min-height:0;}
+  .speakingStatus{text-align:center; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-top:8px;}
 
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
   .pavatar{width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
@@ -488,29 +479,27 @@
     </div>
   </section>
 
-  <!-- 16: speaking practice — setup (Quick Start в стиле LexiBot) -->
+  <!-- 16: speaking practice — setup: только выбор части экзамена -->
   <section class="screen" data-screen="speaking">
     <div class="apphead"><div class="brand">Speaking Practice</div></div>
-    <div class="sectiontitle">Быстрый старт</div>
+    <div class="sectiontitle">Выбери часть</div>
     <div id="speakingPresets"></div>
-    <div class="sectiontitle">Тема</div>
-    <div class="chips" id="speakingTopicChips"></div>
-    <div class="sectiontitle">Целевой балл</div>
-    <div class="chips" id="speakingLevelChips"></div>
-    <div class="sectiontitle">Режим практики</div>
-    <div class="chips" id="speakingModeChips"></div>
     <div class="spacer"></div>
     <div class="aiError" id="speakingStartError" style="display:none;"></div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingStartBtn" onclick="startSpeakingSession()">НАЧАТЬ</button></div>
   </section>
 
-  <!-- 17: speaking practice — живой звонок с ИИ-экзаменатором (Gemini Live API) -->
+  <!-- 17: speaking practice — пошаговый диалог с ИИ-экзаменатором (см. backend/services/speaking.py):
+       ученик записывает ответ голосом -> Gemini расшифровывает + отвечает текстом ->
+       ответ озвучивается браузерным speechSynthesis. Не live-аудио стрим. -->
   <section class="screen" data-screen="speakingSession">
     <div class="topbar"><button class="xbtn" onclick="exitSpeakingSession()">✕</button><div class="badge" id="speakingSessionBadge">Speaking</div></div>
-    <div class="speakingOrb" id="speakingOrb"></div>
-    <div class="speakingStatus" id="speakingStatus">Подключаюсь…</div>
-    <div class="speakingTranscriptWrap" id="speakingTranscript"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingEndBtn" onclick="endSpeakingCall()">ЗАВЕРШИТЬ</button></div>
+    <div class="chatWrap" id="speakingTranscript"></div>
+    <div class="mic-wrap" style="flex:none; padding:14px 0 4px;">
+      <button class="mic-btn" id="speakingMicBtn" onclick="toggleSpeakingMic()">🎙️</button>
+      <div class="speakingStatus" id="speakingStatus">Нажми и ответь голосом</div>
+    </div>
+    <div class="bottombar"><button class="btn btn-ghost btn-wide" id="speakingEndBtn" onclick="finishSpeakingCall()">ЗАВЕРШИТЬ ДОСРОЧНО</button></div>
   </section>
 
   <!-- 18: speaking practice — отчёт с оценкой по критериям IELTS -->
@@ -609,7 +598,7 @@
 
   function go(id){
     const prevScreen = document.querySelector('.screen.active')?.dataset.screen;
-    if (prevScreen === 'speakingSession' && id !== 'speakingSession') abandonSpeakingCall();
+    if (prevScreen === 'speakingSession' && id !== 'speakingSession') stopSpeakingMic();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
     const showTabbar = TABBAR_SCREENS.has(id);
     document.body.classList.toggle('has-tabbar', showTabbar);
@@ -1189,33 +1178,19 @@
   renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
   renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
 
-  // ---- Speaking Practice: живой голосовой разговор с ИИ-экзаменатором (Gemini Live API) ----
-  // Архитектура: браузер шлёт сырой PCM16/16kHz звук с микрофона бинарными WS-фреймами,
-  // backend релеит его в Gemini Live и стримит обратно PCM16/24kHz голос модели + текстовые
-  // JSON-фреймы с живым транскриптом. См. backend/routers/speaking.py и
-  // backend/services/speaking_live.py.
+  // ---- Speaking Practice: пошаговый диалог с ИИ-экзаменатором (не live-аудио) ----
+  // Каждый ход: запись голоса (MediaRecorder, как в createVoiceTest) -> POST аудио на
+  // /api/speaking/{id}/turn -> Gemini одним запросом расшифровывает + отвечает текстом ->
+  // ответ озвучивается браузерным speechSynthesis (бесплатно, без внешнего API).
+  // См. backend/routers/speaking.py и backend/services/speaking.py.
 
   const SPEAKING_PARTS = [
     { id: 'part1', icon: '1️⃣', title: 'IELTS Speaking Part 1', desc: 'Короткие вопросы о себе · ~5 мин' },
     { id: 'part2', icon: '2️⃣', title: 'IELTS Speaking Part 2', desc: 'Монолог по карточке · ~3 мин' },
     { id: 'part3', icon: '3️⃣', title: 'IELTS Speaking Part 3', desc: 'Дискуссия · ~5 мин' },
-    { id: 'full', icon: '🎓', title: 'Full Mock Test', desc: 'Части 1–3 подряд · ~14 мин' },
-  ];
-  const SPEAKING_TOPICS = [
-    { id: 'random', label: 'Случайная' },
-    { id: 'hometown', label: 'Родной город' },
-    { id: 'work_study', label: 'Работа/учёба' },
-    { id: 'accommodation', label: 'Жильё' },
-    { id: 'family', label: 'Семья' },
-    { id: 'hobbies', label: 'Хобби' },
-  ];
-  const SPEAKING_LEVELS = ['4.0', '5.0', '6.0', '7.0', '8.0'].map(v => ({ id: v, label: 'Band ' + v }));
-  const SPEAKING_MODES = [
-    { id: 'mock_test', label: 'Mock Test' },
-    { id: 'guided_practice', label: 'Guided Practice' },
   ];
 
-  let speakingChoice = { part: 'part1', topic: 'random', target_level: '6.0', practice_mode: 'mock_test' };
+  let speakingChoice = { part: 'part1' };
   let currentSpeakingSessionId = null;
 
   function renderSpeakingSetup(){
@@ -1227,21 +1202,6 @@
       card.onclick = () => { speakingChoice.part = p.id; renderSpeakingSetup(); };
       card.innerHTML = `<div class="lv">${p.icon}</div><div><div class="tt">${p.title}</div><div class="ds">${p.desc}</div></div>`;
       presetsEl.appendChild(card);
-    });
-    renderSpeakingChips('speakingTopicChips', SPEAKING_TOPICS, speakingChoice.topic, id => { speakingChoice.topic = id; renderSpeakingSetup(); });
-    renderSpeakingChips('speakingLevelChips', SPEAKING_LEVELS, speakingChoice.target_level, id => { speakingChoice.target_level = id; renderSpeakingSetup(); });
-    renderSpeakingChips('speakingModeChips', SPEAKING_MODES, speakingChoice.practice_mode, id => { speakingChoice.practice_mode = id; renderSpeakingSetup(); });
-  }
-
-  function renderSpeakingChips(containerId, items, activeId, onPick){
-    const el = document.getElementById(containerId);
-    el.innerHTML = '';
-    items.forEach(item => {
-      const chip = document.createElement('div');
-      chip.className = 'wchip' + (item.id === activeId ? ' sel' : '');
-      chip.textContent = item.label;
-      chip.onclick = () => onPick(item.id);
-      el.appendChild(chip);
     });
   }
 
@@ -1264,8 +1224,10 @@
       document.getElementById('speakingSessionBadge').textContent = partLabel;
       document.getElementById('speakingTranscript').innerHTML = '';
       document.getElementById('speakingEndBtn').disabled = false;
+      appendSpeakingBubble('ai', data.ai_message);
+      speakSpeakingText(data.ai_message);
+      setSpeakingStatus('Нажми и ответь голосом');
       go('speakingSession');
-      await openSpeakingCall(data.session_id);
     } catch (e) {
       errEl.textContent = 'Не удалось начать: ' + e.message;
       errEl.style.display = 'block';
@@ -1275,68 +1237,21 @@
     }
   }
 
-  // ---- Живой звонок: захват микрофона -> PCM16/16kHz -> WS, и воспроизведение PCM16/24kHz от Gemini ----
-  let speakingAudioCtx = null, speakingMicStream = null, speakingProcessor = null, speakingSourceNode = null;
-  let speakingWs = null, speakingPlaybackTime = 0;
-  let speakingDoneReceived = false, speakingErrorShown = false;
-
-  function downsampleTo16k(float32Array, inputSampleRate){
-    const targetRate = 16000;
-    if (inputSampleRate === targetRate) return float32Array;
-    const ratio = inputSampleRate / targetRate;
-    const newLength = Math.round(float32Array.length / ratio);
-    const result = new Float32Array(newLength);
-    let offsetResult = 0, offsetBuffer = 0;
-    while (offsetResult < newLength) {
-      const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
-      let accum = 0, count = 0;
-      for (let i = offsetBuffer; i < nextOffsetBuffer && i < float32Array.length; i++) { accum += float32Array[i]; count++; }
-      result[offsetResult] = count ? accum / count : 0;
-      offsetResult++;
-      offsetBuffer = nextOffsetBuffer;
-    }
-    return result;
-  }
-
-  function floatTo16BitPCM(float32Array){
-    const buf = new ArrayBuffer(float32Array.length * 2);
-    const view = new DataView(buf);
-    for (let i = 0, offset = 0; i < float32Array.length; i++, offset += 2) {
-      const s = Math.max(-1, Math.min(1, float32Array[i]));
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    }
-    return buf;
-  }
-
-  function playSpeakingAudioChunk(arrayBuffer){
-    if (!speakingAudioCtx) return;
-    const int16 = new Int16Array(arrayBuffer);
-    const float32 = new Float32Array(int16.length);
-    for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 0x8000;
-    const buffer = speakingAudioCtx.createBuffer(1, float32.length, 24000);
-    buffer.copyToChannel(float32, 0);
-    const source = speakingAudioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(speakingAudioCtx.destination);
-    const startAt = Math.max(speakingAudioCtx.currentTime, speakingPlaybackTime);
-    source.start(startAt);
-    speakingPlaybackTime = startAt + buffer.duration;
-    document.getElementById('speakingOrb')?.classList.add('speaking');
-    source.onended = () => {
-      if (speakingPlaybackTime <= speakingAudioCtx.currentTime + 0.05) {
-        document.getElementById('speakingOrb')?.classList.remove('speaking');
-      }
-    };
-  }
-
-  function appendSpeakingTranscript(speaker, text){
+  function appendSpeakingBubble(speaker, text){
     const wrap = document.getElementById('speakingTranscript');
-    const row = document.createElement('div');
-    row.className = 'liveCaption show';
-    row.innerHTML = `<b>${speaker === 'ai' ? 'Экзаменатор' : 'Ты'}</b><span></span>`;
-    row.querySelector('span').textContent = text;
-    wrap.appendChild(row);
+    const bubble = document.createElement('div');
+    bubble.className = 'chatBubble ' + (speaker === 'user' ? 'student' : 'teacher');
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
     wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function speakSpeakingText(text){
+    if (!window.speechSynthesis || !text) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    window.speechSynthesis.speak(utter);
   }
 
   function setSpeakingStatus(text){
@@ -1344,123 +1259,93 @@
     if (el) el.textContent = text;
   }
 
-  function speakingWsUrl(sessionId){
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const q = initData ? ('?init_data=' + encodeURIComponent(initData)) : '';
-    return `${proto}//${location.host}/api/speaking/ws/${sessionId}${q}`;
+  // ---- Запись хода ученика — тот же MediaRecorder-паттерн, что и в createVoiceTest ----
+  let speakingRecorder = null, speakingAudioChunks = [], speakingIsRecording = false;
+
+  async function toggleSpeakingMic(){
+    const btn = document.getElementById('speakingMicBtn');
+    if (!speakingIsRecording) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        speakingAudioChunks = [];
+        speakingRecorder = new MediaRecorder(stream);
+        speakingRecorder.ondataavailable = e => speakingAudioChunks.push(e.data);
+        speakingRecorder.onstop = onSpeakingRecordingStop;
+        speakingRecorder.start();
+        speakingIsRecording = true;
+        btn.classList.add('rec');
+        btn.textContent = '⏹️';
+        setSpeakingStatus('Идёт запись… нажми ещё раз, чтобы остановить');
+      } catch (e) {
+        setSpeakingStatus('Нет доступа к микрофону: ' + e.message);
+      }
+    } else {
+      speakingRecorder.stop();
+      speakingRecorder.stream.getTracks().forEach(t => t.stop());
+      speakingIsRecording = false;
+    }
   }
 
-  async function openSpeakingCall(sessionId){
-    speakingDoneReceived = false;
-    speakingErrorShown = false;
-    setSpeakingStatus('Подключаюсь…');
+  async function onSpeakingRecordingStop(){
+    const btn = document.getElementById('speakingMicBtn');
+    btn.classList.remove('rec');
+    btn.textContent = '⏳';
+    setSpeakingStatus('Ассель слушает и отвечает…');
+
+    const blob = new Blob(speakingAudioChunks, { type: speakingRecorder.mimeType || 'audio/webm' });
+    const form = new FormData();
+    form.append('audio', blob, 'turn.webm');
 
     try {
-      speakingMicStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
-    } catch (e) {
-      setSpeakingStatus('Нет доступа к микрофону: ' + e.message);
-      document.getElementById('speakingEndBtn').disabled = true;
-      return;
-    }
-
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    speakingAudioCtx = new AudioCtx();
-    speakingPlaybackTime = speakingAudioCtx.currentTime;
-    speakingSourceNode = speakingAudioCtx.createMediaStreamSource(speakingMicStream);
-    speakingProcessor = speakingAudioCtx.createScriptProcessor(4096, 1, 1);
-    speakingSourceNode.connect(speakingProcessor);
-    // Узел должен быть подключен к destination, иначе onaudioprocess не сработает в части
-    // браузеров — вывод при этом остаётся тишиной, т.к. в outputBuffer мы ничего не пишем.
-    speakingProcessor.connect(speakingAudioCtx.destination);
-
-    speakingWs = new WebSocket(speakingWsUrl(sessionId));
-    speakingWs.binaryType = 'arraybuffer';
-
-    speakingWs.onopen = () => {
-      setSpeakingStatus('Идёт разговор — говори в микрофон');
-      speakingProcessor.onaudioprocess = (e) => {
-        if (!speakingWs || speakingWs.readyState !== WebSocket.OPEN) return;
-        const input = e.inputBuffer.getChannelData(0);
-        const down = downsampleTo16k(input, speakingAudioCtx.sampleRate);
-        speakingWs.send(floatTo16BitPCM(down));
-      };
-    };
-
-    speakingWs.onmessage = (event) => {
-      if (typeof event.data === 'string') {
-        let msg;
-        try { msg = JSON.parse(event.data); } catch (e) { return; }
-        if (msg.type === 'transcript') appendSpeakingTranscript(msg.speaker, msg.text);
-        else if (msg.type === 'error') { speakingErrorShown = true; setSpeakingStatus('⚠️ ' + msg.message); }
-        else if (msg.type === 'done') { speakingDoneReceived = true; finishSpeakingCall(); }
+      const res = await fetch(`/api/speaking/${currentSpeakingSessionId}/turn`, {
+        method: 'POST', headers: authHeaders(), body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+      if (data.student_said) appendSpeakingBubble('user', data.student_said);
+      appendSpeakingBubble('ai', data.ai_message);
+      speakSpeakingText(data.ai_message);
+      btn.textContent = '🎙️';
+      if (data.finished) {
+        setSpeakingStatus('Часть завершена — считаю оценку…');
+        document.getElementById('speakingEndBtn').disabled = true;
+        finishSpeakingCall();
       } else {
-        playSpeakingAudioChunk(event.data);
+        setSpeakingStatus('Нажми и ответь голосом');
       }
-    };
-
-    speakingWs.onclose = () => {
-      stopSpeakingAudio();
-      if (!speakingDoneReceived && !speakingErrorShown) {
-        setSpeakingStatus('Соединение прервалось. Попробуй начать заново.');
-      }
-      document.getElementById('speakingEndBtn').disabled = true;
-    };
-
-    speakingWs.onerror = () => { speakingErrorShown = true; setSpeakingStatus('⚠️ Ошибка соединения'); };
+    } catch (e) {
+      btn.textContent = '🎙️';
+      setSpeakingStatus('⚠️ ' + e.message);
+    }
   }
 
-  function endSpeakingCall(){
-    if (speakingWs && speakingWs.readyState === WebSocket.OPEN) {
-      speakingWs.send(JSON.stringify({ type: 'finish' }));
+  function stopSpeakingMic(){
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (speakingIsRecording && speakingRecorder) {
+      try { speakingRecorder.stop(); speakingRecorder.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      speakingIsRecording = false;
     }
-    setSpeakingStatus('Завершаю и получаю оценку…');
-    document.getElementById('speakingEndBtn').disabled = true;
   }
 
   function exitSpeakingSession(){
-    if (speakingWs && speakingWs.readyState === WebSocket.OPEN) {
-      try { speakingWs.send(JSON.stringify({ type: 'finish' })); } catch (e) {}
-    }
-    abandonSpeakingCall();
+    stopSpeakingMic();
     go('speaking');
   }
 
-  function abandonSpeakingCall(){
-    stopSpeakingAudio();
-  }
-
-  function stopSpeakingAudio(){
-    if (speakingProcessor) { speakingProcessor.onaudioprocess = null; speakingProcessor.disconnect(); speakingProcessor = null; }
-    if (speakingSourceNode) { speakingSourceNode.disconnect(); speakingSourceNode = null; }
-    if (speakingMicStream) { speakingMicStream.getTracks().forEach(t => t.stop()); speakingMicStream = null; }
-    if (speakingAudioCtx) { speakingAudioCtx.close(); speakingAudioCtx = null; }
-    if (speakingWs) { try { speakingWs.close(); } catch (e) {} speakingWs = null; }
-  }
-
-  function finishSpeakingCall(){
-    stopSpeakingAudio();
+  async function finishSpeakingCall(){
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     go('speakingReport');
-    pollSpeakingReport(currentSpeakingSessionId);
-  }
-
-  async function pollSpeakingReport(sessionId){
     const reportEl = document.getElementById('speakingReportBody');
     reportEl.innerHTML = '<div class="hint">Считаю оценку…</div>';
-    for (let i = 0; i < 30; i++) {
-      try {
-        const res = await fetch(`/api/speaking/${sessionId}`, { headers: authHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'done') { renderSpeakingReport(data); return; }
-          if (data.status === 'error') {
-            reportEl.innerHTML = `<div class="aiError">${escapeHtml(data.error_message || 'Не удалось получить оценку.')}</div>`;
-            return;
-          }
-        }
-      } catch (e) { /* сеть моргнула — просто попробуем ещё раз */ }
-      await new Promise(r => setTimeout(r, 2000));
+    try {
+      const res = await fetch(`/api/speaking/${currentSpeakingSessionId}/finish`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+      renderSpeakingReport(data);
+    } catch (e) {
+      reportEl.innerHTML = `<div class="aiError">${escapeHtml(e.message)}</div>`;
     }
-    reportEl.innerHTML = '<div class="aiError">Не удалось дождаться оценки. Загляни в отчёт ещё раз чуть позже.</div>';
   }
 
   function renderSpeakingReport(data){

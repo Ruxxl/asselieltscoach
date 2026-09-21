@@ -83,22 +83,24 @@ class ReadingCheckResult(BaseModel):
 
 
 class SpeakingStartRequest(BaseModel):
-    part: str  # part1 / part2 / part3 / full
-    topic: str
-    target_level: str
-    practice_mode: str  # mock_test / guided_practice
+    part: str  # part1 / part2 / part3
 
 
 class SpeakingStartResult(BaseModel):
     session_id: int
+    ai_message: str  # первая реплика экзаменатора — открывающий вопрос "о чём поговорим?"
+
+
+class SpeakingTurnResult(BaseModel):
+    student_said: str
+    ai_message: str
+    finished: bool
 
 
 class SpeakingSessionOut(BaseModel):
     id: int
     status: str
     part: str
-    topic: str
-    target_level: str
     fluency_coherence: float | None = None
     lexical_resource: float | None = None
     grammar_accuracy: float | None = None

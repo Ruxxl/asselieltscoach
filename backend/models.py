@@ -146,21 +146,15 @@ class TestAnswer(Base):
 
 
 class SpeakingSession(Base):
-    """Сессия живой голосовой практики Speaking с ИИ-экзаменатором (Gemini Live API).
-
-    В отличие от TestAttempt/TestAnswer (дискретные вопрос-ответ пары), здесь один
-    непрерывный голосовой диалог — поэтому транскрипт хранится целиком одним полем,
-    а не по-вопросно.
-    """
+    """Сессия практики Speaking с ИИ-экзаменатором — пошаговый диалог (не live-аудио,
+    см. backend/services/speaking.py): каждый ход ученика — отдельный аудио-запрос,
+    транскрипт копится целиком в transcript_json по мере разговора."""
 
     __tablename__ = "speaking_sessions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    part: Mapped[str] = mapped_column(String(16))  # part1 / part2 / part3 / full
-    topic: Mapped[str] = mapped_column(String(32))
-    target_level: Mapped[str] = mapped_column(String(8))  # напр. "6.0"
-    practice_mode: Mapped[str] = mapped_column(String(16))  # mock_test / guided_practice
+    part: Mapped[str] = mapped_column(String(16))  # part1 / part2 / part3
     status: Mapped[str] = mapped_column(String(16), default="active")  # active/scoring/done/error
     transcript_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     fluency_coherence: Mapped[float | None] = mapped_column(Float, nullable=True)
