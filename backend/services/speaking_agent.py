@@ -6,28 +6,38 @@ LiveKit Cloud (бесплатный Build-тариф) для WebRTC-трансп
 Deepgram (free $200 credit) для STT+TTS, Groq (free tier) для LLM-мозга экзаменатора.
 Все три — обычные стабильные API с бесплатными тирами без карты, не preview/live.
 
-Воркер встроен в тот же процесс, что и FastAPI + Telegram-бот (backend/main.py),
-по той же причине, что и бот: Render free tier не даёт отдельный background worker.
-job_executor_type=THREAD (вместо дефолтного PROCESS) — чтобы не плодить подпроцессы
-на ограниченной памяти free-инстанса Render.
+Воркер запускается ОТДЕЛЬНЫМ Render-сервисом (см. backend/agent_worker.py), не встроен в
+процесс с ботом/FastAPI — вместе с Gemini SDK и остальным стеком он не помещался в 512MB
+free-инстанса Render и падал по OOM прямо во время звонка (подтверждено в логах Render:
+"Ran out of memory (used over 512MB)"). Раз это отдельный процесс на отдельном диске, у него
+нет доступа к SQLite основного сервиса — результат звонка отправляется обратно HTTP-запросом
+(см. AGENT_CALLBACK_SECRET / SPEAKING_API_BASE_URL и backend/routers/speaking.py).
+job_executor_type=THREAD (вместо дефолтного PROCESS) — чтобы не плодить подпроцессы на
+ограниченной памяти free-инстанса.
 """
 
-import json
 import logging
+import os
 import re
-from datetime import datetime
 
+import aiohttp
 from livekit.agents import Agent, AgentServer, AgentSession, JobContext, JobExecutorType
 from livekit.plugins import deepgram, groq, silero
 
-from backend.config import DEEPGRAM_API_KEY, GROQ_API_KEY, LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL
-from backend.database import SessionLocal
-from backend.models import SpeakingSession
+from backend.config import (
+    AGENT_CALLBACK_SECRET,
+    DEEPGRAM_API_KEY,
+    GROQ_API_KEY,
+    LIVEKIT_API_KEY,
+    LIVEKIT_API_SECRET,
+    LIVEKIT_URL,
+    SPEAKING_AGENT_NAME,
+    SPEAKING_API_BASE_URL,
+)
 from backend.services.speaking import build_examiner_instructions, score_session
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "assel-examiner"
 _ROOM_RE = re.compile(r"^speaking-(\d+)-(part[123])$")
 
 is_configured = bool(LIVEKIT_URL and LIVEKIT_API_KEY and LIVEKIT_API_SECRET and DEEPGRAM_API_KEY and GROQ_API_KEY)
@@ -38,6 +48,8 @@ server = AgentServer(
     api_secret=LIVEKIT_API_SECRET or None,
     job_executor_type=JobExecutorType.THREAD,
     num_idle_processes=0,
+    host="0.0.0.0",
+    port=int(os.environ.get("PORT", 8081)),
 )
 
 
@@ -57,39 +69,48 @@ def _extract_transcript(session: AgentSession) -> list[dict]:
     return transcript
 
 
+async def _post_report(session_id: int, payload: dict) -> None:
+    if not SPEAKING_API_BASE_URL or not AGENT_CALLBACK_SECRET:
+        logger.error(
+            "Speaking agent: SPEAKING_API_BASE_URL/AGENT_CALLBACK_SECRET not configured, "
+            "cannot report result for session %s",
+            session_id,
+        )
+        return
+    url = f"{SPEAKING_API_BASE_URL.rstrip('/')}/api/speaking/{session_id}/report"
+    try:
+        async with aiohttp.ClientSession() as http:
+            async with http.post(
+                url, json=payload, headers={"X-Agent-Secret": AGENT_CALLBACK_SECRET}, timeout=aiohttp.ClientTimeout(total=15)
+            ) as resp:
+                if resp.status >= 400:
+                    logger.error(
+                        "Speaking agent: report callback for session %s failed with %s: %s",
+                        session_id,
+                        resp.status,
+                        await resp.text(),
+                    )
+    except Exception:
+        logger.exception("Speaking agent: report callback failed for session %s", session_id)
+
+
 async def _finalize_session(session_id: int, part: str, session: AgentSession) -> None:
-    """Считает финальную оценку и сохраняет результат — вызывается, когда звонок завершён
-    (комната опустела/закрылась). Отдельный обычный текстовый запрос к Gemini, тот же
-    надёжный паттерн, что и раньше в пошаговой версии — здесь live-часть только собирает
-    транскрипт, оценка всегда посчитана одним стабильным запросом."""
+    """Считает финальную оценку и шлёт результат обратно основному сервису — вызывается,
+    когда звонок завершён (комната опустела/закрылась). Отдельный обычный текстовый запрос
+    к Gemini, тот же надёжный паттерн, что и раньше в пошаговой версии — здесь live-часть
+    только собирает транскрипт, оценка всегда посчитана одним стабильным запросом."""
     transcript = _extract_transcript(session)
-    async with SessionLocal() as db_session:
-        speaking_session = await db_session.get(SpeakingSession, session_id)
-        if not speaking_session:
-            logger.warning("Speaking agent: session %s not found when finalizing", session_id)
-            return
-        speaking_session.transcript_json = json.dumps(transcript, ensure_ascii=False)
-        try:
-            result = await score_session(transcript, part)
-        except Exception:
-            logger.exception("Speaking agent: scoring failed for session %s", session_id)
-            speaking_session.status = "error"
-            speaking_session.error_message = "Не удалось получить оценку ИИ."
-            await db_session.commit()
-            return
+    try:
+        result = await score_session(transcript, part)
+    except Exception:
+        logger.exception("Speaking agent: scoring failed for session %s", session_id)
+        await _post_report(session_id, {"transcript": transcript, "error": "Не удалось получить оценку ИИ."})
+        return
 
-        speaking_session.status = "done"
-        speaking_session.fluency_coherence = result["fluency_coherence"]
-        speaking_session.lexical_resource = result["lexical_resource"]
-        speaking_session.grammar_accuracy = result["grammar_accuracy"]
-        speaking_session.pronunciation = result["pronunciation"]
-        speaking_session.overall_band = result["overall_band"]
-        speaking_session.summary_feedback = result["summary_feedback"]
-        speaking_session.finished_at = datetime.utcnow()
-        await db_session.commit()
+    await _post_report(session_id, {"transcript": transcript, **result})
 
 
-@server.rtc_session(agent_name=AGENT_NAME)
+@server.rtc_session(agent_name=SPEAKING_AGENT_NAME)
 async def speaking_entrypoint(ctx: JobContext) -> None:
     match = _ROOM_RE.match(ctx.room.name)
     if not match:
@@ -102,7 +123,10 @@ async def speaking_entrypoint(ctx: JobContext) -> None:
     session = AgentSession(
         vad=silero.VAD.load(),
         stt=deepgram.STT(model="nova-3", language="en-US"),
-        llm=groq.LLM(model="llama-3.3-70b-versatile"),
+        # llama-3.3-70b-versatile был снят с продакшена в Groq (модель периодически меняется —
+        # если этот тоже перестанет резолвиться, актуальный список: GET
+        # https://api.groq.com/openai/v1/models с твоим ключом).
+        llm=groq.LLM(model="openai/gpt-oss-120b"),
         tts=deepgram.TTS(model="aura-2-asteria-en"),
     )
 

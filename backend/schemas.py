@@ -92,6 +92,20 @@ class SpeakingStartResult(BaseModel):
     token: str  # JWT для подключения браузера к LiveKit-комнате (livekit-client)
 
 
+class SpeakingReportIn(BaseModel):
+    """Отчёт, который отдельный сервис-агент (backend/agent_worker.py) присылает обратно
+    сюда по завершении звонка — см. AGENT_CALLBACK_SECRET в backend/config.py."""
+
+    transcript: list[dict] = []
+    error: str | None = None
+    fluency_coherence: float | None = None
+    lexical_resource: float | None = None
+    grammar_accuracy: float | None = None
+    pronunciation: float | None = None
+    overall_band: float | None = None
+    summary_feedback: str | None = None
+
+
 class SpeakingSessionOut(BaseModel):
     id: int
     status: str

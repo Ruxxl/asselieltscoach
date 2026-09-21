@@ -19,6 +19,33 @@ services:
         value: "998292747"
       - key: DATABASE_URL
         value: sqlite+aiosqlite:///./echo_english.db
+      # Нужны только для выдачи токена на вход в LiveKit-комнату (backend/routers/speaking.py) —
+      # сам голосовой агент живёт в отдельном сервисе echo-english-speaking-agent ниже,
+      # т.к. вместе с ботом/FastAPI/Gemini SDK он не помещался в 512MB этого инстанса.
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      # Секрет, которым echo-english-speaking-agent подписывает POST .../report с результатом
+      # звонка — должен быть одинаковым в обоих сервисах.
+      - key: AGENT_CALLBACK_SECRET
+        sync: false
+
+  # Отдельный сервис только для голосового ИИ-экзаменатора Speaking Practice (LiveKit Agents +
+  # Deepgram STT/TTS + Groq LLM). Вынесен из основного сервиса после реального OOM в проде
+  # ("Ran out of memory (used over 512MB)") — эта связка (livekit-agents, onnxruntime и т.д.)
+  # сама по себе занимает больше памяти, чем оставалось у процесса с ботом и FastAPI.
+  # У агента нет доступа к SQLite основного сервиса (свой диск), поэтому результат звонка он
+  # отправляет обратно HTTP-запросом на SPEAKING_API_BASE_URL — см. backend/agent_worker.py.
+  - type: web
+    name: echo-english-speaking-agent
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m backend.agent_worker
+    envVars:
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY
@@ -28,4 +55,13 @@ services:
       - key: DEEPGRAM_API_KEY
         sync: false
       - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      # Публичный URL основного сервиса (echo-english-bot) — куда слать отчёт по звонку.
+      - key: SPEAKING_API_BASE_URL
+        sync: false
+      - key: AGENT_CALLBACK_SECRET
         sync: false

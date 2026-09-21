@@ -23,12 +23,28 @@ DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/a
 WEBAPP_DIR = BASE_DIR / "webapp"
 UPLOADS_DIR = BASE_DIR / "uploads"
 
-# Live-голосовой ИИ-экзаменатор для Speaking Practice (backend/services/speaking_agent.py):
-# LiveKit Cloud (free Build tier) для WebRTC-транспорта + Deepgram ($200 free credit, STT+TTS)
-# + Groq (free tier LLM) — вместо Gemini Live/preview-моделей, которые дважды подводили
-# квотами в этом проекте (см. память сессии). Все три — бесплатные тиры без карты.
+# Live-голосовой ИИ-экзаменатор для Speaking Practice (backend/services/speaking_agent.py,
+# backend/agent_worker.py): LiveKit Cloud (free Build tier) для WebRTC-транспорта + Deepgram
+# ($200 free credit, STT+TTS) + Groq (free tier LLM) — вместо Gemini Live/preview-моделей,
+# которые дважды подводили квотами в этом проекте (см. память сессии). Все три — бесплатные
+# тиры без карты.
+#
+# Агент-воркер работает КАК ОТДЕЛЬНЫЙ Render-сервис (backend/agent_worker.py), не встроен в
+# основной процесс с ботом — вместе с FastAPI/aiogram/Gemini SDK он не помещался в 512MB
+# free-инстанса Render и падал по OOM прямо во время звонка (подтверждено в логах Render).
+# Т.к. это отдельный процесс на отдельном диске, у него нет доступа к SQLite основного
+# сервиса — результат звонка он отправляет обратно HTTP-запросом (см. AGENT_CALLBACK_SECRET
+# и роутер backend/routers/speaking.py: POST /api/speaking/{id}/report).
 LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "")
 LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY", "")
 LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "")
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+# Только у основного сервиса: секрет, которым агент-воркер подписывает callback с отчётом.
+AGENT_CALLBACK_SECRET = os.environ.get("AGENT_CALLBACK_SECRET", "")
+# Только у агент-воркера: куда слать этот callback (публичный URL основного сервиса).
+SPEAKING_API_BASE_URL = os.environ.get("SPEAKING_API_BASE_URL", "")
+# Имя, под которым агент регистрируется в LiveKit (используется и при выдаче токена на
+# основном сервисе, и в самом воркере) — общая константа, чтобы не завести опечатку в одном
+# из двух мест.
+SPEAKING_AGENT_NAME = "assel-examiner"
