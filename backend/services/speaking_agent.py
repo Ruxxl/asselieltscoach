@@ -121,7 +121,11 @@ async def speaking_entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
 
     session = AgentSession(
-        vad=silero.VAD.load(),
+        # sample_rate=8000 (вместо дефолтных 16000) — вдвое меньше сэмплов на кадр для VAD,
+        # заметно снижает нагрузку на CPU. На free-инстансе Render (0.1 vCPU) полноразмерный
+        # VAD не успевал в реальном времени ("VAD inference is slower than realtime" в логах);
+        # звонок всё равно отрабатывал корректно, но определение конца фразы запаздывало.
+        vad=silero.VAD.load(sample_rate=8000),
         stt=deepgram.STT(model="nova-3", language="en-US"),
         # llama-3.3-70b-versatile был снят с продакшена в Groq (модель периодически меняется —
         # если этот тоже перестанет резолвиться, актуальный список: GET
