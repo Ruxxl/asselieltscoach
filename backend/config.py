@@ -15,6 +15,9 @@ DISABLE_BOT_POLLING = os.environ.get("DISABLE_BOT_POLLING", "") == "1"
 WEBAPP_URL = os.environ.get("WEBAPP_URL", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
+# Live-модель для потокового голосового разговора (Speaking Practice) — отдельная от
+# GEMINI_MODEL, т.к. это другое семейство моделей (двусторонний аудио-стрим через Live API).
+GEMINI_LIVE_MODEL = os.environ.get("GEMINI_LIVE_MODEL", "gemini-3.8-live")
 # Numeric Telegram id преподавателя (не username — id не меняется). Определяет доступ
 # к админке, /news в боте, и куда слать уведомления о сообщениях учеников в чате
 # "Преподаватель". Узнать свой id можно, например, у @userinfobot.

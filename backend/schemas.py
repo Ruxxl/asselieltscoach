@@ -82,6 +82,35 @@ class ReadingCheckResult(BaseModel):
     feedback: str
 
 
+class SpeakingStartRequest(BaseModel):
+    part: str  # part1 / part2 / part3 / full
+    topic: str
+    target_level: str
+    practice_mode: str  # mock_test / guided_practice
+
+
+class SpeakingStartResult(BaseModel):
+    session_id: int
+
+
+class SpeakingSessionOut(BaseModel):
+    id: int
+    status: str
+    part: str
+    topic: str
+    target_level: str
+    fluency_coherence: float | None = None
+    lexical_resource: float | None = None
+    grammar_accuracy: float | None = None
+    pronunciation: float | None = None
+    overall_band: float | None = None
+    summary_feedback: str | None = None
+    error_message: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class PurchaseResult(BaseModel):
     owned: bool
 

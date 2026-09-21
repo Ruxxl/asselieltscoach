@@ -66,6 +66,16 @@
 
   .soonTag{font:800 10px 'Inter',sans-serif; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2); padding:3px 8px; border-radius:999px;}
 
+  .checkoutTimer{display:flex; align-items:center; justify-content:center; gap:8px; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:16px;}
+  .checkoutTimerChip{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 12px; font:800 13px 'Inter',sans-serif; color:var(--text); font-variant-numeric:tabular-nums;}
+  .checkoutAmount{text-align:center; font:800 40px 'Nunito',sans-serif; color:var(--text); margin-bottom:24px;}
+  .checkoutAmount .cur{font-size:24px; color:var(--text-muted); margin-left:4px;}
+  .checkoutCard{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:var(--shadow-card); margin-bottom:10px;}
+  .checkoutCard .field:last-child{margin-bottom:0;}
+  .checkoutRow{display:flex; gap:10px;}
+  .checkoutRow .field{flex:1;}
+  .checkoutHint{font:500 11.5px/1.5 'Inter',sans-serif; color:var(--text-muted); text-align:center;}
+
   .newsCard{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; box-shadow:var(--shadow-card);}
   .newsCard .txt{font:500 13.5px/1.55 'Inter',sans-serif; color:var(--text); white-space:pre-wrap;}
   .newsCard .date{font:600 11px 'Inter',sans-serif; color:var(--text-muted); margin-top:8px;}
@@ -275,6 +285,17 @@
   .aiFeedback{font:500 12.5px/1.55 'Inter',sans-serif; color:var(--text-secondary);}
   .aiError{color:var(--red); font:600 12.5px/1.5 'Inter',sans-serif;}
 
+  .speakingOrb{
+    width:120px; height:120px; border-radius:50%; margin:10px auto 18px;
+    background:radial-gradient(circle at 35% 30%, var(--accent-strong), var(--accent) 70%);
+    box-shadow:0 10px 30px rgba(90,79,217,.35); transition:transform .2s ease; flex:none;
+  }
+  .speakingOrb.speaking{animation:orbPulse 1s ease-in-out infinite;}
+  @keyframes orbPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+  @media (prefers-reduced-motion: reduce){.speakingOrb.speaking{animation:none;}}
+  .speakingStatus{text-align:center; font:600 13px 'Inter',sans-serif; color:var(--text-secondary); margin-bottom:14px;}
+  .speakingTranscriptWrap{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; min-height:0;}
+
   .profilehead{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
   .pavatar{width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:grid; place-items:center; font-size:26px; flex:none; overflow:hidden;}
   .pavatar img{width:100%; height:100%; object-fit:cover;}
@@ -397,7 +418,31 @@
     <div id="courseModules"></div>
     <div class="aiError" id="courseBuyError" style="display:none; margin-top:6px;"></div>
     <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="buyOrContinueCourse()">ПРОДОЛЖИТЬ УРОК</button></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="onCourseBuyBtnClick()">ПРОДОЛЖИТЬ УРОК</button></div>
+  </section>
+
+  <!-- 9b: checkout — визуальная имитация оплаты картой. Поля карты декоративные,
+       никуда не отправляются; реальный эквайринг ещё не подключен (см. Payment
+       в backend/models.py) — после "оплаты" срабатывает тот же мгновенный
+       мок-эндпоинт покупки, что и раньше. -->
+  <section class="screen" data-screen="checkout">
+    <div class="topbar"><button class="xbtn" onclick="cancelCheckout()">←</button></div>
+    <div class="checkoutTimer">Оплатите в течение <span class="checkoutTimerChip" id="checkoutTimer">20:00</span></div>
+    <div class="checkoutAmount"><span id="checkoutAmount">0</span><span class="cur">₸</span></div>
+
+    <div class="sectiontitle">Оплата картой <span class="soonTag" style="margin-left:4px;">демо</span></div>
+    <div class="checkoutCard">
+      <div class="field"><label>Номер карты</label><input class="input" id="ccNumber" placeholder="0000 0000 0000 0000" inputmode="numeric" maxlength="19" oninput="formatCardNumber(this)"></div>
+      <div class="checkoutRow">
+        <div class="field"><label>Срок действия</label><input class="input" id="ccExpiry" placeholder="ММ/ГГ" inputmode="numeric" maxlength="5" oninput="formatCardExpiry(this)"></div>
+        <div class="field"><label>CVV</label><input class="input" id="ccCvv" type="password" placeholder="•••" inputmode="numeric" maxlength="3"></div>
+      </div>
+    </div>
+    <div class="checkoutHint">Демо-экран интерфейса оплаты — данные карты никуда не отправляются, реальное списание не происходит.</div>
+
+    <div class="aiError" id="checkoutError" style="display:none; margin-top:10px;"></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="checkoutPayBtn" onclick="completePurchase()">Оплатить <span id="checkoutPayAmount"></span></button></div>
   </section>
 
   <!-- 10b: lesson reader — реальный контент урока с backend (сейчас: A1 Vocabulary/Grammar) -->
@@ -441,6 +486,39 @@
       <button class="chatIconBtn" id="chatMicBtn" onclick="toggleChatMic()">🎙️</button>
       <button class="chatIconBtn chatSendBtn" onclick="sendChatText()">➤</button>
     </div>
+  </section>
+
+  <!-- 16: speaking practice — setup (Quick Start в стиле LexiBot) -->
+  <section class="screen" data-screen="speaking">
+    <div class="apphead"><div class="brand">Speaking Practice</div></div>
+    <div class="sectiontitle">Быстрый старт</div>
+    <div id="speakingPresets"></div>
+    <div class="sectiontitle">Тема</div>
+    <div class="chips" id="speakingTopicChips"></div>
+    <div class="sectiontitle">Целевой балл</div>
+    <div class="chips" id="speakingLevelChips"></div>
+    <div class="sectiontitle">Режим практики</div>
+    <div class="chips" id="speakingModeChips"></div>
+    <div class="spacer"></div>
+    <div class="aiError" id="speakingStartError" style="display:none;"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingStartBtn" onclick="startSpeakingSession()">НАЧАТЬ</button></div>
+  </section>
+
+  <!-- 17: speaking practice — живой звонок с ИИ-экзаменатором (Gemini Live API) -->
+  <section class="screen" data-screen="speakingSession">
+    <div class="topbar"><button class="xbtn" onclick="exitSpeakingSession()">✕</button><div class="badge" id="speakingSessionBadge">Speaking</div></div>
+    <div class="speakingOrb" id="speakingOrb"></div>
+    <div class="speakingStatus" id="speakingStatus">Подключаюсь…</div>
+    <div class="speakingTranscriptWrap" id="speakingTranscript"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingEndBtn" onclick="endSpeakingCall()">ЗАВЕРШИТЬ</button></div>
+  </section>
+
+  <!-- 18: speaking practice — отчёт с оценкой по критериям IELTS -->
+  <section class="screen" data-screen="speakingReport">
+    <div class="apphead"><div class="brand">Результат Speaking</div></div>
+    <div id="speakingReportBody"><div class="hint">Считаю оценку…</div></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('speaking')">ПРАКТИКОВАТЬ ЕЩЁ РАЗ</button></div>
   </section>
 
   <!-- 13: profile -->
@@ -498,6 +576,9 @@
   <button class="tabbtn" data-tab="news" onclick="go('news')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>Новости
   </button>
+  <button class="tabbtn" data-tab="speaking" onclick="go('speaking')">
+    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/></svg></span>Speaking
+  </button>
   <button class="tabbtn" data-tab="teacherChat" onclick="go('teacherChat')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 1 1 21 11.5Z"/></svg></span>Чат
   </button>
@@ -520,13 +601,15 @@
     return h;
   }
 
-  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'teacherChat', 'admin']);
+  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'teacherChat', 'admin', 'speaking']);
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
   let teacherChatPolling = null;
 
   function go(id){
+    const prevScreen = document.querySelector('.screen.active')?.dataset.screen;
+    if (prevScreen === 'speakingSession' && id !== 'speakingSession') abandonSpeakingCall();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
     const showTabbar = TABBAR_SCREENS.has(id);
     document.body.classList.toggle('has-tabbar', showTabbar);
@@ -540,6 +623,7 @@
     }
     if (id === 'news') loadNews();
     if (id === 'admin') loadAdmin();
+    if (id === 'speaking') renderSpeakingSetup();
     if (id === 'teacherChat') {
       loadChatMessages();
       if (!teacherChatPolling) teacherChatPolling = setInterval(loadChatMessages, 8000);
@@ -769,39 +853,88 @@
     go('course');
   }
 
-  async function buyOrContinueCourse(){
+  function onCourseBuyBtnClick(){
     if (!currentCourse) return;
-    const errEl = document.getElementById('courseBuyError');
-    errEl.style.display = 'none';
-
     if (!currentCourse.owned) {
-      const btn = document.getElementById('courseBuyBtn');
-      const prevText = btn.textContent;
-      btn.setAttribute('disabled', '');
-      btn.textContent = 'Покупаем…';
-      try {
-        const res = await fetch(`/api/courses/${currentCourse.code}/purchase`, { method: 'POST', headers: authHeaders() });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Не удалось купить курс');
-        currentCourse.owned = true;
-        const cached = coursesCache.find(item => item.code === currentCourse.code);
-        if (cached) cached.owned = true;
-        renderCourseList();
-        renderMyCourses();
-        renderCourseModules(currentCourse);
-        updateCourseBuyBtn(currentCourse);
-      } catch (e) {
-        errEl.textContent = e.message;
-        errEl.style.display = 'block';
-        btn.textContent = prevText;
-      } finally {
-        btn.removeAttribute('disabled');
-      }
+      openCheckout(currentCourse);
       return;
     }
-
     const nextModule = currentCourse.modules.find(m => m.lessons && m.lessons.length);
     if (nextModule) openLessonReader(nextModule.lessons[0].id);
+  }
+
+  // ---- Экран оплаты — визуальная демка (см. комментарий у <section data-screen="checkout">) ----
+  let checkoutTimerInterval = null;
+  let checkoutSecondsLeft = 20 * 60;
+
+  function updateCheckoutTimer(){
+    const m = Math.floor(checkoutSecondsLeft / 60);
+    const s = checkoutSecondsLeft % 60;
+    document.getElementById('checkoutTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function openCheckout(course){
+    const amount = course.price_kzt.toLocaleString('ru-RU');
+    document.getElementById('checkoutAmount').textContent = amount;
+    document.getElementById('checkoutPayAmount').textContent = amount + ' ₸';
+    document.getElementById('checkoutError').style.display = 'none';
+    document.getElementById('ccNumber').value = '';
+    document.getElementById('ccExpiry').value = '';
+    document.getElementById('ccCvv').value = '';
+
+    checkoutSecondsLeft = 20 * 60;
+    updateCheckoutTimer();
+    if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
+    checkoutTimerInterval = setInterval(() => {
+      checkoutSecondsLeft--;
+      updateCheckoutTimer();
+      if (checkoutSecondsLeft <= 0) clearInterval(checkoutTimerInterval);
+    }, 1000);
+
+    go('checkout');
+  }
+
+  function cancelCheckout(){
+    if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
+    go('course');
+  }
+
+  function formatCardNumber(el){
+    el.value = el.value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+  }
+  function formatCardExpiry(el){
+    el.value = el.value.replace(/\D/g, '').slice(0, 4).replace(/(\d{2})(\d)/, '$1/$2');
+  }
+
+  async function completePurchase(){
+    if (!currentCourse) return;
+    const errEl = document.getElementById('checkoutError');
+    errEl.style.display = 'none';
+    const btn = document.getElementById('checkoutPayBtn');
+    const prevText = btn.textContent;
+    btn.setAttribute('disabled', '');
+    btn.textContent = 'Обрабатываем…';
+    try {
+      await new Promise(r => setTimeout(r, 1100)); // имитация обработки платежа — реального эквайринга ещё нет
+      const res = await fetch(`/api/courses/${currentCourse.code}/purchase`, { method: 'POST', headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Не удалось купить курс');
+      currentCourse.owned = true;
+      const cached = coursesCache.find(item => item.code === currentCourse.code);
+      if (cached) cached.owned = true;
+      renderCourseList();
+      renderMyCourses();
+      renderCourseModules(currentCourse);
+      updateCourseBuyBtn(currentCourse);
+      if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
+      go('course');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+      btn.textContent = prevText;
+    } finally {
+      btn.removeAttribute('disabled');
+    }
   }
 
   // ---- Читалка реального урока + его тест (по образцу study.ru) ----
@@ -1055,6 +1188,302 @@
 
   renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
   renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
+
+  // ---- Speaking Practice: живой голосовой разговор с ИИ-экзаменатором (Gemini Live API) ----
+  // Архитектура: браузер шлёт сырой PCM16/16kHz звук с микрофона бинарными WS-фреймами,
+  // backend релеит его в Gemini Live и стримит обратно PCM16/24kHz голос модели + текстовые
+  // JSON-фреймы с живым транскриптом. См. backend/routers/speaking.py и
+  // backend/services/speaking_live.py.
+
+  const SPEAKING_PARTS = [
+    { id: 'part1', icon: '1️⃣', title: 'IELTS Speaking Part 1', desc: 'Короткие вопросы о себе · ~5 мин' },
+    { id: 'part2', icon: '2️⃣', title: 'IELTS Speaking Part 2', desc: 'Монолог по карточке · ~3 мин' },
+    { id: 'part3', icon: '3️⃣', title: 'IELTS Speaking Part 3', desc: 'Дискуссия · ~5 мин' },
+    { id: 'full', icon: '🎓', title: 'Full Mock Test', desc: 'Части 1–3 подряд · ~14 мин' },
+  ];
+  const SPEAKING_TOPICS = [
+    { id: 'random', label: 'Случайная' },
+    { id: 'hometown', label: 'Родной город' },
+    { id: 'work_study', label: 'Работа/учёба' },
+    { id: 'accommodation', label: 'Жильё' },
+    { id: 'family', label: 'Семья' },
+    { id: 'hobbies', label: 'Хобби' },
+  ];
+  const SPEAKING_LEVELS = ['4.0', '5.0', '6.0', '7.0', '8.0'].map(v => ({ id: v, label: 'Band ' + v }));
+  const SPEAKING_MODES = [
+    { id: 'mock_test', label: 'Mock Test' },
+    { id: 'guided_practice', label: 'Guided Practice' },
+  ];
+
+  let speakingChoice = { part: 'part1', topic: 'random', target_level: '6.0', practice_mode: 'mock_test' };
+  let currentSpeakingSessionId = null;
+
+  function renderSpeakingSetup(){
+    const presetsEl = document.getElementById('speakingPresets');
+    presetsEl.innerHTML = '';
+    SPEAKING_PARTS.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'levelcard' + (speakingChoice.part === p.id ? ' reco' : '');
+      card.onclick = () => { speakingChoice.part = p.id; renderSpeakingSetup(); };
+      card.innerHTML = `<div class="lv">${p.icon}</div><div><div class="tt">${p.title}</div><div class="ds">${p.desc}</div></div>`;
+      presetsEl.appendChild(card);
+    });
+    renderSpeakingChips('speakingTopicChips', SPEAKING_TOPICS, speakingChoice.topic, id => { speakingChoice.topic = id; renderSpeakingSetup(); });
+    renderSpeakingChips('speakingLevelChips', SPEAKING_LEVELS, speakingChoice.target_level, id => { speakingChoice.target_level = id; renderSpeakingSetup(); });
+    renderSpeakingChips('speakingModeChips', SPEAKING_MODES, speakingChoice.practice_mode, id => { speakingChoice.practice_mode = id; renderSpeakingSetup(); });
+  }
+
+  function renderSpeakingChips(containerId, items, activeId, onPick){
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    items.forEach(item => {
+      const chip = document.createElement('div');
+      chip.className = 'wchip' + (item.id === activeId ? ' sel' : '');
+      chip.textContent = item.label;
+      chip.onclick = () => onPick(item.id);
+      el.appendChild(chip);
+    });
+  }
+
+  async function startSpeakingSession(){
+    const btn = document.getElementById('speakingStartBtn');
+    const errEl = document.getElementById('speakingStartError');
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Начинаю…';
+    try {
+      const res = await fetch('/api/speaking/start', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(speakingChoice),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+      currentSpeakingSessionId = data.session_id;
+      const partLabel = SPEAKING_PARTS.find(p => p.id === speakingChoice.part)?.title || 'Speaking';
+      document.getElementById('speakingSessionBadge').textContent = partLabel;
+      document.getElementById('speakingTranscript').innerHTML = '';
+      document.getElementById('speakingEndBtn').disabled = false;
+      go('speakingSession');
+      await openSpeakingCall(data.session_id);
+    } catch (e) {
+      errEl.textContent = 'Не удалось начать: ' + e.message;
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'НАЧАТЬ';
+    }
+  }
+
+  // ---- Живой звонок: захват микрофона -> PCM16/16kHz -> WS, и воспроизведение PCM16/24kHz от Gemini ----
+  let speakingAudioCtx = null, speakingMicStream = null, speakingProcessor = null, speakingSourceNode = null;
+  let speakingWs = null, speakingPlaybackTime = 0;
+  let speakingDoneReceived = false, speakingErrorShown = false;
+
+  function downsampleTo16k(float32Array, inputSampleRate){
+    const targetRate = 16000;
+    if (inputSampleRate === targetRate) return float32Array;
+    const ratio = inputSampleRate / targetRate;
+    const newLength = Math.round(float32Array.length / ratio);
+    const result = new Float32Array(newLength);
+    let offsetResult = 0, offsetBuffer = 0;
+    while (offsetResult < newLength) {
+      const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+      let accum = 0, count = 0;
+      for (let i = offsetBuffer; i < nextOffsetBuffer && i < float32Array.length; i++) { accum += float32Array[i]; count++; }
+      result[offsetResult] = count ? accum / count : 0;
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+    return result;
+  }
+
+  function floatTo16BitPCM(float32Array){
+    const buf = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buf);
+    for (let i = 0, offset = 0; i < float32Array.length; i++, offset += 2) {
+      const s = Math.max(-1, Math.min(1, float32Array[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buf;
+  }
+
+  function playSpeakingAudioChunk(arrayBuffer){
+    if (!speakingAudioCtx) return;
+    const int16 = new Int16Array(arrayBuffer);
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 0x8000;
+    const buffer = speakingAudioCtx.createBuffer(1, float32.length, 24000);
+    buffer.copyToChannel(float32, 0);
+    const source = speakingAudioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(speakingAudioCtx.destination);
+    const startAt = Math.max(speakingAudioCtx.currentTime, speakingPlaybackTime);
+    source.start(startAt);
+    speakingPlaybackTime = startAt + buffer.duration;
+    document.getElementById('speakingOrb')?.classList.add('speaking');
+    source.onended = () => {
+      if (speakingPlaybackTime <= speakingAudioCtx.currentTime + 0.05) {
+        document.getElementById('speakingOrb')?.classList.remove('speaking');
+      }
+    };
+  }
+
+  function appendSpeakingTranscript(speaker, text){
+    const wrap = document.getElementById('speakingTranscript');
+    const row = document.createElement('div');
+    row.className = 'liveCaption show';
+    row.innerHTML = `<b>${speaker === 'ai' ? 'Экзаменатор' : 'Ты'}</b><span></span>`;
+    row.querySelector('span').textContent = text;
+    wrap.appendChild(row);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function setSpeakingStatus(text){
+    const el = document.getElementById('speakingStatus');
+    if (el) el.textContent = text;
+  }
+
+  function speakingWsUrl(sessionId){
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const q = initData ? ('?init_data=' + encodeURIComponent(initData)) : '';
+    return `${proto}//${location.host}/api/speaking/ws/${sessionId}${q}`;
+  }
+
+  async function openSpeakingCall(sessionId){
+    speakingDoneReceived = false;
+    speakingErrorShown = false;
+    setSpeakingStatus('Подключаюсь…');
+
+    try {
+      speakingMicStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
+    } catch (e) {
+      setSpeakingStatus('Нет доступа к микрофону: ' + e.message);
+      document.getElementById('speakingEndBtn').disabled = true;
+      return;
+    }
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    speakingAudioCtx = new AudioCtx();
+    speakingPlaybackTime = speakingAudioCtx.currentTime;
+    speakingSourceNode = speakingAudioCtx.createMediaStreamSource(speakingMicStream);
+    speakingProcessor = speakingAudioCtx.createScriptProcessor(4096, 1, 1);
+    speakingSourceNode.connect(speakingProcessor);
+    // Узел должен быть подключен к destination, иначе onaudioprocess не сработает в части
+    // браузеров — вывод при этом остаётся тишиной, т.к. в outputBuffer мы ничего не пишем.
+    speakingProcessor.connect(speakingAudioCtx.destination);
+
+    speakingWs = new WebSocket(speakingWsUrl(sessionId));
+    speakingWs.binaryType = 'arraybuffer';
+
+    speakingWs.onopen = () => {
+      setSpeakingStatus('Идёт разговор — говори в микрофон');
+      speakingProcessor.onaudioprocess = (e) => {
+        if (!speakingWs || speakingWs.readyState !== WebSocket.OPEN) return;
+        const input = e.inputBuffer.getChannelData(0);
+        const down = downsampleTo16k(input, speakingAudioCtx.sampleRate);
+        speakingWs.send(floatTo16BitPCM(down));
+      };
+    };
+
+    speakingWs.onmessage = (event) => {
+      if (typeof event.data === 'string') {
+        let msg;
+        try { msg = JSON.parse(event.data); } catch (e) { return; }
+        if (msg.type === 'transcript') appendSpeakingTranscript(msg.speaker, msg.text);
+        else if (msg.type === 'error') { speakingErrorShown = true; setSpeakingStatus('⚠️ ' + msg.message); }
+        else if (msg.type === 'done') { speakingDoneReceived = true; finishSpeakingCall(); }
+      } else {
+        playSpeakingAudioChunk(event.data);
+      }
+    };
+
+    speakingWs.onclose = () => {
+      stopSpeakingAudio();
+      if (!speakingDoneReceived && !speakingErrorShown) {
+        setSpeakingStatus('Соединение прервалось. Попробуй начать заново.');
+      }
+      document.getElementById('speakingEndBtn').disabled = true;
+    };
+
+    speakingWs.onerror = () => { speakingErrorShown = true; setSpeakingStatus('⚠️ Ошибка соединения'); };
+  }
+
+  function endSpeakingCall(){
+    if (speakingWs && speakingWs.readyState === WebSocket.OPEN) {
+      speakingWs.send(JSON.stringify({ type: 'finish' }));
+    }
+    setSpeakingStatus('Завершаю и получаю оценку…');
+    document.getElementById('speakingEndBtn').disabled = true;
+  }
+
+  function exitSpeakingSession(){
+    if (speakingWs && speakingWs.readyState === WebSocket.OPEN) {
+      try { speakingWs.send(JSON.stringify({ type: 'finish' })); } catch (e) {}
+    }
+    abandonSpeakingCall();
+    go('speaking');
+  }
+
+  function abandonSpeakingCall(){
+    stopSpeakingAudio();
+  }
+
+  function stopSpeakingAudio(){
+    if (speakingProcessor) { speakingProcessor.onaudioprocess = null; speakingProcessor.disconnect(); speakingProcessor = null; }
+    if (speakingSourceNode) { speakingSourceNode.disconnect(); speakingSourceNode = null; }
+    if (speakingMicStream) { speakingMicStream.getTracks().forEach(t => t.stop()); speakingMicStream = null; }
+    if (speakingAudioCtx) { speakingAudioCtx.close(); speakingAudioCtx = null; }
+    if (speakingWs) { try { speakingWs.close(); } catch (e) {} speakingWs = null; }
+  }
+
+  function finishSpeakingCall(){
+    stopSpeakingAudio();
+    go('speakingReport');
+    pollSpeakingReport(currentSpeakingSessionId);
+  }
+
+  async function pollSpeakingReport(sessionId){
+    const reportEl = document.getElementById('speakingReportBody');
+    reportEl.innerHTML = '<div class="hint">Считаю оценку…</div>';
+    for (let i = 0; i < 30; i++) {
+      try {
+        const res = await fetch(`/api/speaking/${sessionId}`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'done') { renderSpeakingReport(data); return; }
+          if (data.status === 'error') {
+            reportEl.innerHTML = `<div class="aiError">${escapeHtml(data.error_message || 'Не удалось получить оценку.')}</div>`;
+            return;
+          }
+        }
+      } catch (e) { /* сеть моргнула — просто попробуем ещё раз */ }
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    reportEl.innerHTML = '<div class="aiError">Не удалось дождаться оценки. Загляни в отчёт ещё раз чуть позже.</div>';
+  }
+
+  function renderSpeakingReport(data){
+    const reportEl = document.getElementById('speakingReportBody');
+    const bands = [
+      ['Fluency & Coherence', data.fluency_coherence, 'var(--accent-strong)'],
+      ['Lexical Resource', data.lexical_resource, 'var(--blue)'],
+      ['Grammar Accuracy', data.grammar_accuracy, 'var(--yellow)'],
+      ['Pronunciation', data.pronunciation, 'var(--red)'],
+    ];
+    reportEl.innerHTML = `
+      <div class="center-col" style="flex:none; margin-bottom:14px;">
+        <div style="font:600 13px 'Inter',sans-serif; color:var(--text-secondary);">Твой Band</div>
+        <div class="resultlevel">${(data.overall_band ?? 0).toFixed(1)}</div>
+      </div>
+      <div style="width:100%;">
+        ${bands.map(([label, val, color]) => `
+          <div class="skillrow"><div class="sl">${label}</div><div class="sb"><i style="width:${Math.min(100, Math.round((val || 0) / 9 * 100))}%; background:${color};"></i></div><div class="sv">${(val || 0).toFixed(1)}</div></div>
+        `).join('')}
+      </div>
+      <div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${escapeHtml(data.summary_feedback || '')}</div>
+    `;
+  }
 
   // ---- Новости от преподавателя ----
   function formatDate(iso){
