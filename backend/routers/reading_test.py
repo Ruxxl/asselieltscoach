@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form, Header, HTTPException, UploadFile
 from google.api_core.exceptions import DeadlineExceeded
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.auth import get_or_create_user
+from backend.auth import require_user
 from backend.config import UPLOADS_DIR
 from backend.database import get_session
 from backend.models import TestAnswer, TestAttempt
@@ -23,6 +23,10 @@ async def reading_check(
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
+    # Проверяем Telegram-подпись до вызова Gemini, чтобы не тратить платную AI-квоту
+    # на запросы вне Mini App (например, прямые curl-запросы к API в обход Telegram).
+    user = await require_user(session, x_telegram_init_data)
+
     audio_bytes = await audio.read()
     if not audio_bytes:
         raise HTTPException(status_code=400, detail="Пустой аудиофайл")
@@ -44,8 +48,7 @@ async def reading_check(
     audio_path = UPLOADS_DIR / f"{uuid.uuid4().hex}.webm"
     audio_path.write_bytes(audio_bytes)
 
-    user = await get_or_create_user(session, x_telegram_init_data)
-    attempt = TestAttempt(user_id=user.id if user else None, kind=kind)
+    attempt = TestAttempt(user_id=user.id, kind=kind)
     session.add(attempt)
     await session.flush()
     session.add(
