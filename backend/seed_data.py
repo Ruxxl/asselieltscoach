@@ -3,131 +3,126 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models import Course, Lesson, LessonQuestion, Module
 
-# Реальный контент уроков — пока только для курса A1 (Vocabulary/Grammar), по образцу
-# структуры study.ru (тема -> уроки-статьи -> тест из вопросов "заполни пропуск").
+# Реальный контент уроков — пока только для курса "IELTS 5.5" (Listening/Reading), по образцу
+# структуры study.ru (тема -> уроки-статьи -> тест из вопросов "заполни пропуск"). Это авторский
+# разбор стратегий сдачи, а не пересказ реальных вопросов Cambridge/IDP (копирайт).
 # Остальные курсы/модули ниже остаются с одним lesson_count без реального контента —
 # это следующий шаг, см. memory/echo_english_deployment для контекста.
-A1_VOCABULARY_LESSONS = [
+IELTS_LISTENING_LESSONS = [
     {
-        "title": "Приветствия и знакомство",
-        "subtitle": "Как поздороваться и представиться по-английски",
+        "title": "Формат IELTS Listening",
+        "subtitle": "Что тебя ждёт на экзамене: структура, время, баллы",
         "read_minutes": 3,
         "content": [
-            "Самые частые приветствия в английском — Hello и Hi. Hello чуть более нейтральное и формальное, "
-            "Hi — более разговорное, между друзьями и знакомыми.",
-            "Чтобы представиться, используют фразу My name is... («Меня зовут...») или короче — I'm... "
-            "Например: My name is Anna. / I'm Anna.",
-            "На вопрос How are you? («Как дела?») обычно отвечают I'm fine, thank you. And you? — это "
-            "вежливая формула, даже если дела не идеальные.",
-            "Прощаются словами Bye, Goodbye или разговорным See you! («Увидимся!»).",
+            "IELTS Listening состоит из 4 разделов (sections) и содержит 40 вопросов. Первый раздел — "
+            "бытовой диалог (например, бронирование), четвёртый — лекция на академическую тему.",
+            "На прослушивание даётся 30 минут; в бумажной версии теста добавляется ещё 10 минут, чтобы "
+            "перенести ответы в бланк — в компьютерной версии этого дополнительного времени нет, ответы "
+            "вводятся сразу.",
+            "Каждая запись звучит только один раз — переслушать нельзя, поэтому важно читать вопросы "
+            "заранее, пока идёт вступление к разделу.",
+            "Итоговый балл считается по таблице соответствия: из 40 правильных ответов высчитывается "
+            "band score от 1 до 9.",
         ],
         "questions": [
-            {
-                "prompt": "— Hi! {blank} name is Tom. — Nice to meet you!",
-                "options": ["My", "I", "Me"],
-                "correct": "My",
-            },
-            {
-                "prompt": "— How are you? — I'm fine, thank you. {blank} you?",
-                "options": ["And", "For", "With"],
-                "correct": "And",
-            },
-            {
-                "prompt": "Формальное приветствие — это {blank}.",
-                "options": ["Hello", "Hi", "Bye"],
-                "correct": "Hello",
-            },
+            {"prompt": "В IELTS Listening всего {blank} вопросов.", "options": ["40", "50", "30"], "correct": "40"},
+            {"prompt": "Сколько разделов (sections) в тесте?", "options": ["4", "3", "5"], "correct": "4"},
+            {"prompt": "Каждая запись в Listening звучит {blank}.", "options": ["один раз", "дважды", "три раза"], "correct": "один раз"},
         ],
     },
     {
-        "title": "Числа 1–20",
-        "subtitle": "Считаем по-английски от одного до двадцати",
-        "read_minutes": 2,
+        "title": "Типы вопросов в Listening",
+        "subtitle": "Form completion, multiple choice, matching, map labeling",
+        "read_minutes": 3,
         "content": [
-            "Числа от 1 до 12 в английском не подчиняются никакому правилу и их нужно просто запомнить: "
-            "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve.",
-            "Числа от 13 до 19 образуются добавлением суффикса -teen: thirteen, fourteen, fifteen, "
-            "sixteen, seventeen, eighteen, nineteen.",
-            "Двадцать — twenty, дальше (21, 22...) числа складываются: twenty-one, twenty-two.",
+            "Самые частые типы заданий: заполнение пропусков (form/note/table completion), множественный "
+            "выбор (multiple choice), подбор соответствий (matching), подписи на карте или плане "
+            "(map/plan labeling).",
+            "В заданиях на заполнение пропусков важно соблюдать лимит слов из инструкции — обычно "
+            "'NO MORE THAN THREE WORDS AND/OR A NUMBER'. Превышение лимита засчитывается как ошибка, "
+            "даже если по смыслу ответ верный.",
+            "В multiple choice несколько вариантов часто кажутся похожими на правду — это специально, "
+            "чтобы проверить внимательность к деталям: числам, датам, именам.",
         ],
         "questions": [
-            {"prompt": "Число 15 по-английски — {blank}.", "options": ["fifteen", "fifty", "five"], "correct": "fifteen"},
-            {"prompt": "Число 20 по-английски — {blank}.", "options": ["twenty", "twelve", "ten"], "correct": "twenty"},
-            {"prompt": "После nine идёт {blank}.", "options": ["ten", "nineteen", "nine"], "correct": "ten"},
+            {"prompt": "В заданиях на заполнение пропуска важно соблюдать {blank} из инструкции.", "options": ["лимит слов", "цвет ручки", "громкость записи"], "correct": "лимит слов"},
+            {"prompt": "Задание, где нужно подписать объекты на плане — это {blank}.", "options": ["map labeling", "multiple choice", "matching"], "correct": "map labeling"},
+            {"prompt": "Типичная формулировка лимита — 'NO MORE THAN {blank} WORDS'.", "options": ["THREE", "TEN", "ONE"], "correct": "THREE"},
         ],
     },
     {
-        "title": "Цвета",
-        "subtitle": "Основные названия цветов",
+        "title": "Стратегия: слушай наперёд",
+        "subtitle": "Как использовать паузы и не терять баллы на парафразе",
         "read_minutes": 2,
         "content": [
-            "Основные цвета: red (красный), blue (синий), green (зелёный), yellow (жёлтый), black (чёрный), "
-            "white (белый), orange (оранжевый), purple (фиолетовый).",
-            "Чтобы описать цвет предмета, прилагательное ставится перед существительным: a red car "
-            "(красная машина), a blue sky (синее небо). В английском прилагательные не меняются по родам "
-            "и числам.",
+            "Перед каждым разделом даётся 20–30 секунд, чтобы прочитать вопросы — используй это время, "
+            "чтобы подчеркнуть ключевые слова и предположить тип ответа (имя, число, место).",
+            "Ответы в записи почти всегда даются через парафраз — говорящий использует синонимы вместо "
+            "слов из вопроса. Тренируйся слышать смысл, а не искать дословное совпадение.",
+            "Если пропустил один ответ — не зацикливайся на нём, сразу переходи к следующему вопросу, "
+            "иначе рискуешь пропустить сразу несколько подряд.",
         ],
         "questions": [
-            {"prompt": "The sky is {blank}.", "options": ["blue", "loud", "fast"], "correct": "blue"},
-            {"prompt": "Grass (трава) is usually {blank}.", "options": ["green", "green's", "greens"], "correct": "green"},
-            {"prompt": "«Красная машина» — a {blank} car.", "options": ["red", "reds", "redly"], "correct": "red"},
+            {"prompt": "Ответы в записи почти всегда даются через {blank}, а не дословно.", "options": ["парафраз", "повтор", "перевод"], "correct": "парафраз"},
+            {"prompt": "Если пропустил один ответ, нужно {blank}.", "options": ["сразу перейти к следующему", "остановить запись", "переслушать"], "correct": "сразу перейти к следующему"},
+            {"prompt": "Пауза перед разделом нужна, чтобы {blank} вопросы.", "options": ["прочитать", "перевести", "выучить"], "correct": "прочитать"},
         ],
     },
 ]
 
-A1_GRAMMAR_LESSONS = [
+IELTS_READING_LESSONS = [
     {
-        "title": "Глагол to be",
-        "subtitle": "Формы am / is / are в настоящем времени",
-        "read_minutes": 4,
+        "title": "Формат IELTS Reading",
+        "subtitle": "3 текста, 40 вопросов, 60 минут без добавки",
+        "read_minutes": 3,
         "content": [
-            "Глагол to be («быть») — один из самых важных в английском. В настоящем времени у него три формы: "
-            "am, is, are.",
-            "am используется только с I: I am a student.",
-            "is используется с he, she, it и с существительными в единственном числе: He is happy. The book is "
-            "interesting.",
-            "are используется с you, we, they и с существительными во множественном числе: They are friends. "
-            "We are here.",
-            "В разговорной речи формы часто сокращают: I'm, he's, she's, it's, you're, we're, they're.",
+            "IELTS Reading состоит из 3 текстов (passages) и 40 вопросов, на всё даётся 60 минут — в "
+            "отличие от Listening, дополнительного времени на перенос ответов нет.",
+            "Тексты постепенно усложняются: первый — самый простой, третий — самый сложный, часто "
+            "научно-популярный.",
+            "В Academic-версии тексты берутся из журналов, книг, научных статей; в General Training — "
+            "из объявлений, писем, справочных материалов (актуально для миграции и работы).",
         ],
         "questions": [
-            {"prompt": "I {blank} a teacher.", "options": ["am", "is", "are"], "correct": "am"},
-            {"prompt": "She {blank} from London.", "options": ["is", "am", "are"], "correct": "is"},
-            {"prompt": "They {blank} happy today.", "options": ["are", "is", "am"], "correct": "are"},
+            {"prompt": "Сколько текстов (passages) в IELTS Reading?", "options": ["3", "2", "4"], "correct": "3"},
+            {"prompt": "Сколько минут даётся на весь Reading, включая перенос ответов?", "options": ["60", "70", "90"], "correct": "60"},
+            {"prompt": "В какой версии теста тексты — это объявления и письма?", "options": ["General Training", "Academic", "Speaking"], "correct": "General Training"},
         ],
     },
     {
-        "title": "Личные местоимения",
-        "subtitle": "I, you, he, she, it, we, they",
-        "read_minutes": 3,
+        "title": "Skimming и scanning",
+        "subtitle": "Два разных навыка быстрого чтения",
+        "read_minutes": 2,
         "content": [
-            "Личные местоимения заменяют существительные-подлежащее: I (я), you (ты/вы), he (он), she (она), "
-            "it (оно, для предметов и животных), we (мы), they (они).",
-            "В английском нет отдельного вежливого «вы» — you используется и для одного человека, и для "
-            "нескольких, и в вежливом, и в неформальном обращении.",
-            "Местоимение it также используется для погоды и времени: It is raining. It is five o'clock.",
+            "Skimming — быстрое чтение текста целиком, чтобы понять общую идею и структуру абзацев, без "
+            "вникания в детали.",
+            "Scanning — поиск конкретной информации (даты, имена, цифры) без чтения всего текста: взгляд "
+            "«скользит» по строчкам в поисках ключевого слова.",
+            "Перед подробным чтением полезно сначала пробежаться skimming'ом — так проще понять, в каком "
+            "абзаце искать ответ на конкретный вопрос.",
         ],
         "questions": [
-            {"prompt": "Look at the dog — {blank} is so cute!", "options": ["it", "he", "they"], "correct": "it"},
-            {"prompt": "{blank} is raining outside.", "options": ["It", "He", "She"], "correct": "It"},
-            {"prompt": "Anna and Tom are students. {blank} study English.", "options": ["They", "He", "It"], "correct": "They"},
+            {"prompt": "Быстрое чтение текста целиком для общего понимания — это {blank}.", "options": ["skimming", "scanning", "matching"], "correct": "skimming"},
+            {"prompt": "Поиск конкретной цифры или имени в тексте — это {blank}.", "options": ["scanning", "skimming", "paraphrasing"], "correct": "scanning"},
+            {"prompt": "Перед подробным чтением полезно сначала сделать {blank}.", "options": ["skimming", "полный перевод", "конспект"], "correct": "skimming"},
         ],
     },
     {
-        "title": "Артикли a / an / the",
-        "subtitle": "Когда ставить неопределённый, а когда определённый артикль",
+        "title": "True / False / Not Given — частые ошибки",
+        "subtitle": "Как не путать «текст молчит» с «текст опровергает»",
         "read_minutes": 3,
         "content": [
-            "Артикль a/an ставится перед исчисляемым существительным в единственном числе, когда речь идёт о "
-            "предмете впервые или в общем смысле: a cat, a table.",
-            "an используется вместо a, если следующее слово начинается с гласного звука: an apple, an hour.",
-            "Артикль the ставится, когда предмет уже известен собеседнику или упоминался раньше: I have a cat. "
-            "The cat is black.",
+            "False ставится, когда утверждение прямо противоречит тексту. Not Given — когда в тексте "
+            "просто нет информации, чтобы подтвердить или опровергнуть утверждение.",
+            "Самая частая ошибка — путать False и Not Given: если кажется, что «текст молчит» об этом, но "
+            "нет уверенности — скорее всего это Not Given, а не False.",
+            "Отвечай строго по тексту, а не по своим знаниям темы — даже если утверждение верно в "
+            "реальности, но текст об этом не говорит, правильный ответ — Not Given.",
         ],
         "questions": [
-            {"prompt": "I have {blank} apple.", "options": ["an", "a", "the"], "correct": "an"},
-            {"prompt": "She has a dog. {blank} dog is very friendly.", "options": ["The", "A", "An"], "correct": "The"},
-            {"prompt": "He is {blank} good student.", "options": ["a", "an", "the"], "correct": "a"},
+            {"prompt": "Если утверждение прямо противоречит тексту, ответ — {blank}.", "options": ["False", "Not Given", "True"], "correct": "False"},
+            {"prompt": "Если в тексте просто нет информации по теме утверждения, ответ — {blank}.", "options": ["Not Given", "False", "True"], "correct": "Not Given"},
+            {"prompt": "Отвечать нужно строго по {blank}, а не по общим знаниям.", "options": ["тексту", "интуиции", "заголовку"], "correct": "тексту"},
         ],
     },
 ]
@@ -156,73 +151,46 @@ def _build_module_lessons(lesson_specs: list[dict]) -> list[Lesson]:
     return lessons
 
 
+# Три курса подготовки к IELTS по целевому баллу (band score) — стандартная сегментация
+# для прайм-подготовки, ближе клиенту, чем абстрактные уровни CEFR.
 COURSES = [
     {
-        "code": "A1",
-        "title": "Beginner",
-        "description": "Основы: алфавит, простые фразы, базовая грамматика.",
+        "code": "B55",
+        "title": "IELTS 5.5",
+        "description": "С нуля до уверенного среднего: база по всем 4 модулям экзамена — Listening, Reading, Writing, Speaking.",
         "price_kzt": 5000,
         "order": 1,
         "modules": [
-            ("vocabulary", "Vocabulary", A1_VOCABULARY_LESSONS),
-            ("grammar", "Grammar", A1_GRAMMAR_LESSONS),
-            ("listening", "Listening", 6),  # аудио-контента пока нет
+            ("listening", "Listening", IELTS_LISTENING_LESSONS),
+            ("reading", "Reading", IELTS_READING_LESSONS),
+            ("writing", "Writing", 6),  # контента пока нет
+            ("speaking", "Speaking", 5),  # контента пока нет
         ],
     },
     {
-        "code": "A2",
-        "title": "Elementary",
-        "description": "Бытовые диалоги, настоящее и прошедшее время.",
+        "code": "B65",
+        "title": "IELTS 6.5",
+        "description": "Для уверенного среднего уровня: техники под конкретные типы заданий, разбор типичных ошибок, практика по таймингу.",
         "price_kzt": 5000,
         "order": 2,
         "modules": [
-            ("grammar", "Grammar", 10),
-            ("vocabulary", "Vocabulary", 9),
-            ("listening", "Listening", 7),
-            ("speaking", "Speaking", 5),
+            ("listening", "Listening", 8),
+            ("reading", "Reading", 9),
+            ("writing", "Writing", 8),
+            ("speaking", "Speaking", 7),
         ],
     },
     {
-        "code": "B1",
-        "title": "Intermediate",
-        "description": "Уверенная бытовая речь, Present Perfect, начало Reading/Writing.",
+        "code": "B75",
+        "title": "IELTS 7.5+",
+        "description": "Для высокого балла: сложные типы вопросов, эссе на Band 8+, беглость и точность в Speaking.",
         "price_kzt": 5000,
         "order": 3,
         "modules": [
-            ("grammar", "Grammar", 12),
-            ("vocabulary", "Vocabulary", 10),
-            ("listening", "Listening", 8),
-            ("speaking", "Speaking", 8),
-            ("reading", "Reading", 9),
-            ("writing", "Writing", 6),
-        ],
-    },
-    {
-        "code": "B2",
-        "title": "Upper-Intermediate",
-        "description": "Свободные темы, деловой английский, сложные времена.",
-        "price_kzt": 5000,
-        "order": 4,
-        "modules": [
-            ("grammar", "Grammar", 12),
-            ("vocabulary", "Vocabulary", 12),
-            ("reading", "Reading", 10),
-            ("speaking", "Speaking", 9),
-            ("writing", "Writing", 8),
-        ],
-    },
-    {
-        "code": "C1",
-        "title": "Advanced",
-        "description": "Нюансы, академический и деловой стиль, идиомы.",
-        "price_kzt": 5000,
-        "order": 5,
-        "modules": [
-            ("vocabulary", "Vocabulary", 14),
-            ("reading", "Reading", 12),
+            ("listening", "Listening", 6),
+            ("reading", "Reading", 8),
             ("writing", "Writing", 10),
-            ("speaking", "Speaking", 10),
-            ("pronunciation", "Pronunciation", 6),
+            ("speaking", "Speaking", 8),
         ],
     },
 ]
