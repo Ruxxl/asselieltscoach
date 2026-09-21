@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.config import TEACHER_USERNAME
+from backend.config import TEACHER_CHAT_ID
 from backend.models import User
 from backend.telegram_auth import parse_init_data
 
@@ -47,11 +47,9 @@ async def require_user(session: AsyncSession, init_data: str | None) -> User:
 
 
 async def require_admin(session: AsyncSession, init_data: str | None) -> User:
-    """Доступ к админке — только для TEACHER_USERNAME. Сверяем username напрямую из
-    подписанного initData (а не закэшированный User.username), чтобы смена ника не
-    оставляла доступ по старому значению и наоборот."""
+    """Доступ к админке — только для TEACHER_CHAT_ID (numeric Telegram id, не username —
+    id не меняется и не может быть подделан, т.к. берётся из подписанного initData)."""
     tg_user = parse_init_data(init_data)
-    username = (tg_user or {}).get("username") or ""
-    if not tg_user or username.lower() != TEACHER_USERNAME.lower():
+    if not tg_user or tg_user["id"] != TEACHER_CHAT_ID:
         raise HTTPException(status_code=403, detail="Доступ только для преподавателя")
     return await require_user(session, init_data)

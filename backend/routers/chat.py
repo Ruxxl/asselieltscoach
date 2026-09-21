@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth import require_user
-from backend.config import TEACHER_USERNAME, UPLOADS_DIR
+from backend.config import TEACHER_CHAT_ID, UPLOADS_DIR
 from backend.database import get_session
 from backend.models import ChatMessage
 from backend.schemas import ChatMessageOut
@@ -77,7 +77,7 @@ async def get_voice(
 
     # Доступ — только сам ученик (владелец сообщения) или преподаватель.
     tg_user = parse_init_data(x_telegram_init_data)
-    is_teacher = bool(tg_user) and (tg_user.get("username") or "").lower() == TEACHER_USERNAME.lower()
+    is_teacher = bool(tg_user) and tg_user.get("id") == TEACHER_CHAT_ID
     is_owner = bool(tg_user) and tg_user.get("id") == msg.user_id
     if not (is_teacher or is_owner):
         raise HTTPException(status_code=403, detail="Нет доступа")

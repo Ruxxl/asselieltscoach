@@ -7,9 +7,9 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import FSInputFile, InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from sqlalchemy import select
 
-from backend.config import BOT_TOKEN, TEACHER_USERNAME, UPLOADS_DIR, WEBAPP_URL
+from backend.config import BOT_TOKEN, TEACHER_CHAT_ID, UPLOADS_DIR, WEBAPP_URL
 from backend.database import SessionLocal
-from backend.models import AppSettings, ChatMessage, NewsPost
+from backend.models import ChatMessage, NewsPost
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,30 +51,13 @@ async def on_app(message: Message) -> None:
 
 
 def _is_teacher(message: Message) -> bool:
-    username = (message.from_user.username or "") if message.from_user else ""
-    return username.lower() == TEACHER_USERNAME.lower()
-
-
-async def _remember_teacher_chat_id(message: Message) -> None:
-    """Username преподавателя задан в конфиге, но numeric chat_id для отправки
-    уведомлений Bot API заранее не даёт узнать — резолвим его тем, что он сам
-    хоть раз напишет боту (например /start)."""
-    if not message.from_user:
-        return
-    async with SessionLocal() as session:
-        settings = await session.get(AppSettings, 1)
-        if not settings:
-            session.add(AppSettings(id=1, teacher_chat_id=message.from_user.id))
-        elif settings.teacher_chat_id != message.from_user.id:
-            settings.teacher_chat_id = message.from_user.id
-        await session.commit()
+    return bool(message.from_user and message.from_user.id == TEACHER_CHAT_ID)
 
 
 @router_dp.message(Command("news"))
 async def on_news(message: Message, command: CommandObject) -> None:
     if not _is_teacher(message):
         return  # тихо игнорируем посторонних — не выдаём, что команда вообще существует
-    await _remember_teacher_chat_id(message)
     text = (command.args or "").strip()
     if not text:
         await message.answer("Формат: /news текст новости")
@@ -89,7 +72,6 @@ async def on_news(message: Message, command: CommandObject) -> None:
 async def on_teacher_reply(message: Message) -> None:
     if not _is_teacher(message):
         return
-    await _remember_teacher_chat_id(message)
 
     voice_path = None
     if message.voice:
@@ -125,7 +107,6 @@ async def on_teacher_reply(message: Message) -> None:
 @router_dp.message()
 async def on_other_message(message: Message) -> None:
     if _is_teacher(message):
-        await _remember_teacher_chat_id(message)
         await message.answer(
             "Чтобы опубликовать новость: /news текст.\n"
             "Чтобы ответить ученику: сделай Reply прямо на моё уведомление с его вопросом."

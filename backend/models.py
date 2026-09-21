@@ -174,17 +174,6 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
-class AppSettings(Base):
-    """Единственная строка (id=1) с рантайм-конфигом, который нельзя знать заранее —
-    например numeric id преподавателя в Telegram, узнаваемый только когда он сам
-    напишет боту (username -> id нельзя резолвить через Bot API заранее)."""
-
-    __tablename__ = "app_settings"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    teacher_chat_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-
 class Payment(Base):
     __tablename__ = "payments"
 

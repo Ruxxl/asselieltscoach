@@ -458,7 +458,7 @@
     <div id="myCoursesList"><div class="hint">Загружаю…</div></div>
   </section>
 
-  <!-- 16: admin dashboard (только для TEACHER_USERNAME) -->
+  <!-- 16: admin dashboard (только для TEACHER_CHAT_ID) -->
   <section class="screen" data-screen="admin">
     <div class="apphead"><div class="brand">Админка</div></div>
     <div class="statgrid" id="adminStatGrid" style="grid-template-columns:1fr 1fr 1fr;"></div>
@@ -522,7 +522,7 @@
 
   const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'teacherChat', 'admin']);
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
-  const TEACHER_USERNAME = 'ISNVO'; // держим в синхроне с backend/config.py:TEACHER_USERNAME (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
+  const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
   let teacherChatPolling = null;
 
@@ -569,7 +569,7 @@
     if (tgUser.photo_url) {
       document.getElementById('pavatar').innerHTML = `<img src="${tgUser.photo_url}" alt="${tgUser.first_name || 'Аватар'}">`;
     }
-    if ((tgUser.username || '').toLowerCase() === TEACHER_USERNAME.toLowerCase()) {
+    if (tgUser.id === TEACHER_CHAT_ID) {
       document.getElementById('adminTabBtn').style.display = '';
     }
   }
@@ -1147,7 +1147,7 @@
     await loadChatMessages();
   }
 
-  // ---- Админка (только для TEACHER_USERNAME — настоящая проверка на backend) ----
+  // ---- Админка (только для TEACHER_CHAT_ID — настоящая проверка на backend) ----
   async function loadAdmin(){
     renderAdminCourseList();
     try {
