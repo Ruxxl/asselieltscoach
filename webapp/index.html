@@ -535,7 +535,7 @@
     <div class="speakingStatus" id="speakingStatus">Подключаюсь…</div>
     <div class="chatWrap" id="speakingTranscript"></div>
     <div class="bottombar" style="flex-direction:column; gap:10px;">
-      <button class="holdTalkBtn" id="speakingHoldBtn" disabled>Зажми <span class="kbd">и говори</span></button>
+      <button class="holdTalkBtn" id="speakingHoldBtn" disabled>Нажми <span class="kbd">и говори</span></button>
       <button class="btn btn-ghost btn-wide" id="speakingEndBtn" onclick="endSpeakingCall()">ЗАВЕРШИТЬ</button>
     </div>
   </section>
@@ -1309,7 +1309,7 @@
       if (agentJoined) return;
       agentJoined = true;
       if (agentJoinTimer) { clearTimeout(agentJoinTimer); agentJoinTimer = null; }
-      setSpeakingStatus('Зажми кнопку внизу и говори');
+      setSpeakingStatus('Нажми кнопку внизу и говори');
       const holdBtn = document.getElementById('speakingHoldBtn');
       if (holdBtn) holdBtn.disabled = false;
     }
@@ -1362,42 +1362,36 @@
     }
   }
 
-  // ---- Push-to-talk: зажал — микрофон включён, отпустил — выключен (как в референсе) ----
+  // ---- Тап-переключатель: нажал — микрофон включён и остаётся включён, пока не нажмёшь ещё раз ----
   let speakingHoldActive = false;
 
-  async function speakingHoldStart(e){
-    e.preventDefault();
-    if (speakingHoldActive || !speakingRoom) return;
-    speakingHoldActive = true;
-    const btn = document.getElementById('speakingHoldBtn');
-    btn.classList.add('active');
-    setSpeakingStatus('Слушаю…');
-    try {
-      await speakingRoom.localParticipant.setMicrophoneEnabled(true);
-    } catch (e) { /* ignore — кнопка отпустится, попробуем снова на следующем нажатии */ }
-  }
-
-  async function speakingHoldEnd(e){
+  async function speakingHoldToggle(e){
     if (e) e.preventDefault();
-    if (!speakingHoldActive) return;
-    speakingHoldActive = false;
+    if (!speakingRoom) return;
     const btn = document.getElementById('speakingHoldBtn');
-    btn.classList.remove('active');
-    setSpeakingStatus('Зажми кнопку внизу и говори');
-    if (speakingRoom) {
-      try { await speakingRoom.localParticipant.setMicrophoneEnabled(false); } catch (e) {}
+    if (!speakingHoldActive) {
+      speakingHoldActive = true;
+      btn.classList.add('active');
+      btn.innerHTML = 'Говорю <span class="kbd">нажми, чтобы закончить</span>';
+      setSpeakingStatus('Слушаю…');
+      try {
+        await speakingRoom.localParticipant.setMicrophoneEnabled(true);
+      } catch (e) { /* ignore — попробуем снова на следующем нажатии */ }
+    } else {
+      speakingHoldActive = false;
+      btn.classList.remove('active');
+      btn.innerHTML = 'Нажми <span class="kbd">и говори</span>';
+      setSpeakingStatus('Нажми кнопку внизу и говори');
+      try {
+        await speakingRoom.localParticipant.setMicrophoneEnabled(false);
+      } catch (e) {}
     }
   }
 
   (function initSpeakingHoldBtn(){
     const btn = document.getElementById('speakingHoldBtn');
     if (!btn) return;
-    btn.addEventListener('mousedown', speakingHoldStart);
-    btn.addEventListener('touchstart', speakingHoldStart, { passive: false });
-    btn.addEventListener('mouseup', speakingHoldEnd);
-    btn.addEventListener('mouseleave', speakingHoldEnd);
-    btn.addEventListener('touchend', speakingHoldEnd);
-    btn.addEventListener('touchcancel', speakingHoldEnd);
+    btn.addEventListener('click', speakingHoldToggle);
   })();
 
   function onSpeakingRoomEnded(){
