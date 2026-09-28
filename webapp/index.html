@@ -361,6 +361,9 @@
   }
   .spkLastMsg b{display:block; margin-top:4px; font-weight:600; color:var(--text);}
   .spkLastMsg.hidden{display:none;}
+  .spkYou{margin-top:10px; margin-left:28px; padding:11px 14px; border-radius:14px 14px 4px 14px; background:var(--accent-strong); color:var(--on-accent); font:500 13.5px/1.5 var(--font-sans);}
+  .spkYou b{display:block; font:600 10.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; opacity:.75; margin-bottom:3px;}
+  .spkYou .spkYouFix{margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.3);}
 
   .spkQList{display:flex; flex-direction:column; gap:10px; margin-bottom:12px;}
   .spkQ{border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow-card);}
@@ -615,6 +618,7 @@
       <button class="spkToggle" id="speakingToggleMsgBtn" onclick="toggleLastExaminerMessage()"><span>Скрыть сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
     </div>
     <div class="spkLastMsg" id="speakingLastMsg"></div>
+    <div class="spkYou" id="speakingYouSaid" style="display:none;"></div>
     <div class="speakingStatus" id="speakingStatus"></div>
     <div class="sectiontitle">Вопросы</div>
     <div class="spkQList" id="speakingQList"></div>
@@ -1429,36 +1433,61 @@
     }
   }
 
-  // ---- Звук: Web Audio для mp3 от Deepgram, speechSynthesis как запасной голос ----
-  // AudioContext "размораживается" только внутри жеста пользователя (iOS/Telegram WebView),
-  // а ответ экзаменатора приходит уже после await fetch — поэтому будим его заранее, в клике.
-  let speakingAudioCtx = null;
-  let speakingSource = null;
+  // ---- Звук: mp3 от Deepgram через <audio>, speechSynthesis как запасной голос ----
+  // Именно <audio>, а не Web Audio: на iPhone Web Audio глушится беззвучным режимом
+  // (переключатель сбоку), а <audio> играет как медиа. iOS/Telegram WebView разрешает
+  // play() без жеста только элементу, который уже играл по жесту, — поэтому в клике
+  // "Начать"/кнопки микрофона проигрываем на нём короткую тишину.
+  const speakingAudioEl = new Audio();
+  speakingAudioEl.setAttribute('playsinline', '');
+  let speakingAudioUnlocked = false;
+  let speakingPlaybackDone = null; // resolve текущего проигрывания — чтобы стоп не оставлял await висеть
+
+  const SILENT_WAV_URL = (() => {
+    const samples = 800; // 0.1 с тишины, 8 кГц, 8 бит, моно
+    const buf = new ArrayBuffer(44 + samples);
+    const v = new DataView(buf);
+    const str = (o, t) => [...t].forEach((c, k) => v.setUint8(o + k, c.charCodeAt(0)));
+    str(0, 'RIFF'); v.setUint32(4, 36 + samples, true); str(8, 'WAVEfmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    str(36, 'data'); v.setUint32(40, samples, true);
+    for (let k = 0; k < samples; k++) v.setUint8(44 + k, 128);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  })();
 
   function unlockSpeakingAudio(){
+    if (speakingAudioUnlocked) return;
     try {
-      speakingAudioCtx = speakingAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (speakingAudioCtx.state === 'suspended') speakingAudioCtx.resume();
+      speakingAudioEl.src = SILENT_WAV_URL;
+      const p = speakingAudioEl.play();
+      if (p) p.then(() => { speakingAudioUnlocked = true; }).catch(() => {});
     } catch (e) {}
+    // speechSynthesis на iOS тоже "будится" только в жесте — пустая фраза ничего не произносит.
+    try { if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch (e) {}
   }
 
   function stopSpeakingPlayback(){
-    if (speakingSource) { try { speakingSource.stop(); } catch (e) {} speakingSource = null; }
+    try { speakingAudioEl.pause(); } catch (e) {}
     try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
+    if (speakingPlaybackDone) { const done = speakingPlaybackDone; speakingPlaybackDone = null; done(); }
     document.getElementById('speakingOrb')?.classList.remove('speaking');
   }
 
   function playSpeakingMp3(b64){
-    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     return new Promise((resolve, reject) => {
-      speakingAudioCtx.decodeAudioData(bytes.buffer, buffer => {
-        const src = speakingAudioCtx.createBufferSource();
-        src.buffer = buffer;
-        src.connect(speakingAudioCtx.destination);
-        src.onended = () => { if (speakingSource === src) speakingSource = null; resolve(); };
-        speakingSource = src;
-        src.start();
-      }, reject);
+      const finish = (err) => {
+        if (speakingPlaybackDone !== done) return;
+        speakingPlaybackDone = null;
+        err ? reject(err) : resolve();
+      };
+      const done = () => finish();
+      speakingPlaybackDone = done;
+      speakingAudioEl.onended = () => finish();
+      speakingAudioEl.onerror = () => finish(new Error('audio error'));
+      speakingAudioEl.src = 'data:audio/mpeg;base64,' + b64;
+      const p = speakingAudioEl.play();
+      if (p) p.catch(err => finish(err));
     });
   }
 
@@ -1491,7 +1520,7 @@
     const orb = document.getElementById('speakingOrb');
     orb?.classList.add('speaking');
     try {
-      if (audioB64 && speakingAudioCtx) {
+      if (audioB64) {
         try { await playSpeakingMp3(audioB64); return; } catch (e) { /* ниже — встроенный голос */ }
       }
       await speakWithBrowserVoice(text);
@@ -1518,6 +1547,14 @@
     document.getElementById('speakingReplayBtn').disabled = false;
   }
 
+  function showYouSaid(text, correction){
+    const el = document.getElementById('speakingYouSaid');
+    if (text == null) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.innerHTML = `<b>Ты сказал</b>${escapeHtml(text || '…')}` +
+      (correction ? `<div class="spkYouFix"><b>Как лучше</b>${escapeHtml(correction.better)}${correction.tip ? `<div style="opacity:.85; margin-top:4px;">${escapeHtml(correction.tip)}</div>` : ''}</div>` : '');
+    el.style.display = 'block';
+  }
+
   function toggleLastExaminerMessage(){
     const msg = document.getElementById('speakingLastMsg');
     const btn = document.getElementById('speakingToggleMsgBtn');
@@ -1529,9 +1566,14 @@
   function setExaminerMessage(text, question, audioB64){
     lastExaminer = { text, question, audioB64 };
     renderLastExaminer();
-    if (question) {
-      speakingQuestions.forEach(q => { q.collapsed = true; });
+    const last = speakingQuestions[speakingQuestions.length - 1];
+    const repeated = last && question && last.question.toLowerCase() === question.toLowerCase();
+    if (question && !repeated) {
+      // Сворачиваем всё, кроме только что отвеченной карточки — там видно "Твой ответ".
+      speakingQuestions.slice(0, -1).forEach(q => { q.collapsed = true; });
       speakingQuestions.push({ question, answer: null, help: null, open: null, loading: false, collapsed: false });
+    } else if (repeated) {
+      last.answer = null; // экзаменатор переспросил — ждём новый ответ на тот же вопрос
     }
     renderSpeakingQuestions();
   }
@@ -1635,6 +1677,7 @@
       speakingBusy = false;
       speakingFinishRequested = false;
       speakingQuestions = [];
+      showYouSaid(null);
       document.getElementById('speakingSessionBadge').textContent =
         SPEAKING_PARTS.find(p => p.id === speakingChoice.part)?.tag || 'Speaking';
       document.getElementById('speakingEndBtn').disabled = false;
@@ -1708,6 +1751,7 @@
 
       const openQ = [...speakingQuestions].reverse().find(q => q.answer == null);
       if (openQ) { openQ.answer = data.student_said; openQ.correction = data.correction; }
+      showYouSaid(data.student_said, data.correction);
       speakingBusy = false;
       speakingFinished = data.finished;
       setExaminerMessage(data.ai_message, data.question, data.audio_b64);
