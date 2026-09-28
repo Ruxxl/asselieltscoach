@@ -125,24 +125,32 @@ class SpeakingStartRequest(BaseModel):
 
 class SpeakingStartResult(BaseModel):
     session_id: int
-    livekit_url: str
-    token: str  # JWT для подключения браузера к LiveKit-комнате (livekit-client)
+    ai_message: str
+    question: str = ""  # вопрос дословно из ai_message ("" — если реплика без вопроса)
+    audio_b64: str | None = None  # mp3 реплики; None — фронтенд озвучит speechSynthesis
 
 
-class SpeakingReportIn(BaseModel):
-    """Отчёт, который отдельный сервис-агент (backend/agent_worker.py) присылает обратно
-    сюда по завершении звонка — см. AGENT_CALLBACK_SECRET в backend/config.py."""
+class SpeakingCorrection(BaseModel):
+    better: str  # ответ ученика так, как сказал бы носитель
+    tip: str  # короткое объяснение на русском
 
-    transcript: list[dict] = []
-    error: str | None = None
-    corrected_answer: str | None = None  # part1 (с темой)
-    improvement_comments: list[str] | None = None  # part1 (с темой)
-    fluency_coherence: float | None = None  # part2/part3
-    lexical_resource: float | None = None
-    grammar_accuracy: float | None = None
-    pronunciation: float | None = None
-    overall_band: float | None = None
-    summary_feedback: str | None = None
+
+class SpeakingTurnResult(BaseModel):
+    student_said: str
+    ai_message: str
+    question: str = ""
+    correction: SpeakingCorrection | None = None  # как лучше сказать — None, если ответ был без ошибок
+    finished: bool
+    audio_b64: str | None = None
+
+
+class SpeakingHelpRequest(BaseModel):
+    question: str
+
+
+class SpeakingHelpResult(BaseModel):
+    hint: str
+    sample: str
 
 
 class SpeakingSessionOut(BaseModel):

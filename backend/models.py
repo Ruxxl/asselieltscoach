@@ -146,8 +146,8 @@ class TestAnswer(Base):
 
 
 class SpeakingTopic(Base):
-    """Тема для IELTS Speaking Part 1 — вопрос, с которого живой ИИ-экзаменатор открывает
-    звонок (см. backend/services/speaking_agent.py). Редактируется преподавателем через
+    """Тема для IELTS Speaking Part 1 — вопрос, с которого ИИ-экзаменатор открывает
+    разговор (см. backend/services/speaking.py). Редактируется преподавателем через
     админку (backend/routers/admin.py)."""
 
     __tablename__ = "speaking_topics"
@@ -161,9 +161,8 @@ class SpeakingTopic(Base):
 
 
 class SpeakingSession(Base):
-    """Сессия практики Speaking с живым ИИ-экзаменатором (LiveKit Agents, см.
-    backend/services/speaking_agent.py) — транскрипт всего звонка копится в
-    transcript_json по завершении. Для Part 1 звонок открывается конкретной темой
+    """Сессия практики Speaking с ИИ-экзаменатором (пошаговый диалог, см.
+    backend/routers/speaking.py) — транскрипт копится в transcript_json ход за ходом. Для Part 1 звонок открывается конкретной темой
     (topic_*), итог — corrected_answer/improvement_comments_json; для Part 2/3 —
     прежние 4 балла IELTS."""
 
