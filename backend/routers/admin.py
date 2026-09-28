@@ -4,15 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth import require_admin
 from backend.database import get_session
-from backend.models import Course, CoursePurchase, Module, User
+from backend.models import Course, CoursePurchase, Module, SpeakingSession, SpeakingTopic, User
 from backend.routers.courses import _COURSE_OPTIONS
 from backend.schemas import (
     AdminCourseIn,
     AdminCoursePatch,
     AdminCourseStatOut,
+    AdminSpeakingTopicIn,
+    AdminSpeakingTopicPatch,
     AdminStatsOut,
     AdminUserOut,
     CourseOut,
+    SpeakingTopicOut,
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -179,5 +182,78 @@ async def delete_course(
         )
 
     await session.delete(course)
+    await session.commit()
+    return {"deleted": True}
+
+
+@router.get("/speaking-topics", response_model=list[SpeakingTopicOut])
+async def list_speaking_topics(
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    await require_admin(session, x_telegram_init_data)
+    rows = await session.execute(select(SpeakingTopic).order_by(SpeakingTopic.order))
+    return rows.scalars().all()
+
+
+@router.post("/speaking-topics", response_model=SpeakingTopicOut)
+async def create_speaking_topic(
+    payload: AdminSpeakingTopicIn,
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    await require_admin(session, x_telegram_init_data)
+    topic = SpeakingTopic(
+        title=payload.title,
+        question_text=payload.question_text,
+        order=payload.order,
+        is_active=payload.is_active,
+    )
+    session.add(topic)
+    await session.commit()
+    await session.refresh(topic)
+    return topic
+
+
+@router.patch("/speaking-topics/{topic_id}", response_model=SpeakingTopicOut)
+async def patch_speaking_topic(
+    topic_id: int,
+    payload: AdminSpeakingTopicPatch,
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    await require_admin(session, x_telegram_init_data)
+    topic = await session.get(SpeakingTopic, topic_id)
+    if not topic:
+        raise HTTPException(status_code=404, detail="Тема не найдена")
+    if payload.title is not None:
+        topic.title = payload.title
+    if payload.question_text is not None:
+        topic.question_text = payload.question_text
+    if payload.order is not None:
+        topic.order = payload.order
+    if payload.is_active is not None:
+        topic.is_active = payload.is_active
+    await session.commit()
+    return topic
+
+
+@router.delete("/speaking-topics/{topic_id}")
+async def delete_speaking_topic(
+    topic_id: int,
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    await require_admin(session, x_telegram_init_data)
+    topic = await session.get(SpeakingTopic, topic_id)
+    if not topic:
+        raise HTTPException(status_code=404, detail="Тема не найдена")
+    used = await session.execute(select(SpeakingSession.id).where(SpeakingSession.topic_id == topic_id).limit(1))
+    if used.first():
+        raise HTTPException(
+            status_code=400,
+            detail="Тема уже использовалась в звонках — удаление отключено, вместо этого сними «активна»",
+        )
+    await session.delete(topic)
     await session.commit()
     return {"deleted": True}

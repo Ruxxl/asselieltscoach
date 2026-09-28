@@ -16,6 +16,7 @@ job_executor_type=THREAD (вместо дефолтного PROCESS) — что�
 ограниченной памяти free-инстанса.
 """
 
+import json
 import logging
 import os
 import re
@@ -34,7 +35,7 @@ from backend.config import (
     SPEAKING_AGENT_NAME,
     SPEAKING_API_BASE_URL,
 )
-from backend.services.speaking import build_examiner_instructions, score_session
+from backend.services.speaking import build_corrected_report, build_examiner_instructions, score_session
 
 logger = logging.getLogger(__name__)
 
@@ -94,14 +95,20 @@ async def _post_report(session_id: int, payload: dict) -> None:
         logger.exception("Speaking agent: report callback failed for session %s", session_id)
 
 
-async def _finalize_session(session_id: int, part: str, session: AgentSession) -> None:
+async def _finalize_session(session_id: int, part: str, session: AgentSession, topic_question: str | None) -> None:
     """Считает финальную оценку и шлёт результат обратно основному сервису — вызывается,
     когда звонок завершён (комната опустела/закрылась). Отдельный обычный текстовый запрос
     к Gemini, тот же надёжный паттерн, что и раньше в пошаговой версии — здесь live-часть
-    только собирает транскрипт, оценка всегда посчитана одним стабильным запросом."""
+    только собирает транскрипт, оценка всегда посчитана одним стабильным запросом.
+
+    Part 1 (с выбранной темой) получает исправленный текст + комментарии вместо 4 баллов
+    IELTS — Part 2/3 остаются с прежним форматом, см. backend/services/speaking.py."""
     transcript = _extract_transcript(session)
     try:
-        result = await score_session(transcript, part)
+        if part == "part1":
+            result = await build_corrected_report(transcript, topic_question)
+        else:
+            result = await score_session(transcript, part)
     except Exception:
         logger.exception("Speaking agent: scoring failed for session %s", session_id)
         await _post_report(session_id, {"transcript": transcript, "error": "Не удалось получить оценку ИИ."})
@@ -120,6 +127,15 @@ async def speaking_entrypoint(ctx: JobContext) -> None:
 
     await ctx.connect()
 
+    # Тема Part 1 едет через метаданные комнаты (проставлены на основном сервисе при выдаче
+    # токена, см. backend/routers/speaking.py) — у этого процесса нет доступа к его БД.
+    topic_question = None
+    if ctx.room.metadata:
+        try:
+            topic_question = json.loads(ctx.room.metadata).get("topic_question") or None
+        except (ValueError, TypeError):
+            logger.warning("Speaking agent: could not parse room metadata for session %s", session_id)
+
     session = AgentSession(
         # sample_rate=8000 (вместо дефолтных 16000) — вдвое меньше сэмплов на кадр для VAD,
         # заметно снижает нагрузку на CPU. На free-инстансе Render (0.1 vCPU) полноразмерный
@@ -136,13 +152,18 @@ async def speaking_entrypoint(ctx: JobContext) -> None:
 
     async def _on_shutdown(_reason: str = "") -> None:
         try:
-            await _finalize_session(session_id, part, session)
+            await _finalize_session(session_id, part, session, topic_question)
         except Exception:
             logger.exception("Speaking agent: unhandled error finalizing session %s", session_id)
 
     ctx.add_shutdown_callback(_on_shutdown)
 
-    await session.start(agent=Agent(instructions=build_examiner_instructions(part)), room=ctx.room)
+    await session.start(agent=Agent(instructions=build_examiner_instructions(part, topic_question)), room=ctx.room)
     await session.generate_reply(
-        instructions="Greet the student in one short friendly sentence and ask what topic they'd like to talk about today."
+        instructions=(
+            f'Greet the student in one short friendly sentence, then open with exactly this question: '
+            f'"{topic_question}"'
+            if topic_question
+            else "Greet the student in one short friendly sentence and ask what topic they'd like to talk about today."
+        )
     )

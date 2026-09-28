@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models import Course, Lesson, LessonQuestion, Module
+from backend.models import Course, Lesson, LessonQuestion, Module, SpeakingTopic
 
 # Реальный контент уроков — пока только для курса "IELTS 5.5" (Listening/Reading), по образцу
 # структуры study.ru (тема -> уроки-статьи -> тест из вопросов "заполни пропуск"). Это авторский
@@ -194,6 +194,43 @@ COURSES = [
         ],
     },
 ]
+
+
+# Стартовый набор тем для IELTS Speaking Part 1 (Introduction and Interview) — преподаватель
+# правит формулировки и добавляет/убирает темы через админку, это только затравка на старте.
+SPEAKING_PART1_TOPICS = [
+    ("Семья", "Do you have a big family? Can you tell me about them?"),
+    ("Друзья", "Who is your best friend, and what do you like doing together?"),
+    ("Родной город", "Can you describe the town or city where you grew up?"),
+    ("Работа/учёба", "Do you work or are you a student? What do you do?"),
+    ("Свободное время", "What do you usually do in your free time?"),
+    ("Хобби", "Do you have a hobby? How did you get interested in it?"),
+    ("Еда", "What kind of food do you like? Do you enjoy cooking?"),
+    ("Погода", "What's the weather usually like in your country?"),
+    ("Спорт", "Do you play or watch any sports?"),
+    ("Музыка", "What kind of music do you like listening to?"),
+    ("Фильмы", "Do you often watch films? What kind do you prefer?"),
+    ("Книги", "Do you enjoy reading? What was the last book you read?"),
+    ("Технологии", "How often do you use your phone or computer?"),
+    ("Здоровье", "What do you do to stay healthy?"),
+    ("Шопинг", "Do you enjoy shopping? What do you usually buy?"),
+    ("Выходные", "What do you usually do on weekends?"),
+    ("Детство", "What did you enjoy doing when you were a child?"),
+    ("Планы на будущее", "What are your plans for the next few years?"),
+    ("Путешествия", "Do you like traveling? Where would you like to go?"),
+    ("Распорядок дня", "Can you describe your typical daily routine?"),
+]
+
+
+async def seed_speaking_topics_if_empty(session: AsyncSession) -> None:
+    # Отдельный гейт от seed_if_empty (тот гейтится на пустой Course) — на уже работающем
+    # проде курсы уже есть, общий гейт означал бы, что темы никогда не засеются.
+    existing = await session.execute(select(SpeakingTopic.id).limit(1))
+    if existing.first():
+        return
+    for i, (title, question) in enumerate(SPEAKING_PART1_TOPICS):
+        session.add(SpeakingTopic(title=title, question_text=question, order=i, is_active=True))
+    await session.commit()
 
 
 async def seed_if_empty(session: AsyncSession) -> None:

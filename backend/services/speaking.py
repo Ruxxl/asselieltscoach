@@ -17,7 +17,8 @@ class GeminiNotConfigured(RuntimeError):
 _PART_GUIDANCE = {
     "part1": (
         "This is IELTS Speaking Part 1 (Introduction and Interview) practice. After the student names a "
-        "topic they'd like to discuss, ask 3-4 short, simple, everyday questions about it, one at a time."
+        "topic they'd like to discuss, ask 3-4 short, simple, everyday questions about it, one at a time. "
+        "(Fallback only — normally the topic and opening question are already chosen for Part 1.)"
     ),
     "part2": (
         "This is IELTS Speaking Part 2 (Individual Long Turn) practice. After the student names a topic, "
@@ -31,8 +32,15 @@ _PART_GUIDANCE = {
 }
 
 
-def build_examiner_instructions(part: str) -> str:
-    guidance = _PART_GUIDANCE.get(part, _PART_GUIDANCE["part1"])
+def build_examiner_instructions(part: str, topic_question: str | None = None) -> str:
+    if part == "part1" and topic_question:
+        guidance = (
+            f'This is IELTS Speaking Part 1 (Introduction and Interview) practice. The topic and opening '
+            f'question are already chosen: "{topic_question}" — ask exactly this question first, then ask '
+            f"2-3 more short, simple, everyday follow-up questions on the same topic, one at a time."
+        )
+    else:
+        guidance = _PART_GUIDANCE.get(part, _PART_GUIDANCE["part1"])
     return f"""You are Assel, a friendly but professional IELTS Speaking examiner having a real-time voice \
 conversation with a student, one topic at a time. {guidance}
 
@@ -111,4 +119,46 @@ async def score_session(history: list[dict], part: str) -> dict:
         "pronunciation": float(data.get("pronunciation", 0)),
         "overall_band": float(data.get("overall_band", 0)),
         "summary_feedback": data.get("summary_feedback", ""),
+    }
+
+
+_CORRECTED_REPORT_PROMPT_TEMPLATE = """You are an IELTS Speaking examiner reviewing a Part 1 practice session.
+Topic question asked: "{topic_question}"
+
+Transcript (each line is one turn, "Student" or "Examiner"):
+{transcript_text}
+
+Take ONLY the student's spoken answers (ignore the examiner's lines) and:
+1. Rewrite them as a single polished, natural-sounding corrected version in English — keep the student's own \
+ideas and level of detail, just fix grammar/word choice/coherence. If the transcript is empty or far too \
+short to judge, return an empty string here.
+2. List 3-5 concrete, specific improvement comments in Russian — short and actionable, each referencing \
+something the student actually said. If there isn't enough material, say so honestly in one comment inviting \
+them to try again and speak more.
+
+Respond STRICTLY as JSON, no markdown wrapper:
+{{"corrected_answer": "...", "improvement_comments": ["...", "..."]}}
+"""
+
+
+async def build_corrected_report(history: list[dict], topic_question: str | None = None) -> dict:
+    if not GEMINI_API_KEY:
+        raise GeminiNotConfigured(
+            "GEMINI_API_KEY не задан в .env. Получить бесплатный ключ: https://aistudio.google.com/apikey"
+        )
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel(GEMINI_MODEL)
+    prompt = _CORRECTED_REPORT_PROMPT_TEMPLATE.format(
+        topic_question=topic_question or "(не указан)",
+        transcript_text=_history_to_text(history) or "(пусто — студент ничего не сказал)",
+    )
+    response = await model.generate_content_async(
+        prompt,
+        generation_config={"response_mime_type": "application/json"},
+        request_options={"timeout": 25},
+    )
+    data = json.loads(response.text.strip())
+    return {
+        "corrected_answer": data.get("corrected_answer", ""),
+        "improvement_comments": list(data.get("improvement_comments", [])),
     }

@@ -82,8 +82,45 @@ class ReadingCheckResult(BaseModel):
     feedback: str
 
 
+class SpeakingTopicOut(BaseModel):
+    id: int
+    title: str
+    question_text: str
+    order: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class SpeakingTopicPublicOut(BaseModel):
+    """То, что видит ученик в списке тем ДО старта звонка — без вопроса (его первым
+    задаёт живой экзаменатор), в том же духе "сюрприза", что и карточки Part 1/2/3."""
+
+    id: int
+    title: str
+
+    class Config:
+        from_attributes = True
+
+
+class AdminSpeakingTopicIn(BaseModel):
+    title: str
+    question_text: str
+    order: int
+    is_active: bool = True
+
+
+class AdminSpeakingTopicPatch(BaseModel):
+    title: str | None = None
+    question_text: str | None = None
+    order: int | None = None
+    is_active: bool | None = None
+
+
 class SpeakingStartRequest(BaseModel):
     part: str  # part1 / part2 / part3
+    topic_id: int | None = None  # обязателен для part1 (см. backend/routers/speaking.py)
 
 
 class SpeakingStartResult(BaseModel):
@@ -98,7 +135,9 @@ class SpeakingReportIn(BaseModel):
 
     transcript: list[dict] = []
     error: str | None = None
-    fluency_coherence: float | None = None
+    corrected_answer: str | None = None  # part1 (с темой)
+    improvement_comments: list[str] | None = None  # part1 (с темой)
+    fluency_coherence: float | None = None  # part2/part3
     lexical_resource: float | None = None
     grammar_accuracy: float | None = None
     pronunciation: float | None = None
@@ -110,6 +149,8 @@ class SpeakingSessionOut(BaseModel):
     id: int
     status: str
     part: str
+    corrected_answer: str | None = None
+    improvement_comments: list[str] | None = None
     fluency_coherence: float | None = None
     lexical_resource: float | None = None
     grammar_accuracy: float | None = None
@@ -129,17 +170,6 @@ class PurchaseResult(BaseModel):
 class NewsPostOut(BaseModel):
     id: int
     text: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class ChatMessageOut(BaseModel):
-    id: int
-    sender: str  # student / teacher
-    text: str | None = None
-    voice_url: str | None = None  # проставляется в роутере, если voice_path есть
     created_at: datetime
 
     class Config:

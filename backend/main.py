@@ -7,8 +7,8 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.config import BOT_TOKEN, DISABLE_BOT_POLLING, WEBAPP_DIR
 from backend.database import SessionLocal, init_db
-from backend.routers import admin, chat, courses, lessons, news, reading_test, speaking
-from backend.seed_data import seed_if_empty
+from backend.routers import admin, courses, lessons, news, reading_test, speaking
+from backend.seed_data import seed_if_empty, seed_speaking_topics_if_empty
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     async with SessionLocal() as session:
         await seed_if_empty(session)
+        await seed_speaking_topics_if_empty(session)
 
     bot_task = asyncio.create_task(_run_bot_forever()) if BOT_TOKEN and not DISABLE_BOT_POLLING else None
     try:
@@ -44,7 +45,6 @@ app.include_router(courses.router)
 app.include_router(lessons.router)
 app.include_router(reading_test.router)
 app.include_router(news.router)
-app.include_router(chat.router)
 app.include_router(admin.router)
 app.include_router(speaking.router)
 

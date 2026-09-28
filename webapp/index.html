@@ -103,21 +103,6 @@
   .chatBubble.student{align-self:flex-end; background:var(--accent-strong); color:var(--on-dark); border-bottom-right-radius:4px;}
   .chatBubble.teacher{align-self:flex-start; background:var(--surface); border:1px solid var(--border); color:var(--text); border-bottom-left-radius:4px; box-shadow:var(--shadow-card);}
   .chatBubble audio{width:220px; max-width:100%; height:36px;}
-  .chatInputBar{display:flex; align-items:center; gap:8px; padding-top:10px; margin-top:auto;}
-  .chatTextInput{
-    flex:1; border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:11px 16px;
-    font:500 13.5px var(--font-sans); color:var(--text); outline:none;
-  }
-  .chatTextInput:focus{border-color:var(--accent-strong);}
-  .chatIconBtn{
-    width:38px; height:38px; border-radius:50%; border:none; background:transparent; color:var(--text-muted);
-    font-size:20px; display:grid; place-items:center; cursor:pointer; flex:none; transition:background .15s ease, color .15s ease, transform .1s ease;
-  }
-  .chatIconBtn:hover{color:var(--text-secondary);}
-  .chatIconBtn.send{background:var(--btn-dark); color:var(--on-dark); font-size:16px;}
-  .chatIconBtn.send:hover{color:var(--on-dark); background:var(--btn-dark-hover);}
-  .chatIconBtn.rec{background:var(--red); color:var(--on-red); animation:pulse 1.1s ease-out infinite;}
-  @media (prefers-reduced-motion: reduce){.chatIconBtn.rec{animation:none;}}
 
   .field{margin-bottom:12px;}
   .field label{display:block; font:600 11px var(--font-sans); letter-spacing:.03em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;}
@@ -529,16 +514,6 @@
     <div id="newsList"><div class="hint">Загружаю…</div></div>
   </section>
 
-  <!-- 15: teacher chat -->
-  <section class="screen" data-screen="teacherChat">
-    <div class="apphead"><div class="brand">Преподаватель</div></div>
-    <div class="chatWrap" id="chatMessages"><div class="hint">Загружаю…</div></div>
-    <div class="chatInputBar">
-      <input type="text" id="chatTextInput" class="chatTextInput" placeholder="Напишите сообщение…" oninput="updateChatActionBtn()" onkeydown="if(event.key==='Enter' && this.value.trim()){event.preventDefault(); sendChatText();}">
-      <button class="chatIconBtn" id="chatActionBtn" onclick="onChatActionBtnClick()"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg></button>
-    </div>
-  </section>
-
   <!-- 16: speaking practice — setup: только выбор части экзамена -->
   <section class="screen" data-screen="speaking">
     <div class="apphead"><div class="brand">Speaking Practice</div></div>
@@ -546,7 +521,14 @@
     <div id="speakingPresets"></div>
     <div class="spacer"></div>
     <div class="aiError" id="speakingStartError" style="display:none;"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingStartBtn" onclick="startSpeakingSession()">НАЧАТЬ</button></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingStartBtn" onclick="onSpeakingStartClick()">НАЧАТЬ</button></div>
+  </section>
+
+  <!-- 16b: speaking practice Part 1 — выбор темы перед звонком (Part 2/3 идут сразу в звонок) -->
+  <section class="screen" data-screen="speakingTopicPicker">
+    <div class="topbar"><button class="xbtn" onclick="go('speaking')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
+    <div class="sectiontitle">Выбери тему</div>
+    <div id="speakingTopicList"><div class="hint">Загружаю…</div></div>
   </section>
 
   <!-- 17: speaking practice — живой голосовой звонок с ИИ-экзаменатором через LiveKit
@@ -593,8 +575,27 @@
     <div class="sectiontitle">Курсы</div>
     <div id="adminCourseList"></div>
     <button class="btn btn-ghost btn-wide" onclick="openAdminCourseForm(null)" style="margin-top:6px;">+ Добавить курс</button>
+    <div class="sectiontitle" style="margin-top:22px;">Темы Speaking (Part 1)</div>
+    <div id="adminSpeakingTopicList"></div>
+    <button class="btn btn-ghost btn-wide" onclick="openAdminSpeakingTopicForm(null)" style="margin-top:6px;">+ Добавить тему</button>
     <div class="sectiontitle" style="margin-top:22px;">Пользователи</div>
     <div id="adminUserList"></div>
+  </section>
+
+  <!-- 17b: admin speaking topic create/edit form -->
+  <section class="screen" data-screen="adminSpeakingTopicForm">
+    <div class="topbar"><button class="xbtn" onclick="go('admin')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
+    <div class="qtitle" id="astfTitle">Новая тема</div>
+    <div class="field"><label>Название</label><input id="astfTitleInput" class="input"></div>
+    <div class="field"><label>Вопрос экзаменатора (на английском)</label><textarea id="astfQuestion" class="input" rows="3"></textarea></div>
+    <div class="field"><label>Порядок</label><input id="astfOrder" type="number" class="input"></div>
+    <div class="field"><label><input type="checkbox" id="astfActive"> Активна</label></div>
+    <div class="aiError" id="astfError" style="display:none; margin-top:10px;"></div>
+    <div class="spacer"></div>
+    <div class="bottombar">
+      <button class="btn btn-ghost" id="astfDeleteBtn" onclick="deleteAdminSpeakingTopic()" style="display:none;">Удалить</button>
+      <button class="btn btn-primary btn-wide" onclick="saveAdminSpeakingTopic()">Сохранить</button>
+    </div>
   </section>
 
   <!-- 17: admin course create/edit form -->
@@ -628,9 +629,6 @@
   </button>
   <button class="tabbtn" data-tab="speaking" onclick="go('speaking')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg></span><span class="tablabel">Speaking</span>
-  </button>
-  <button class="tabbtn" data-tab="teacherChat" onclick="go('teacherChat')">
-    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 1 1 21 11.5Z"/><circle cx="8.3" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="16.7" cy="11.5" r="1" fill="currentColor" stroke="none"/></svg></span><span class="tablabel">Чат</span>
   </button>
   <button class="tabbtn" data-tab="profile" onclick="go('profile')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.4 3.4-7 7.5-7s7.5 2.6 7.5 7"/></svg></span><span class="tablabel">Профиль</span>
@@ -671,11 +669,9 @@
   const PENCIL_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const VOLUME_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
 
-  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'teacherChat', 'admin', 'speaking']);
+  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'admin', 'speaking']);
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
-
-  let teacherChatPolling = null;
 
   // Точка-индикатор под активной вкладкой плавно скользит между табами вместо мгновенного прыжка.
   function updateTabDot(activeTab){
@@ -711,13 +707,6 @@
     if (id === 'news') loadNews();
     if (id === 'admin') loadAdmin();
     if (id === 'speaking') renderSpeakingSetup();
-    if (id === 'teacherChat') {
-      loadChatMessages();
-      if (!teacherChatPolling) teacherChatPolling = setInterval(loadChatMessages, 8000);
-    } else if (teacherChatPolling) {
-      clearInterval(teacherChatPolling);
-      teacherChatPolling = null;
-    }
     window.scrollTo(0,0);
   }
 
@@ -1305,17 +1294,51 @@
     });
   }
 
-  async function startSpeakingSession(){
+  // Part 1 сначала выбирает тему (отдельный экран) — Part 2/3 запускают звонок сразу.
+  function onSpeakingStartClick(){
+    if (speakingChoice.part === 'part1') {
+      go('speakingTopicPicker');
+      renderSpeakingTopicPicker();
+    } else {
+      startSpeakingSession();
+    }
+  }
+
+  async function renderSpeakingTopicPicker(){
+    const el = document.getElementById('speakingTopicList');
+    el.innerHTML = '<div class="hint">Загружаю…</div>';
+    try {
+      const res = await fetch('/api/speaking/topics');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const topics = await res.json();
+      if (!topics.length) { el.innerHTML = '<div class="hint">Темы ещё не добавлены.</div>'; return; }
+      el.innerHTML = '';
+      topics.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'levelcard';
+        card.innerHTML = `<div><div class="tt">${escapeHtml(t.title)}</div></div>`;
+        card.onclick = () => startSpeakingSession(t.id);
+        el.appendChild(card);
+      });
+    } catch (e) {
+      el.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить темы.</div>';
+    }
+  }
+
+  // topicId задан только для Part 1 (выбор темы, см. onSpeakingStartClick) — вызывается либо
+  // с экрана выбора темы (без speakingStartBtn на экране), либо с кнопки "НАЧАТЬ" для part2/3.
+  async function startSpeakingSession(topicId){
     const btn = document.getElementById('speakingStartBtn');
     const errEl = document.getElementById('speakingStartError');
-    errEl.style.display = 'none';
-    btn.disabled = true;
-    btn.textContent = 'Начинаю…';
+    if (errEl) errEl.style.display = 'none';
+    if (btn) { btn.disabled = true; btn.textContent = 'Начинаю…'; }
     try {
+      const body = { part: speakingChoice.part };
+      if (topicId != null) body.topic_id = topicId;
       const res = await fetch('/api/speaking/start', {
         method: 'POST',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(speakingChoice),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
@@ -1331,11 +1354,14 @@
       go('speakingSession');
       await connectSpeakingRoom(data.livekit_url, data.token);
     } catch (e) {
-      errEl.textContent = 'Не удалось начать: ' + e.message;
-      errEl.style.display = 'block';
+      if (errEl) {
+        errEl.textContent = 'Не удалось начать: ' + e.message;
+        errEl.style.display = 'block';
+      } else {
+        alert('Не удалось начать: ' + e.message);
+      }
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'НАЧАТЬ';
+      if (btn) { btn.disabled = false; btn.textContent = 'НАЧАТЬ'; }
     }
   }
 
@@ -1506,6 +1532,17 @@
 
   function renderSpeakingReport(data){
     const reportEl = document.getElementById('speakingReportBody');
+    if (data.part === 'part1') {
+      const comments = data.improvement_comments || [];
+      reportEl.innerHTML = `
+        <div class="transcript"><b>Исправленный ответ</b>${escapeHtml(data.corrected_answer || 'Маловато сказано, чтобы разобрать — попробуй ещё раз и говори побольше.')}</div>
+        <div class="sectiontitle" style="margin-top:16px;">Что улучшить</div>
+        ${comments.length
+          ? `<ul style="margin:0; padding-left:20px; font:500 13.5px/1.6 var(--font-sans); color:var(--text);">${comments.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>`
+          : '<div class="hint">Комментариев нет.</div>'}
+      `;
+      return;
+    }
     const bands = [
       ['Fluency & Coherence', data.fluency_coherence, 'var(--accent-strong)'],
       ['Lexical Resource', data.lexical_resource, 'var(--blue)'],
@@ -1547,97 +1584,10 @@
     }
   }
 
-  // ---- Чат с преподавателем: история хранится на сервере, не теряется между визитами ----
-  async function loadChatMessages(){
-    const wrap = document.getElementById('chatMessages');
-    try {
-      const res = await fetch('/api/chat/messages', { headers: authHeaders() });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const msgs = await res.json();
-      if (!msgs.length) {
-        wrap.innerHTML = '<div class="hint">Напиши первое сообщение — преподаватель увидит его в Telegram и ответит прямо сюда.</div>';
-        return;
-      }
-      const wasNearBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
-      wrap.innerHTML = msgs.map(m => {
-        const cls = 'chatBubble ' + (m.sender === 'student' ? 'student' : 'teacher');
-        const body = m.voice_url ? `<audio controls src="${m.voice_url}"></audio>` : escapeHtml(m.text || '');
-        return `<div class="${cls}">${body}</div>`;
-      }).join('');
-      if (wasNearBottom) wrap.scrollTop = wrap.scrollHeight;
-    } catch (e) {
-      wrap.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить переписку.</div>';
-    }
-  }
-
-  // Одна кнопка переключается между микрофоном и отправкой, как в обычных мессенджерах:
-  // пока поле пустое — это микрофон, как только начал печатать — превращается в отправку.
-  function updateChatActionBtn(){
-    if (chatIsRecording) return;
-    const btn = document.getElementById('chatActionBtn');
-    const hasText = document.getElementById('chatTextInput').value.trim().length > 0;
-    btn.classList.toggle('send', hasText);
-    btn.innerHTML = hasText ? SEND_ICON : MIC_ICON;
-  }
-
-  function onChatActionBtnClick(){
-    if (chatIsRecording) { toggleChatMic(); return; }
-    const hasText = document.getElementById('chatTextInput').value.trim().length > 0;
-    if (hasText) sendChatText(); else toggleChatMic();
-  }
-
-  async function sendChatText(){
-    const input = document.getElementById('chatTextInput');
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = '';
-    updateChatActionBtn();
-    const form = new FormData();
-    form.append('text', text);
-    await fetch('/api/chat/messages', { method: 'POST', headers: authHeaders(), body: form });
-    await loadChatMessages();
-  }
-
-  let chatRecorder = null, chatAudioChunks = [], chatIsRecording = false;
-
-  async function toggleChatMic(){
-    const btn = document.getElementById('chatActionBtn');
-    if (!chatIsRecording) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        chatAudioChunks = [];
-        chatRecorder = new MediaRecorder(stream);
-        chatRecorder.ondataavailable = e => chatAudioChunks.push(e.data);
-        chatRecorder.onstop = onChatRecordingStop;
-        chatRecorder.start();
-        chatIsRecording = true;
-        btn.classList.add('rec');
-        btn.innerHTML = STOP_ICON;
-      } catch (e) {
-        alert('Нет доступа к микрофону: ' + e.message);
-      }
-    } else {
-      chatRecorder.stop();
-      chatRecorder.stream.getTracks().forEach(t => t.stop());
-      chatIsRecording = false;
-    }
-  }
-
-  async function onChatRecordingStop(){
-    const btn = document.getElementById('chatActionBtn');
-    btn.classList.remove('rec');
-    chatIsRecording = false;
-    updateChatActionBtn();
-    const blob = new Blob(chatAudioChunks, { type: chatRecorder.mimeType || 'audio/webm' });
-    const form = new FormData();
-    form.append('voice', blob, 'voice.webm');
-    await fetch('/api/chat/messages', { method: 'POST', headers: authHeaders(), body: form });
-    await loadChatMessages();
-  }
-
   // ---- Админка (только для TEACHER_CHAT_ID — настоящая проверка на backend) ----
   async function loadAdmin(){
     renderAdminCourseList();
+    loadAdminSpeakingTopics();
     try {
       const [statsRes, usersRes] = await Promise.all([
         fetch('/api/admin/stats', { headers: authHeaders() }),
@@ -1762,6 +1712,85 @@
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { alert(data.detail || 'Не удалось удалить курс'); return; }
     await loadCourses();
+    go('admin');
+  }
+
+  let adminSpeakingTopicsCache = [];
+  let adminEditingSpeakingTopicId = null;
+
+  async function loadAdminSpeakingTopics(){
+    try {
+      const res = await fetch('/api/admin/speaking-topics', { headers: authHeaders() });
+      if (!res.ok) return;
+      adminSpeakingTopicsCache = await res.json();
+      renderAdminSpeakingTopicList();
+    } catch (e) { /* сеть недоступна — оставляем то, что уже отрисовано */ }
+  }
+
+  function renderAdminSpeakingTopicList(){
+    const el = document.getElementById('adminSpeakingTopicList');
+    el.innerHTML = '';
+    adminSpeakingTopicsCache.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'mycourse';
+      row.style.cursor = 'pointer';
+      row.style.opacity = t.is_active ? 1 : .5;
+      row.innerHTML = `<div style="flex:1"><div class="tt">${escapeHtml(t.title)}</div><div class="hint">${escapeHtml(t.question_text)}</div></div>`;
+      row.onclick = () => openAdminSpeakingTopicForm(t);
+      el.appendChild(row);
+    });
+  }
+
+  function openAdminSpeakingTopicForm(topic){
+    adminEditingSpeakingTopicId = topic ? topic.id : null;
+    document.getElementById('astfTitle').textContent = topic ? 'Изменить тему' : 'Новая тема';
+    document.getElementById('astfTitleInput').value = topic ? topic.title : '';
+    document.getElementById('astfQuestion').value = topic ? topic.question_text : '';
+    document.getElementById('astfOrder').value = topic ? topic.order : adminSpeakingTopicsCache.length;
+    document.getElementById('astfActive').checked = topic ? topic.is_active : true;
+    document.getElementById('astfDeleteBtn').style.display = topic ? '' : 'none';
+    document.getElementById('astfError').style.display = 'none';
+    go('adminSpeakingTopicForm');
+  }
+
+  async function saveAdminSpeakingTopic(){
+    const errEl = document.getElementById('astfError');
+    errEl.style.display = 'none';
+    const payload = {
+      title: document.getElementById('astfTitleInput').value.trim(),
+      question_text: document.getElementById('astfQuestion').value.trim(),
+      order: Number(document.getElementById('astfOrder').value) || 0,
+      is_active: document.getElementById('astfActive').checked,
+    };
+    if (!payload.title || !payload.question_text) {
+      errEl.textContent = 'Заполни название и вопрос';
+      errEl.style.display = 'block';
+      return;
+    }
+    try {
+      const res = adminEditingSpeakingTopicId
+        ? await fetch(`/api/admin/speaking-topics/${adminEditingSpeakingTopicId}`, {
+            method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
+          })
+        : await fetch('/api/admin/speaking-topics', {
+            method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
+          });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Не удалось сохранить тему');
+      await loadAdminSpeakingTopics();
+      go('admin');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function deleteAdminSpeakingTopic(){
+    if (!adminEditingSpeakingTopicId || !confirm('Удалить тему?')) return;
+    const res = await fetch(`/api/admin/speaking-topics/${adminEditingSpeakingTopicId}`, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.detail || 'Не удалось удалить тему'); return; }
+    await loadAdminSpeakingTopics();
     go('admin');
   }
 </script>

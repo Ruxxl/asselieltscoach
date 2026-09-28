@@ -3,6 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from livekit import api
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth import require_user
@@ -16,8 +17,14 @@ from backend.config import (
     SPEAKING_AGENT_NAME,
 )
 from backend.database import get_session
-from backend.models import SpeakingSession
-from backend.schemas import SpeakingReportIn, SpeakingSessionOut, SpeakingStartRequest, SpeakingStartResult
+from backend.models import SpeakingSession, SpeakingTopic
+from backend.schemas import (
+    SpeakingReportIn,
+    SpeakingSessionOut,
+    SpeakingStartRequest,
+    SpeakingStartResult,
+    SpeakingTopicPublicOut,
+)
 
 router = APIRouter(prefix="/api/speaking", tags=["speaking"])
 
@@ -27,6 +34,14 @@ _VALID_PARTS = {"part1", "part2", "part3"}
 # backend/config.py); этот роутер НЕ импортирует backend.services.speaking_agent, чтобы
 # не тянуть в основной процесс livekit-agents/onnxruntime и не повторять OOM.
 _agent_configured = bool(LIVEKIT_URL and LIVEKIT_API_KEY and LIVEKIT_API_SECRET and DEEPGRAM_API_KEY and GROQ_API_KEY)
+
+
+@router.get("/topics", response_model=list[SpeakingTopicPublicOut])
+async def list_speaking_topics(session: AsyncSession = Depends(get_session)):
+    rows = await session.execute(
+        select(SpeakingTopic).where(SpeakingTopic.is_active == True).order_by(SpeakingTopic.order)  # noqa: E712
+    )
+    return rows.scalars().all()
 
 
 @router.post("/start", response_model=SpeakingStartResult)
@@ -44,20 +59,43 @@ async def start_session(
             detail="Голосовой агент не настроен (нет LIVEKIT_*/DEEPGRAM_API_KEY/GROQ_API_KEY в .env).",
         )
 
-    speaking_session = SpeakingSession(user_id=user.id, part=body.part)
+    topic: SpeakingTopic | None = None
+    if body.part == "part1":
+        if body.topic_id is None:
+            raise HTTPException(status_code=400, detail="Выбери тему для Part 1")
+        topic = await session.get(SpeakingTopic, body.topic_id)
+        if not topic or not topic.is_active:
+            raise HTTPException(status_code=400, detail="Тема не найдена")
+    elif body.topic_id is not None:
+        raise HTTPException(status_code=400, detail="topic_id поддерживается только для Part 1")
+
+    speaking_session = SpeakingSession(
+        user_id=user.id,
+        part=body.part,
+        topic_id=topic.id if topic else None,
+        topic_title=topic.title if topic else None,
+        topic_question=topic.question_text if topic else None,
+    )
     session.add(speaking_session)
     await session.commit()
     await session.refresh(speaking_session)
 
     # Имя комнаты кодирует id сессии и часть теста — агент (backend/services/speaking_agent.py)
-    # разбирает их обратно из ctx.room.name, без отдельного канала метаданных.
+    # разбирает их обратно из ctx.room.name. Тема (для part1) едет отдельно, через метаданные
+    # комнаты, потому что у агента-воркера нет доступа к этой БД (отдельный процесс/диск).
     room_name = f"speaking-{speaking_session.id}-{body.part}"
+    room_metadata = json.dumps({"topic_question": topic.question_text}) if topic else ""
     token = (
         api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
         .with_identity(f"student-{user.id}")
         .with_name(user.full_name or user.username or "Student")
         .with_grants(api.VideoGrants(room_join=True, room=room_name, can_publish=True, can_subscribe=True))
-        .with_room_config(api.RoomConfiguration(agents=[api.RoomAgentDispatch(agent_name=SPEAKING_AGENT_NAME)]))
+        .with_room_config(
+            api.RoomConfiguration(
+                agents=[api.RoomAgentDispatch(agent_name=SPEAKING_AGENT_NAME)],
+                metadata=room_metadata,
+            )
+        )
         .to_jwt()
     )
 
@@ -74,7 +112,10 @@ async def get_session_report(
     speaking_session = await session.get(SpeakingSession, session_id)
     if not speaking_session or speaking_session.user_id != user.id:
         raise HTTPException(status_code=404, detail="Сессия не найдена")
-    return speaking_session
+    out = SpeakingSessionOut.model_validate(speaking_session)
+    if speaking_session.improvement_comments_json:
+        out.improvement_comments = json.loads(speaking_session.improvement_comments_json)
+    return out
 
 
 @router.post("/{session_id}/report", include_in_schema=False)
@@ -99,12 +140,16 @@ async def receive_agent_report(
         speaking_session.error_message = body.error
     else:
         speaking_session.status = "done"
-        speaking_session.fluency_coherence = body.fluency_coherence
-        speaking_session.lexical_resource = body.lexical_resource
-        speaking_session.grammar_accuracy = body.grammar_accuracy
-        speaking_session.pronunciation = body.pronunciation
-        speaking_session.overall_band = body.overall_band
-        speaking_session.summary_feedback = body.summary_feedback
+        if speaking_session.part == "part1":
+            speaking_session.corrected_answer = body.corrected_answer
+            speaking_session.improvement_comments_json = json.dumps(body.improvement_comments or [], ensure_ascii=False)
+        else:
+            speaking_session.fluency_coherence = body.fluency_coherence
+            speaking_session.lexical_resource = body.lexical_resource
+            speaking_session.grammar_accuracy = body.grammar_accuracy
+            speaking_session.pronunciation = body.pronunciation
+            speaking_session.overall_band = body.overall_band
+            speaking_session.summary_feedback = body.summary_feedback
         speaking_session.finished_at = datetime.utcnow()
     await session.commit()
     return {"ok": True}

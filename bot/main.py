@@ -1,24 +1,18 @@
 import asyncio
 import logging
-import uuid
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandObject, CommandStart
-from aiogram.types import FSInputFile, InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
-from sqlalchemy import select
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 
-from backend.config import BOT_TOKEN, TEACHER_CHAT_ID, UPLOADS_DIR, WEBAPP_URL
+from backend.config import BOT_TOKEN, TEACHER_CHAT_ID, WEBAPP_URL
 from backend.database import SessionLocal
-from backend.models import ChatMessage, NewsPost
+from backend.models import NewsPost
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 router_dp = Dispatcher()
 
-# Один и тот же Bot-инстанс используется и для polling (main()), и для отправки
-# сообщений из backend-роутеров (backend/services/telegram_notify.py) — отправка
-# не требует активного polling, поэтому это безопасно и на инстансах с
-# DISABLE_BOT_POLLING=1 (см. backend/main.py).
 bot = Bot(token=BOT_TOKEN) if BOT_TOKEN else None
 
 
@@ -68,52 +62,13 @@ async def on_news(message: Message, command: CommandObject) -> None:
     await message.answer("Опубликовано ✅")
 
 
-@router_dp.message(F.reply_to_message)
-async def on_teacher_reply(message: Message) -> None:
-    if not _is_teacher(message):
-        return
-
-    voice_path = None
-    if message.voice:
-        UPLOADS_DIR.mkdir(exist_ok=True)
-        dest = UPLOADS_DIR / f"{uuid.uuid4().hex}.ogg"
-        await bot.download(message.voice, destination=dest)
-        voice_path = str(dest)
-    text = message.text or message.caption
-    if not text and not voice_path:
-        return  # стикер/фото и т.п. — нечего пересылать ученику
-
-    async with SessionLocal() as session:
-        result = await session.execute(
-            select(ChatMessage).where(ChatMessage.telegram_message_id == message.reply_to_message.message_id)
-        )
-        original = result.scalar_one_or_none()
-        if not original:
-            await message.answer("Не нашёл, к какому ученику относится это сообщение.")
-            return
-        student_id = original.user_id
-        session.add(ChatMessage(user_id=student_id, sender="teacher", text=text, voice_path=voice_path))
-        await session.commit()
-
-    try:
-        if voice_path:
-            await bot.send_voice(student_id, FSInputFile(voice_path), caption="✉️ Голосовое от преподавателя")
-        else:
-            await bot.send_message(student_id, f"✉️ Ответ от преподавателя:\n\n{text}")
-    except Exception:
-        logger.exception("Не удалось отправить ответ преподавателя ученику %s", student_id)
-
-
 @router_dp.message()
 async def on_other_message(message: Message) -> None:
     if _is_teacher(message):
-        await message.answer(
-            "Чтобы опубликовать новость: /news текст.\n"
-            "Чтобы ответить ученику: сделай Reply прямо на моё уведомление с его вопросом."
-        )
+        await message.answer("Чтобы опубликовать новость: /news текст.")
         return
     await message.answer(
-        "Напиши мне через раздел «Преподаватель» в приложении 👇",
+        "Всё обучение и практика — в мини-приложении ниже 👇",
         reply_markup=_webapp_keyboard(),
     )
 

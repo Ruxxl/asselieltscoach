@@ -145,10 +145,27 @@ class TestAnswer(Base):
     attempt: Mapped["TestAttempt"] = relationship(back_populates="answers")
 
 
+class SpeakingTopic(Base):
+    """Тема для IELTS Speaking Part 1 — вопрос, с которого живой ИИ-экзаменатор открывает
+    звонок (см. backend/services/speaking_agent.py). Редактируется преподавателем через
+    админку (backend/routers/admin.py)."""
+
+    __tablename__ = "speaking_topics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(128))
+    question_text: Mapped[str] = mapped_column(Text)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class SpeakingSession(Base):
-    """Сессия практики Speaking с ИИ-экзаменатором — пошаговый диалог (не live-аудио,
-    см. backend/services/speaking.py): каждый ход ученика — отдельный аудио-запрос,
-    транскрипт копится целиком в transcript_json по мере разговора."""
+    """Сессия практики Speaking с живым ИИ-экзаменатором (LiveKit Agents, см.
+    backend/services/speaking_agent.py) — транскрипт всего звонка копится в
+    transcript_json по завершении. Для Part 1 звонок открывается конкретной темой
+    (topic_*), итог — corrected_answer/improvement_comments_json; для Part 2/3 —
+    прежние 4 балла IELTS."""
 
     __tablename__ = "speaking_sessions"
 
@@ -157,6 +174,11 @@ class SpeakingSession(Base):
     part: Mapped[str] = mapped_column(String(16))  # part1 / part2 / part3
     status: Mapped[str] = mapped_column(String(16), default="active")  # active/scoring/done/error
     transcript_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    topic_id: Mapped[int | None] = mapped_column(ForeignKey("speaking_topics.id"), nullable=True)
+    topic_title: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    topic_question: Mapped[str | None] = mapped_column(Text, nullable=True)
+    corrected_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    improvement_comments_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     fluency_coherence: Mapped[float | None] = mapped_column(Float, nullable=True)
     lexical_resource: Mapped[float | None] = mapped_column(Float, nullable=True)
     grammar_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -175,25 +197,6 @@ class NewsPost(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     text: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-
-class ChatMessage(Base):
-    """Сообщение в переписке ученика с преподавателем ("Обратиться к преподавателю").
-
-    telegram_message_id — id сообщения-уведомления, отправленного преподавателю в Telegram
-    (для sender='student'), по которому бот находит нужного ученика, когда преподаватель
-    отвечает Reply-ом в Telegram (см. bot/main.py).
-    """
-
-    __tablename__ = "chat_messages"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    sender: Mapped[str] = mapped_column(String(16))  # student / teacher
-    text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    voice_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    telegram_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
