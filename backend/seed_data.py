@@ -199,27 +199,53 @@ COURSES = [
 # Стартовый набор тем для IELTS Speaking Part 1 (Introduction and Interview) — преподаватель
 # правит формулировки и добавляет/убирает темы через админку, это только затравка на старте.
 SPEAKING_PART1_TOPICS = [
-    ("Семья", "Do you have a big family? Can you tell me about them?"),
-    ("Друзья", "Who is your best friend, and what do you like doing together?"),
-    ("Родной город", "Can you describe the town or city where you grew up?"),
-    ("Работа/учёба", "Do you work or are you a student? What do you do?"),
-    ("Свободное время", "What do you usually do in your free time?"),
-    ("Хобби", "Do you have a hobby? How did you get interested in it?"),
-    ("Еда", "What kind of food do you like? Do you enjoy cooking?"),
-    ("Погода", "What's the weather usually like in your country?"),
-    ("Спорт", "Do you play or watch any sports?"),
-    ("Музыка", "What kind of music do you like listening to?"),
-    ("Фильмы", "Do you often watch films? What kind do you prefer?"),
-    ("Книги", "Do you enjoy reading? What was the last book you read?"),
-    ("Технологии", "How often do you use your phone or computer?"),
-    ("Здоровье", "What do you do to stay healthy?"),
-    ("Шопинг", "Do you enjoy shopping? What do you usually buy?"),
-    ("Выходные", "What do you usually do on weekends?"),
-    ("Детство", "What did you enjoy doing when you were a child?"),
-    ("Планы на будущее", "What are your plans for the next few years?"),
-    ("Путешествия", "Do you like traveling? Where would you like to go?"),
-    ("Распорядок дня", "Can you describe your typical daily routine?"),
+    ("Family", "Do you have a big family? Can you tell me about them?"),
+    ("Friends", "Who is your best friend, and what do you like doing together?"),
+    ("Hometown", "Can you describe the town or city where you grew up?"),
+    ("Work/Study", "Do you work or are you a student? What do you do?"),
+    ("Free time", "What do you usually do in your free time?"),
+    ("Hobbies", "Do you have a hobby? How did you get interested in it?"),
+    ("Food", "What kind of food do you like? Do you enjoy cooking?"),
+    ("Weather", "What's the weather usually like in your country?"),
+    ("Sport", "Do you play or watch any sports?"),
+    ("Music", "What kind of music do you like listening to?"),
+    ("Films", "Do you often watch films? What kind do you prefer?"),
+    ("Books", "Do you enjoy reading? What was the last book you read?"),
+    ("Technology", "How often do you use your phone or computer?"),
+    ("Health", "What do you do to stay healthy?"),
+    ("Shopping", "Do you enjoy shopping? What do you usually buy?"),
+    ("Weekends", "What do you usually do on weekends?"),
+    ("Childhood", "What did you enjoy doing when you were a child?"),
+    ("Future plans", "What are your plans for the next few years?"),
+    ("Travel", "Do you like traveling? Where would you like to go?"),
+    ("Daily routine", "Can you describe your typical daily routine?"),
 ]
+
+
+# Первый стартовый набор был с русскими названиями — на уже засеянной базе переводим только
+# их (точное совпадение), чтобы не затереть темы, которые преподаватель переименовал сам.
+_LEGACY_RU_TOPIC_TITLES = {
+    "Семья": "Family",
+    "Друзья": "Friends",
+    "Родной город": "Hometown",
+    "Работа/учёба": "Work/Study",
+    "Свободное время": "Free time",
+    "Хобби": "Hobbies",
+    "Еда": "Food",
+    "Погода": "Weather",
+    "Спорт": "Sport",
+    "Музыка": "Music",
+    "Фильмы": "Films",
+    "Книги": "Books",
+    "Технологии": "Technology",
+    "Здоровье": "Health",
+    "Шопинг": "Shopping",
+    "Выходные": "Weekends",
+    "Детство": "Childhood",
+    "Планы на будущее": "Future plans",
+    "Путешествия": "Travel",
+    "Распорядок дня": "Daily routine",
+}
 
 
 async def seed_speaking_topics_if_empty(session: AsyncSession) -> None:
@@ -227,6 +253,12 @@ async def seed_speaking_topics_if_empty(session: AsyncSession) -> None:
     # проде курсы уже есть, общий гейт означал бы, что темы никогда не засеются.
     existing = await session.execute(select(SpeakingTopic.id).limit(1))
     if existing.first():
+        legacy = await session.execute(
+            select(SpeakingTopic).where(SpeakingTopic.title.in_(_LEGACY_RU_TOPIC_TITLES))
+        )
+        for topic in legacy.scalars():
+            topic.title = _LEGACY_RU_TOPIC_TITLES[topic.title]
+        await session.commit()
         return
     for i, (title, question) in enumerate(SPEAKING_PART1_TOPICS):
         session.add(SpeakingTopic(title=title, question_text=question, order=i, is_active=True))
