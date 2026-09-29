@@ -1777,6 +1777,10 @@
 
   function endSpeakingCall(){
     if (!currentSpeakingSessionId) return;
+    if (!speakingRecorder && !speakingBusy && !speakingQuestions.some(q => q.answer)) {
+      setSpeakingStatus('Ответь хотя бы на один вопрос — тогда будет что оценить.');
+      return;
+    }
     if (speakingRecorder || speakingBusy) {
       // Последняя реплика ещё не дошла до бэкенда — дождёмся её, иначе она не попадёт в отчёт.
       speakingFinishRequested = true;
@@ -1832,6 +1836,11 @@
       ['Pronunciation', data.pronunciation, 'var(--red)'],
     ];
     const tips = data.improvement_comments || [];
+    if (!data.overall_band) {
+      // 0 — модель честно не стала оценивать (слишком мало речи); пустые шкалы выглядели бы как поломка.
+      reportEl.innerHTML = `<div class="transcript"><b>Оценки нет</b>${escapeHtml(data.summary_feedback || 'Маловато сказано, чтобы оценить — попробуй ещё раз и отвечай подробнее.')}</div>`;
+      return;
+    }
     reportEl.innerHTML = `
       <div class="center-col" style="flex:none; margin-bottom:14px;">
         <div style="font:600 13px var(--font-sans); color:var(--text-secondary);">Твой Band</div>
