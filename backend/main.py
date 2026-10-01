@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.config import BOT_TOKEN, DISABLE_BOT_POLLING, WEBAPP_DIR
 from backend.database import SessionLocal, init_db
-from backend.routers import admin, courses, lessons, news, reading_test, speaking, writing
+from backend.routers import admin, courses, grammar, lessons, news, reading_test, speaking, writing
 from backend.seed_data import seed_if_empty, seed_speaking_topics_if_empty
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ app.include_router(news.router)
 app.include_router(admin.router)
 app.include_router(speaking.router)
 app.include_router(writing.router)
+app.include_router(grammar.router)
 
 
 @app.get("/api/ping")

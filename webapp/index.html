@@ -582,6 +582,55 @@
   .wrQuick::-webkit-scrollbar{display:none;}
   .wrQuick button{flex:none; border:1px solid var(--wr-2); background:var(--surface); color:var(--wr-ink); border-radius:999px; padding:6px 11px; font:600 12px var(--font-sans); cursor:pointer;}
   .wrNote{font:500 12px/1.5 var(--font-sans); color:var(--text-muted); text-align:center; margin-top:8px;}
+
+  /* ---- IELTS Score Calculator ---- */
+  .calcOverall{background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:16px; box-shadow:var(--shadow-card); margin-bottom:14px;}
+  .calcOvTop{display:flex; align-items:center; gap:14px;}
+  .calcRadar{width:150px; height:150px; flex:none;}
+  .calcRadar text{font:700 10px var(--font-sans); fill:var(--text-secondary);}
+  .calcOvK{font:700 10.5px var(--font-sans); letter-spacing:.08em; text-transform:uppercase; color:var(--wr);}
+  .calcOvBand{font:800 46px/1 var(--font-sans); color:var(--text); margin:4px 0 6px; font-variant-numeric:tabular-nums;}
+  .calcOvRaw{font:500 12px/1.45 var(--font-sans); color:var(--text-secondary);}
+  .calcOvRow{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:14px;}
+  .calcOvCell{background:var(--surface-2); border-radius:12px; padding:8px 4px; text-align:center;}
+  .calcOvCell b{display:block; font:800 17px var(--font-sans); color:var(--text); font-variant-numeric:tabular-nums;}
+  .calcOvCell span{font:600 10.5px var(--font-sans); color:var(--text-muted); letter-spacing:.03em;}
+  .calcCard{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:14px 16px; box-shadow:var(--shadow-card); margin-bottom:12px;}
+  .calcCardHead{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .calcCardIc{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:var(--wr-tint); color:var(--wr); flex:none;}
+  .calcCardIc svg{width:18px; height:18px;}
+  .calcCardT{font:700 15px var(--font-sans); color:var(--text); flex:1;}
+  .calcBandChip{font:800 16px var(--font-sans); color:var(--wr-ink); background:var(--wr-tint); border-radius:10px; padding:5px 10px; font-variant-numeric:tabular-nums;}
+  .calcStepper{display:flex; align-items:center; gap:10px;}
+  .calcStepBtn{width:40px; height:40px; flex:none; border-radius:12px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font:700 20px var(--font-sans); cursor:pointer;}
+  .calcNum{width:76px; text-align:center; font:800 20px var(--font-sans); padding:8px 6px; border:1.5px solid var(--text); border-radius:12px; color:var(--text); background:var(--surface); font-variant-numeric:tabular-nums;}
+  .calcNum:focus{outline:none; border-color:var(--wr);}
+  .calcOf{font:600 13px var(--font-sans); color:var(--text-muted);}
+  .calcRange{width:100%; margin:12px 0 2px; accent-color:var(--wr);}
+  .calcHint{font:500 12px/1.5 var(--font-sans); color:var(--text-muted); margin-top:8px;}
+  .calcHint b{color:var(--text-secondary);}
+  .calcTwo{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .calcLink{display:inline-flex; align-items:center; gap:6px; margin-top:10px; border:none; background:none; padding:0; font:700 13px var(--font-sans); color:var(--wr); cursor:pointer;}
+  .calcLink svg{width:15px; height:15px;}
+  .calcRef{background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:8px; box-shadow:var(--shadow-card); overflow:hidden;}
+  .calcRef summary{list-style:none; cursor:pointer; padding:13px 16px; font:700 14px var(--font-sans); color:var(--text); display:flex; align-items:center; gap:8px;}
+  .calcRef summary::-webkit-details-marker{display:none;}
+  .calcRef summary::after{content:''; margin-left:auto; width:8px; height:8px; border-right:2px solid var(--text-muted); border-bottom:2px solid var(--text-muted); transform:rotate(45deg); transition:transform .2s ease;}
+  .calcRef[open] summary::after{transform:rotate(-135deg);}
+  .calcRefBody{padding:0 16px 14px; font:500 13px/1.6 var(--font-sans); color:var(--text-secondary);}
+  .calcRefBody p{margin:0 0 8px;}
+  .calcTable{width:100%; border-collapse:collapse; font:500 13px var(--font-sans); font-variant-numeric:tabular-nums;}
+  .calcTable th{font:700 11px var(--font-sans); letter-spacing:.04em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:6px 4px; border-bottom:1px solid var(--border);}
+  .calcTable td{padding:6px 4px; border-bottom:1px solid var(--surface-2); color:var(--text);}
+  .calcTable tr.on td{background:var(--wr-tint); color:var(--wr-ink); font-weight:700;}
+  .calcFormula{background:var(--surface-2); border-radius:10px; padding:9px 11px; font:600 13px/1.5 var(--font-sans); color:var(--text); margin:6px 0 8px;}
+  .toolCard{display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer; padding:14px; border-radius:16px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-card); margin-bottom:10px;}
+  .toolCard .wrTaskIc{width:42px; height:42px;}
+  .gcDoc{border:none; box-shadow:none; margin:0; padding:6px 16px 14px; border-radius:0;}
+  .gcSummary{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 0 12px; font:500 14px var(--font-sans); color:var(--text-secondary);}
+  .gcSummary b{color:var(--text);}
+  .gcUndo{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding:9px 12px; border-radius:12px; background:var(--wr-tint); font:600 13px var(--font-sans); color:var(--wr-ink);}
+  .wrTool[disabled]{opacity:.4; cursor:default;}
 </style>
 </head>
 <body>
@@ -672,6 +721,17 @@
     <div id="courseList">
       <div style="color:var(--text-muted); font-size:13px;">Загружаю курсы…</div>
     </div>
+    <div class="sectiontitle" style="margin-top:18px;">Инструменты</div>
+    <button class="toolCard wrTeal" onclick="openScoreCalc()">
+      <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h.01"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/><path d="M8 19h.01"/><path d="M12 19h4"/></svg></span>
+      <span><span class="wrTaskT">Калькулятор баллов IELTS</span><span class="wrTaskD" style="display:block">Переведи правильные ответы в бэнды и посчитай Overall</span></span>
+      <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button>
+    <button class="toolCard wrTeal" onclick="openGrammar()">
+      <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 3 10 3-10"/><path d="M5 13h4"/><path d="m13 13 3 3 5-6"/></svg></span>
+      <span><span class="wrTaskT">Проверка грамматики</span><span class="wrTaskD" style="display:block">Орфография, пунктуация и стиль текста на любом языке</span></span>
+      <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button>
   </section>
 
   <!-- 9: course detail -->
@@ -809,6 +869,16 @@
     <div id="wrDraftBox"></div>
     <div class="sectiontitle">Выбери задание</div>
     <div class="wrTasks" id="wrTaskCards"></div>
+    <div style="margin-top:10px;"><button class="toolCard wrTeal" onclick="openScoreCalc()">
+      <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h.01"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/><path d="M8 19h.01"/><path d="M12 19h4"/></svg></span>
+      <span><span class="wrTaskT">Калькулятор баллов IELTS</span><span class="wrTaskD" style="display:block">Writing по Task 1 и Task 2 и общий балл</span></span>
+      <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button>
+    <button class="toolCard wrTeal" onclick="openGrammar()">
+      <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 3 10 3-10"/><path d="M5 13h4"/><path d="m13 13 3 3 5-6"/></svg></span>
+      <span><span class="wrTaskT">Проверка грамматики</span><span class="wrTaskD" style="display:block">Орфография, пунктуация и стиль текста на любом языке</span></span>
+      <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button></div>
     <div class="sectiontitle" style="margin-top:22px;">Мои проверки</div>
     <div id="wrHistoryList"><div class="hint">Загружаю…</div></div>
   </section>
@@ -912,6 +982,226 @@
   <section class="screen wrTeal" data-screen="writingResult">
     <div class="topbar"><button class="xbtn" onclick="go('writing')" aria-label="Назад"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" id="wrResultBadge" style="margin-bottom:0;">Task 2</div></div>
     <div id="wrResultBody"></div>
+  </section>
+
+  <!-- 21: калькулятор баллов IELTS — перевод сырых баллов Listening/Reading в бэнды, Writing по весам задач,
+       Overall по правилу округления IELTS. Всё считается на клиенте, без запросов к серверу. -->
+  <section class="screen wrTeal" data-screen="scoreCalc">
+    <div class="topbar"><button class="xbtn" onclick="go(scoreCalcBack)" aria-label="Назад"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" style="margin-bottom:0;">Калькулятор IELTS</div></div>
+
+    <div class="calcOverall">
+      <div class="calcOvTop">
+        <svg class="calcRadar" id="calcRadar" viewBox="0 0 150 150"></svg>
+        <div>
+          <div class="calcOvK">Overall Band Score</div>
+          <div class="calcOvBand" id="calcOvBand">0.0</div>
+          <div class="calcOvRaw" id="calcOvRaw">Среднее 0.00</div>
+        </div>
+      </div>
+      <div class="calcOvRow">
+        <div class="calcOvCell"><b id="calcOvL">0.0</b><span>Listening</span></div>
+        <div class="calcOvCell"><b id="calcOvR">0.0</b><span>Reading</span></div>
+        <div class="calcOvCell"><b id="calcOvW">0.0</b><span>Writing</span></div>
+        <div class="calcOvCell"><b id="calcOvS">0.0</b><span>Speaking</span></div>
+      </div>
+      <button class="calcLink" onclick="resetScoreCalc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Сбросить все баллы</button>
+    </div>
+
+    <div class="calcCard">
+      <div class="calcCardHead"><span class="calcCardIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"/></svg></span><span class="calcCardT">Listening</span><span class="calcBandChip" id="calcBandL">0.0</span></div>
+      <div class="calcStepper">
+        <button class="calcStepBtn" onclick="stepScoreCalc('listening',-1)" aria-label="Меньше">−</button>
+        <input class="calcNum" id="calcListening" type="number" inputmode="numeric" min="0" max="40" oninput="setScoreCalcRaw('listening', this.value)">
+        <button class="calcStepBtn" onclick="stepScoreCalc('listening',1)" aria-label="Больше">+</button>
+        <span class="calcOf">правильных из 40</span>
+      </div>
+      <input class="calcRange" id="calcListeningRange" type="range" min="0" max="40" oninput="setScoreCalcRaw('listening', this.value)">
+      <div class="calcHint">Шкала одна для Academic и General Training.</div>
+    </div>
+
+    <div class="calcCard">
+      <div class="calcCardHead"><span class="calcCardIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg></span><span class="calcCardT">Reading</span><span class="calcBandChip" id="calcBandR">0.0</span></div>
+      <div class="wrSeg" id="calcReadingSeg" style="margin-bottom:12px;">
+        <button data-v="academic" onclick="setScoreCalcReadingType('academic')">Academic</button>
+        <button data-v="general" onclick="setScoreCalcReadingType('general')">General Training</button>
+      </div>
+      <div class="calcStepper">
+        <button class="calcStepBtn" onclick="stepScoreCalc('reading',-1)" aria-label="Меньше">−</button>
+        <input class="calcNum" id="calcReading" type="number" inputmode="numeric" min="0" max="40" oninput="setScoreCalcRaw('reading', this.value)">
+        <button class="calcStepBtn" onclick="stepScoreCalc('reading',1)" aria-label="Больше">+</button>
+        <span class="calcOf">правильных из 40</span>
+      </div>
+      <input class="calcRange" id="calcReadingRange" type="range" min="0" max="40" oninput="setScoreCalcRaw('reading', this.value)">
+      <div class="calcHint" id="calcReadingHint"></div>
+    </div>
+
+    <div class="calcCard">
+      <div class="calcCardHead"><span class="calcCardIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="calcCardT">Writing</span><span class="calcBandChip" id="calcBandW">0.0</span></div>
+      <div class="calcTwo">
+        <div><label class="wrFieldLbl" for="calcTask1">Task 1</label><select class="wrSelect" id="calcTask1" onchange="setScoreCalcBand('task1', this.value)"></select></div>
+        <div><label class="wrFieldLbl" for="calcTask2">Task 2</label><select class="wrSelect" id="calcTask2" onchange="setScoreCalcBand('task2', this.value)"></select></div>
+      </div>
+      <div class="calcHint" id="calcWritingHint"></div>
+      <button class="calcLink" onclick="go('writing')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>Не знаешь балл? Проверь эссе с ИИ</button>
+    </div>
+
+    <div class="calcCard">
+      <div class="calcCardHead"><span class="calcCardIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg></span><span class="calcCardT">Speaking</span><span class="calcBandChip" id="calcBandS">0.0</span></div>
+      <select class="wrSelect" id="calcSpeaking" onchange="setScoreCalcBand('speaking', this.value)"></select>
+      <div class="calcHint">Speaking экзаменатор оценивает сразу по 4 критериям: Fluency &amp; Coherence, Lexical Resource, Grammatical Range &amp; Accuracy, Pronunciation. Отдельного перевода «по частям» нет, поэтому выбери итоговый балл за секцию.</div>
+      <button class="calcLink" onclick="go('speaking')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>Узнать свой балл в Speaking Practice</button>
+    </div>
+
+    <div class="sectiontitle" style="margin-top:12px;">Справка</div>
+    <details class="calcRef"><summary>Таблица: Listening</summary><div class="calcRefBody" id="calcTableListening"></div></details>
+    <details class="calcRef"><summary>Таблица: Academic Reading</summary><div class="calcRefBody" id="calcTableAcademic"></div></details>
+    <details class="calcRef"><summary>Таблица: General Training Reading</summary><div class="calcRefBody" id="calcTableGeneral"></div></details>
+    <details class="calcRef"><summary>Как считаются Writing и Speaking</summary><div class="calcRefBody">
+      <p>В Writing два задания, и Task 2 весит вдвое больше Task 1 (≈67% против ≈33%):</p>
+      <div class="calcFormula">Writing = (Task 1 + Task 2 × 2) ÷ 3</div>
+      <p>Результат округляется до ближайшего 0.5. Например, Task 1 = 6.0 и Task 2 = 7.0: (6 + 14) ÷ 3 = 6.67 → <b>6.5</b>.</p>
+      <p>Каждое задание экзаменатор оценивает по 4 критериям: Task Achievement / Task Response, Coherence &amp; Cohesion, Lexical Resource, Grammatical Range &amp; Accuracy.</p>
+      <p>Speaking тоже оценивается по 4 критериям: Fluency &amp; Coherence, Lexical Resource, Grammatical Range &amp; Accuracy, Pronunciation. Балл за секцию — их среднее.</p>
+    </div></details>
+    <details class="calcRef"><summary>Правила округления Overall</summary><div class="calcRefBody">
+      <div class="calcFormula">Overall = (Listening + Reading + Writing + Speaking) ÷ 4</div>
+      <p>Среднее округляется до целого или половины балла:</p>
+      <p>• дробная часть меньше 0.25 → вниз до целого (6.125 → 6.0);<br>• от 0.25 до 0.75 → до .5 (6.25 → 6.5);<br>• 0.75 и больше → вверх до целого (6.75 → 7.0).</p>
+      <table class="calcTable"><tr><th></th><th>L</th><th>R</th><th>W</th><th>S</th><th>Среднее</th><th>Overall</th></tr>
+        <tr><td>A</td><td>6.5</td><td>6.5</td><td>5.0</td><td>7.0</td><td>6.25</td><td><b>6.5</b></td></tr>
+        <tr><td>B</td><td>4.0</td><td>3.5</td><td>4.0</td><td>5.0</td><td>4.125</td><td><b>4.0</b></td></tr>
+        <tr><td>C</td><td>5.0</td><td>6.0</td><td>5.5</td><td>6.0</td><td>5.625</td><td><b>5.5</b></td></tr>
+        <tr><td>D</td><td>7.5</td><td>7.0</td><td>6.5</td><td>7.0</td><td>7.0</td><td><b>7.0</b></td></tr>
+        <tr><td>E</td><td>8.0</td><td>7.5</td><td>7.0</td><td>7.5</td><td>7.5</td><td><b>7.5</b></td></tr>
+        <tr><td>F</td><td>7.0</td><td>7.0</td><td>7.0</td><td>8.0</td><td>7.25</td><td><b>7.5</b></td></tr>
+        <tr><td>G</td><td>8.0</td><td>8.0</td><td>7.0</td><td>8.0</td><td>7.75</td><td><b>8.0</b></td></tr>
+      </table>
+    </div></details>
+    <details class="calcRef"><summary>Частые вопросы</summary><div class="calcRefBody">
+      <p><b>Насколько точен калькулятор?</b><br>Таблицы — те, что публикуют центры IELTS как ориентир. На реальном экзамене пороги для конкретной версии теста могут сдвигаться на 1–2 ответа, поэтому считай результат оценкой, а не гарантией.</p>
+      <p><b>Почему в General Reading нужно больше правильных ответов?</b><br>Тексты General Training проще академических, поэтому для того же балла нужно ответить верно на большее число вопросов.</p>
+      <p><b>Почему Task 2 важнее Task 1?</b><br>Task 2 длиннее (250+ слов против 150+) и проверяет аргументацию, поэтому весит вдвое больше.</p>
+      <p><b>Какой балл нужен для поступления или визы?</b><br>Обычно вузы просят Overall 6.0–7.0 и не ниже 5.5–6.5 в каждой секции. Точные требования смотри на сайте программы или ведомства.</p>
+      <p><b>Можно ли пересдать одну секцию?</b><br>Да, у IELTS есть One Skill Retake — пересдача одной секции в течение 60 дней после экзамена. Доступна не во всех центрах.</p>
+    </div></details>
+  </section>
+
+  <!-- 22: grammar checker — проверка орфографии/грамматики/стиля на любом языке (backend/routers/grammar.py):
+       настройки, быстрые правки стиля для выделенного фрагмента, текст с подсветкой правок, оценка, ИИ-помощник,
+       отчёт .docx с комментариями. Проверки не хранятся на сервере — текст и черновик живут на устройстве. -->
+  <section class="screen wrTeal" data-screen="grammar">
+    <div class="topbar"><button class="xbtn" onclick="go(grammarBack)" aria-label="Назад"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" style="margin-bottom:0;">Grammar Checker</div></div>
+
+    <div class="wrCheckRow">
+      <button class="wrCheckBtn" id="gcCheckBtn" onclick="submitGrammar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 3 10 3-10"/><path d="M5 13h4"/><path d="m13 13 3 3 5-6"/></svg><span>Проверить текст</span></button>
+      <button class="wrGear open" id="gcGear" onclick="toggleGrammarSettings()" aria-label="Настройки проверки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button>
+    </div>
+    <div class="aiError" id="gcError" style="display:none; margin-bottom:12px;"></div>
+
+    <div class="wrSettings" id="gcSettings">
+      <div class="wrRow">
+        <span class="wrLbl">Режим:</span>
+        <div class="wrSeg" id="gcModeSeg">
+          <button data-v="student" onclick="setGrammarOpt('mode','student')">Ученик</button>
+          <button data-v="teacher" onclick="setGrammarOpt('mode','teacher')">Преподаватель</button>
+        </div>
+      </div>
+      <div class="calcTwo">
+        <div><label class="wrFieldLbl" for="gcTextLang">Язык текста</label><select class="wrSelect" id="gcTextLang" onchange="setGrammarOpt('text_language', this.value)"></select></div>
+        <div><label class="wrFieldLbl" for="gcAiLang">Язык объяснений</label><select class="wrSelect" id="gcAiLang" onchange="setGrammarOpt('ai_language', this.value)"></select></div>
+      </div>
+      <div>
+        <label class="wrFieldLbl" for="gcContext">Где будет текст</label>
+        <select class="wrSelect" id="gcContext" onchange="setGrammarOpt('context', this.value)">
+          <option value="general">Обычный текст, переписка</option>
+          <option value="formal">Официальное письмо</option>
+          <option value="business">Деловой текст</option>
+          <option value="academic">Академический текст</option>
+          <option value="school">Школьное сочинение</option>
+          <option value="ielts">Экзамен IELTS</option>
+          <option value="toefl">Экзамен TOEFL</option>
+          <option value="cambridge">Экзамен Cambridge</option>
+          <option value="jlpt">Экзамен JLPT (японский)</option>
+          <option value="hsk">Экзамен HSK (китайский)</option>
+          <option value="topik">Экзамен TOPIK (корейский)</option>
+          <option value="dele">Экзамен DELE (испанский)</option>
+        </select>
+      </div>
+      <div>
+        <span class="wrFieldLbl">Целевой уровень</span>
+        <div class="wrBands" id="gcTargets">
+          <button class="wrBand" data-v="none" onclick="setGrammarOpt('target','none')">Не важно</button>
+          <button class="wrBand" data-v="b2" onclick="setGrammarOpt('target','b2')">Band 5.5–6.5 · B2</button>
+          <button class="wrBand" data-v="c1" onclick="setGrammarOpt('target','c1')">Band 7.0–8.0 · C1</button>
+          <button class="wrBand" data-v="c2" onclick="setGrammarOpt('target','c2')">Band 8.5–9.0 · C2</button>
+        </div>
+      </div>
+      <div class="wrChecks">
+        <label class="wrCheck"><input type="checkbox" id="gcOptExplain" onchange="setGrammarOpt('explanations', this.checked)">Объяснения ИИ</label>
+        <label class="wrCheck"><input type="checkbox" id="gcOptDetailed" onchange="setGrammarOpt('detailed', this.checked)">Оценка текста</label>
+        <label class="wrCheck"><input type="checkbox" id="gcOptContext" onchange="setGrammarOpt('use_context', this.checked)">Учитывать контекст</label>
+      </div>
+      <div class="calcTwo">
+        <div><label class="wrFieldLbl" for="gcFilename">Имя файла .docx</label><input class="input" id="gcFilename" oninput="saveGrammarDraft()" placeholder="Grammar_Check"></div>
+        <div><label class="wrFieldLbl" for="gcAuthor">Автор комментариев</label><input class="input" id="gcAuthor" oninput="saveGrammarDraft()" placeholder="Assel AI"></div>
+      </div>
+    </div>
+
+    <div class="sectiontitle" style="margin:4px 0 8px;">Быстрые правки стиля</div>
+    <div class="wrQuick" id="gcQuick" style="margin-bottom:4px;">
+      <button data-a="vocabulary" onclick="transformGrammar('vocabulary', this)">Улучшить лексику</button>
+      <button data-a="rephrase" onclick="transformGrammar('rephrase', this)">Перефразировать</button>
+      <button data-a="concise" onclick="transformGrammar('concise', this)">Сократить</button>
+      <button data-a="strengthen" onclick="transformGrammar('strengthen', this)">Убедительнее</button>
+      <button data-a="readability" onclick="transformGrammar('readability', this)">Читаемее</button>
+      <button data-a="structure" onclick="transformGrammar('structure', this)">Структура</button>
+    </div>
+    <div class="calcHint" style="margin-top:2px;">Выдели фрагмент — изменится только он, иначе весь текст.</div>
+
+    <div class="wrTools">
+      <button class="wrTool" id="gcAcceptAll" onclick="decideAllGrammar('accepted')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Принять все</button>
+      <button class="wrTool" id="gcRejectAll" onclick="decideAllGrammar('rejected')" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>Отклонить все</button>
+      <button class="wrTool" onclick="copyGrammarText()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="gcCopyText">Копировать</span></button>
+      <button class="wrTool" onclick="pasteGrammarText()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Вставить</button>
+      <button class="wrTool" onclick="clearGrammarText()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>Очистить</button>
+    </div>
+
+    <div class="wrBox wrEssay">
+      <div class="wrChips">
+        <button class="wrChip" id="gcScanBtn" onclick="document.getElementById('gcScanInput').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>Скан с фото</button>
+        <button class="wrChip" onclick="loadGrammarExample()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>Пример текста</button>
+        <button class="wrChip" id="gcPolishBtn" onclick="polishGrammar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.6 2.4-1.2 1.2"/><path d="M3 21 15 9"/><path d="M15 3v2"/><path d="M19 9h2"/><path d="M11 5l1 1"/><path d="M18 13l1 1"/></svg>Эталонная версия</button>
+        <button class="wrChip" onclick="openGrammarChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>ИИ-помощник</button>
+        <input type="file" id="gcScanInput" accept="image/*" hidden onchange="scanGrammarImage(this)">
+      </div>
+      <textarea id="gcText" placeholder="Вставь или напиши текст на любом языке…" oninput="onGrammarInput()"></textarea>
+      <div class="wrDoc gcDoc" id="gcDoc" style="display:none;"></div>
+      <div class="wrCount"><span id="gcLangTag"></span><span>СИМВОЛОВ: <b id="gcChars">0</b></span><span>СЛОВ: <b id="gcWords">0</b></span></div>
+    </div>
+    <div class="gcUndo" id="gcUndo" style="display:none;"><span id="gcUndoText">Текст изменён</span><button class="wrMini" onclick="undoGrammarTransform()">Отменить</button></div>
+
+    <div class="wrPanel" id="gcPanel" style="display:none;">
+      <div class="wrPanelHead"><span id="gcPanelTitle">Эталонная версия</span><button class="xbtn" onclick="document.getElementById('gcPanel').style.display='none'" aria-label="Закрыть">✕</button></div>
+      <div class="wrPanelBody" id="gcPanelBody"></div>
+      <div class="wrPanelActions" id="gcPanelActions"></div>
+    </div>
+
+    <div id="gcResults"></div>
+
+    <div class="wrPanel" id="gcChatPanel" style="display:none;">
+      <div class="wrPanelHead"><span>ИИ-помощник</span><button class="xbtn" onclick="document.getElementById('gcChatPanel').style.display='none'" aria-label="Закрыть">✕</button></div>
+      <div class="wrQuick">
+        <button onclick="sendGrammarChat('Объясни мою самую частую ошибку и правило к ней.')">Моя частая ошибка</button>
+        <button onclick="sendGrammarChat('Сделай текст более формальным и объясни, что поменял.')">Сделать формальнее</button>
+        <button onclick="sendGrammarChat('Какие 5 полезных слов или фраз мне стоит выучить по этому тексту?')">Что выучить</button>
+      </div>
+      <div class="wrChatList chatWrap" id="gcChatList"></div>
+      <div class="wrChatInput">
+        <textarea class="input" id="gcChatInput" rows="1" placeholder="Спроси про правило, слово или попроси переписать…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGrammarChat();}"></textarea>
+        <button class="wrChatSend" id="gcChatSend" onclick="sendGrammarChat()" aria-label="Отправить"></button>
+      </div>
+    </div>
   </section>
 
   <!-- 13: profile -->
@@ -2733,12 +3023,12 @@
     }
   }
 
-  function bandRing(band){
+  function bandRing(band, label = band.toFixed(1)){
     const r = 44, c = 2 * Math.PI * r, frac = Math.max(0, Math.min(1, band / 9));
     return `<div class="wrRing"><svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="9"/>
       <circle cx="52" cy="52" r="${r}" fill="none" stroke="url(#wrRingGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c * frac} ${c}"/>
       <defs><linearGradient id="wrRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#0F766E"/></linearGradient></defs></svg>
-      <div class="val">${band.toFixed(1)}</div></div>`;
+      <div class="val">${label}</div></div>`;
   }
 
   function openWritingResult(check){
@@ -3063,6 +3353,551 @@
         </button>`).join('') : '<div class="hint">Здесь появятся твои проверенные эссе.</div>';
     } catch (e) {
       box.innerHTML = `<div class="hint">${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  // ---- IELTS Score Calculator ----
+  // Таблицы перевода: [минимум правильных ответов, балл], по убыванию. Ниже 4 правильных официальной шкалы
+  // не публикуют — там ориентировочные значения.
+  const SCORE_TABLES = {
+    listening: [[39, 9], [37, 8.5], [35, 8], [32, 7.5], [30, 7], [26, 6.5], [23, 6], [18, 5.5], [16, 5], [13, 4.5], [10, 4], [8, 3.5], [6, 3], [4, 2.5], [2, 2], [1, 1], [0, 0]],
+    academic: [[39, 9], [37, 8.5], [35, 8], [33, 7.5], [30, 7], [27, 6.5], [23, 6], [19, 5.5], [15, 5], [13, 4.5], [10, 4], [8, 3.5], [6, 3], [4, 2.5], [2, 2], [1, 1], [0, 0]],
+    general: [[40, 9], [39, 8.5], [37, 8], [36, 7.5], [34, 7], [32, 6.5], [30, 6], [27, 5.5], [23, 5], [19, 4.5], [15, 4], [12, 3.5], [9, 3], [6, 2.5], [3, 2], [1, 1], [0, 0]],
+  };
+  const SCORE_CALC_KEY = 'asselScoreCalc';
+  const scoreCalc = { listening: 0, reading: 0, readingType: 'academic', task1: 0, task2: 0, speaking: 0 };
+  let scoreCalcBack = 'home';
+
+  function rawToBand(table, raw){ return SCORE_TABLES[table].find(([min]) => raw >= min)[1]; }
+  // Округление IELTS: до ближайшего 0.5, ровно .25 и .75 — вверх.
+  function ieltsRound(x){ return Math.floor(x * 2 + 0.5) / 2; }
+  function scoreCalcBands(){
+    const writingRaw = (scoreCalc.task1 + scoreCalc.task2 * 2) / 3;
+    const b = {
+      L: rawToBand('listening', scoreCalc.listening),
+      R: rawToBand(scoreCalc.readingType, scoreCalc.reading),
+      W: ieltsRound(writingRaw),
+      S: scoreCalc.speaking,
+    };
+    const avg = (b.L + b.R + b.W + b.S) / 4;
+    return { ...b, writingRaw, avg, overall: ieltsRound(avg) };
+  }
+
+  function openScoreCalc(){
+    scoreCalcBack = document.querySelector('.screen.active')?.dataset.screen || 'home';
+    go('scoreCalc');
+  }
+
+  (function initScoreCalc(){
+    try { Object.assign(scoreCalc, JSON.parse(localStorage.getItem(SCORE_CALC_KEY) || '{}')); } catch (e) {}
+    const opts = Array.from({ length: 19 }, (_, i) => (9 - i * 0.5).toFixed(1)).map(v => `<option value="${v}">${v}</option>`).join('');
+    ['calcTask1', 'calcTask2', 'calcSpeaking'].forEach(id => { document.getElementById(id).innerHTML = opts; });
+    const table = (key, label) => {
+      const rows = SCORE_TABLES[key].filter(([, band]) => band >= 2.5);
+      return `<table class="calcTable" data-table="${key}"><tr><th>${label}</th><th>Балл</th></tr>` + rows.map(([min, band], i) => {
+        const max = i === 0 ? 40 : rows[i - 1][0] - 1;
+        return `<tr data-band="${band}"><td>${min === max ? min : `${min}–${max}`}</td><td>${band.toFixed(1)}</td></tr>`;
+      }).join('') + '</table>';
+    };
+    document.getElementById('calcTableListening').innerHTML = table('listening', 'Правильных ответов');
+    document.getElementById('calcTableAcademic').innerHTML = table('academic', 'Правильных ответов');
+    document.getElementById('calcTableGeneral').innerHTML = table('general', 'Правильных ответов');
+    renderScoreCalc();
+  })();
+
+  function setScoreCalcRaw(key, value){
+    const n = Math.max(0, Math.min(40, parseInt(value, 10) || 0));
+    scoreCalc[key] = n;
+    renderScoreCalc(key);
+  }
+  function stepScoreCalc(key, delta){ setScoreCalcRaw(key, scoreCalc[key] + delta); }
+  function setScoreCalcBand(key, value){ scoreCalc[key] = parseFloat(value) || 0; renderScoreCalc(); }
+  function setScoreCalcReadingType(type){ scoreCalc.readingType = type; renderScoreCalc(); }
+  function resetScoreCalc(){
+    Object.assign(scoreCalc, { listening: 0, reading: 0, task1: 0, task2: 0, speaking: 0 });
+    renderScoreCalc();
+  }
+
+  // typingKey — поле, в которое сейчас печатают: его value не переписываем, чтобы не сбивать ввод.
+  function renderScoreCalc(typingKey){
+    try { localStorage.setItem(SCORE_CALC_KEY, JSON.stringify(scoreCalc)); } catch (e) {}
+    const b = scoreCalcBands();
+    ['listening', 'reading'].forEach(key => {
+      const cap = key[0].toUpperCase() + key.slice(1);
+      const num = document.getElementById('calc' + cap);
+      if (key !== typingKey || document.activeElement !== num) num.value = scoreCalc[key];
+      document.getElementById('calc' + cap + 'Range').value = scoreCalc[key];
+    });
+    document.getElementById('calcTask1').value = scoreCalc.task1.toFixed(1);
+    document.getElementById('calcTask2').value = scoreCalc.task2.toFixed(1);
+    document.getElementById('calcSpeaking').value = scoreCalc.speaking.toFixed(1);
+    document.querySelectorAll('#calcReadingSeg button').forEach(btn => btn.classList.toggle('on', btn.dataset.v === scoreCalc.readingType));
+    document.getElementById('calcReadingHint').textContent = scoreCalc.readingType === 'academic'
+      ? 'Academic: для 7.0 нужно 30 правильных ответов.'
+      : 'General Training: тексты проще, поэтому для 7.0 нужно уже 34 правильных ответа.';
+    document.getElementById('calcWritingHint').innerHTML =
+      `(${scoreCalc.task1.toFixed(1)} + ${scoreCalc.task2.toFixed(1)} × 2) ÷ 3 = <b>${b.writingRaw.toFixed(2)}</b> → <b>${b.W.toFixed(1)}</b>. Task 2 весит вдвое больше.`;
+
+    [['L', b.L], ['R', b.R], ['W', b.W], ['S', b.S]].forEach(([k, v]) => {
+      document.getElementById('calcBand' + k).textContent = v.toFixed(1);
+      document.getElementById('calcOv' + k).textContent = v.toFixed(1);
+    });
+    document.getElementById('calcOvBand').textContent = b.overall.toFixed(1);
+    document.getElementById('calcOvRaw').innerHTML = `Среднее ${+b.avg.toFixed(3)} → округление IELTS до <b>${b.overall.toFixed(1)}</b>`;
+
+    // подсветка текущей строки в справочных таблицах
+    const mark = (key, band) => document.querySelectorAll(`.calcTable[data-table="${key}"] tr[data-band]`)
+      .forEach(tr => tr.classList.toggle('on', parseFloat(tr.dataset.band) === band));
+    mark('listening', b.L);
+    mark('academic', scoreCalc.readingType === 'academic' ? b.R : -1);
+    mark('general', scoreCalc.readingType === 'general' ? b.R : -1);
+    renderScoreRadar(b);
+  }
+
+  // Радарная диаграмма: 4 оси (L сверху, R справа, W снизу, S слева), сетка на 3/6/9.
+  function renderScoreRadar(b){
+    const c = 75, r = 52;
+    const pt = (i, v) => {
+      const a = -Math.PI / 2 + i * Math.PI / 2, k = r * v / 9;
+      return [c + Math.cos(a) * k, c + Math.sin(a) * k];
+    };
+    const poly = vals => vals.map((v, i) => pt(i, v).map(n => n.toFixed(1)).join(',')).join(' ');
+    const vals = [b.L, b.R, b.W, b.S];
+    const labels = [['L', c, 13], ['R', 143, c + 4], ['W', c, 145], ['S', 7, c + 4]];
+    document.getElementById('calcRadar').innerHTML =
+      [3, 6, 9].map(v => `<polygon points="${poly([v, v, v, v])}" fill="none" stroke="var(--border)" stroke-width="1"/>`).join('') +
+      [0, 1, 2, 3].map(i => `<line x1="${c}" y1="${c}" x2="${pt(i, 9)[0]}" y2="${pt(i, 9)[1]}" stroke="var(--border)"/>`).join('') +
+      `<polygon points="${poly(vals)}" fill="rgba(20,184,166,.28)" stroke="#0F766E" stroke-width="2" stroke-linejoin="round"/>` +
+      vals.map((v, i) => { const [x, y] = pt(i, v); return `<circle cx="${x}" cy="${y}" r="3" fill="#0F766E"/>`; }).join('') +
+      labels.map(([t, x, y]) => `<text x="${x}" y="${y}" text-anchor="middle">${t}</text>`).join('');
+  }
+
+  // ---- Grammar Checker (backend/routers/grammar.py) ----
+  const GRAMMAR_DRAFT_KEY = 'asselGrammarDraft';
+  const GRAMMAR_LANGS = [
+    ['en', 'English'], ['ru', 'Русский'], ['kk', 'Қазақша'], ['uz', 'O‘zbekcha'], ['ky', 'Кыргызча'], ['uk', 'Українська'],
+    ['be', 'Беларуская'], ['tr', 'Türkçe'], ['az', 'Azərbaycanca'], ['tg', 'Тоҷикӣ'], ['de', 'Deutsch'], ['fr', 'Français'],
+    ['es', 'Español'], ['it', 'Italiano'], ['pt', 'Português'], ['nl', 'Nederlands'], ['pl', 'Polski'], ['cs', 'Čeština'],
+    ['ro', 'Română'], ['el', 'Ελληνικά'], ['sv', 'Svenska'], ['fi', 'Suomi'], ['no', 'Norsk'], ['da', 'Dansk'],
+    ['hu', 'Magyar'], ['ar', 'العربية'], ['fa', 'فارسی'], ['he', 'עברית'], ['hi', 'हिन्दी'], ['ur', 'اردو'],
+    ['bn', 'বাংলা'], ['zh', '中文'], ['ja', '日本語'], ['ko', '한국어'], ['vi', 'Tiếng Việt'], ['th', 'ไทย'],
+    ['id', 'Bahasa Indonesia'], ['ms', 'Bahasa Melayu'], ['ka', 'ქართული'], ['hy', 'Հայերեն'], ['mn', 'Монгол'],
+  ];
+  const GRAMMAR_EXAMPLES = {
+    en: `Dear Mr Smith,\n\nI am writting to inform you that I can not attend to the meeting on monday. Unfortunatly, I have a doctors appointment wich I booked a month ago. Could we move the meeting on Wednesday? I will send you the report untill friday.\n\nBest regards,\nAnna`,
+    ru: `Здравствуйте, Ирина Петровна!\n\nХочу сообщить, что не смогу придти на собрание в понедельник. К сожелению у меня запись к врачу, которую я сделала месяц назад. Можно ли перенести собрание на среду? Отчет я вышлю до пятници.\n\nС уважением, Анна`,
+    kk: `Құрметті Ирина Петровна!\n\nДүйсенбі күнгі жиналысқа келе алмайтынымды хабарлаймын. Өкінішке орай, бір ай бұрын жазылған дәрігерге қабылдауым бар. Жиналысты сәрсенбіге ауыстыруға бола ма? Есепті жұмадан дейін жіберемін.\n\nҚұрметпен, Анна`,
+  };
+  const grammarOpts = {
+    mode: 'student', text_language: 'auto', ai_language: 'ru', context: 'general', target: 'none',
+    explanations: true, detailed: true, use_context: true,
+  };
+  let grammarBack = 'home';
+  let grammarResult = null;      // {text, ...GrammarCheckOut} — проверка, на которую указывают позиции правок
+  let grammarDecisions = {};
+  let grammarSelected = null;
+  let grammarChat = [];
+  let grammarUndo = null;
+
+  function openGrammar(){
+    grammarBack = document.querySelector('.screen.active')?.dataset.screen || 'home';
+    go('grammar');
+    requestAnimationFrame(autoGrowGrammar);
+  }
+
+  function saveGrammarDraft(){
+    try {
+      localStorage.setItem(GRAMMAR_DRAFT_KEY, JSON.stringify({
+        opts: grammarOpts,
+        text: grammarResult ? correctedGrammarText() : document.getElementById('gcText').value,
+        filename: document.getElementById('gcFilename').value,
+        author: document.getElementById('gcAuthor').value,
+        settingsOpen: !document.getElementById('gcSettings').classList.contains('collapsed'),
+      }));
+    } catch (e) {}
+  }
+
+  (function initGrammar(){
+    const langOpts = GRAMMAR_LANGS.map(([v, n]) => `<option value="${v}">${n}</option>`).join('');
+    document.getElementById('gcTextLang').innerHTML = '<option value="auto">Определить автоматически</option>' + langOpts;
+    document.getElementById('gcAiLang').innerHTML = langOpts;
+    document.getElementById('gcChatSend').innerHTML = SEND_ICON;
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(GRAMMAR_DRAFT_KEY) || 'null'); } catch (e) {}
+    if (draft) {
+      Object.assign(grammarOpts, draft.opts || {});
+      document.getElementById('gcText').value = draft.text || '';
+      document.getElementById('gcFilename').value = draft.filename || '';
+      document.getElementById('gcAuthor').value = draft.author || '';
+      if (draft.settingsOpen === false) toggleGrammarSettings(false);
+    }
+    renderGrammarOpts();
+    updateGrammarCounts();
+  })();
+
+  function renderGrammarOpts(){
+    document.querySelectorAll('#gcModeSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === grammarOpts.mode));
+    document.querySelectorAll('#gcTargets .wrBand').forEach(b => b.classList.toggle('on', b.dataset.v === grammarOpts.target));
+    document.getElementById('gcTextLang').value = grammarOpts.text_language;
+    document.getElementById('gcAiLang').value = grammarOpts.ai_language;
+    document.getElementById('gcContext').value = grammarOpts.context;
+    document.getElementById('gcOptExplain').checked = grammarOpts.explanations;
+    document.getElementById('gcOptDetailed').checked = grammarOpts.detailed;
+    document.getElementById('gcOptContext').checked = grammarOpts.use_context;
+  }
+
+  function setGrammarOpt(key, value){
+    grammarOpts[key] = value;
+    renderGrammarOpts();
+    saveGrammarDraft();
+  }
+
+  function toggleGrammarSettings(force){
+    const box = document.getElementById('gcSettings');
+    const open = force === undefined ? box.classList.contains('collapsed') : force;
+    box.classList.toggle('collapsed', !open);
+    document.getElementById('gcGear').classList.toggle('open', open);
+    saveGrammarDraft();
+  }
+
+  function autoGrowGrammar(){
+    const el = document.getElementById('gcText');
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 220) + 'px';
+  }
+
+  // Слова считаем по любым буквам (кириллица, CJK и т.д.), а не только латинице, как в Writing.
+  function grammarWordCount(text){ return (text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) || []).length; }
+
+  function updateGrammarCounts(){
+    const text = grammarResult ? correctedGrammarText() : document.getElementById('gcText').value;
+    document.getElementById('gcChars').textContent = text.length;
+    document.getElementById('gcWords').textContent = grammarWordCount(text);
+    autoGrowGrammar();
+  }
+
+  function onGrammarInput(){
+    updateGrammarCounts();
+    saveGrammarDraft();
+  }
+
+  function showGrammarError(msg){
+    const el = document.getElementById('gcError');
+    el.textContent = msg || '';
+    el.style.display = msg ? 'block' : 'none';
+    if (msg) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ---- режим просмотра правок и обратно в редактор ----
+  function correctedGrammarText(){
+    const { text, issues } = grammarResult;
+    let out = '', cursor = 0;
+    issues.forEach((it, idx) => {
+      out += text.slice(cursor, it.start) + (grammarDecisions[idx] === 'accepted' ? it.suggestion : it.original);
+      cursor = it.end;
+    });
+    return out + text.slice(cursor);
+  }
+
+  // Выход из просмотра: принятые правки применяются, текст снова редактируется, разбор сбрасывается
+  // (позиции правок после любого изменения текста уже неверны).
+  function leaveGrammarReview(){
+    if (!grammarResult) return;
+    const text = correctedGrammarText();
+    grammarResult = null;
+    grammarDecisions = {};
+    document.getElementById('gcText').value = text;
+    document.getElementById('gcText').style.display = '';
+    document.getElementById('gcDoc').style.display = 'none';
+    document.getElementById('gcResults').innerHTML = '';
+    document.getElementById('gcLangTag').textContent = '';
+    ['gcAcceptAll', 'gcRejectAll'].forEach(id => { document.getElementById(id).disabled = true; });
+    onGrammarInput();
+  }
+
+  function currentGrammarText(){ return grammarResult ? correctedGrammarText() : document.getElementById('gcText').value; }
+
+  function setGrammarText(text){
+    leaveGrammarReview();
+    document.getElementById('gcText').value = text;
+    onGrammarInput();
+  }
+
+  // ---- инструменты ----
+  async function copyGrammarText(){
+    const ok = await copyText(currentGrammarText());
+    const el = document.getElementById('gcCopyText');
+    el.textContent = ok ? 'Скопировано' : 'Не вышло';
+    setTimeout(() => { el.textContent = 'Копировать'; }, 1500);
+  }
+  async function pasteGrammarText(){
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) { setGrammarText(text); return; }
+    } catch (e) {}
+    leaveGrammarReview();
+    document.getElementById('gcText').focus();
+    showGrammarError('Браузер не дал прочитать буфер обмена — вставь текст долгим нажатием в поле.');
+    setTimeout(() => showGrammarError(''), 4000);
+  }
+  function clearGrammarText(){
+    if (currentGrammarText().trim() && !confirm('Очистить текст?')) return;
+    setGrammarText('');
+    document.getElementById('gcPanel').style.display = 'none';
+  }
+  function loadGrammarExample(){
+    const lang = GRAMMAR_EXAMPLES[grammarOpts.text_language] ? grammarOpts.text_language
+      : GRAMMAR_EXAMPLES[grammarOpts.ai_language] ? grammarOpts.ai_language : 'en';
+    if (currentGrammarText().trim() && !confirm('Заменить текст примером?')) return;
+    setGrammarText(GRAMMAR_EXAMPLES[lang]);
+  }
+  async function grammarChipBusy(btn, busyText, fn){
+    const html = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + ' ' + busyText;
+    showGrammarError('');
+    try { await fn(); } catch (e) { showGrammarError(e.message); }
+    finally { btn.disabled = false; btn.innerHTML = html; }
+  }
+  function scanGrammarImage(input){
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    grammarChipBusy(document.getElementById('gcScanBtn'), 'Распознаю…', async () => {
+      const form = new FormData();
+      form.append('image', file);
+      const data = await wrFetchJson('/api/writing/scan', { method: 'POST', headers: authHeaders(), body: form });
+      const cur = currentGrammarText().trimEnd();
+      setGrammarText(cur ? cur + '\n\n' + data.text : data.text);
+    });
+  }
+
+  // ---- быстрые правки стиля: выделенный фрагмент или весь текст, с отменой ----
+  function transformGrammar(action, btn){
+    leaveGrammarReview();
+    const ta = document.getElementById('gcText');
+    const full = ta.value;
+    if (!full.trim()) { showGrammarError('Сначала вставь или напиши текст.'); return; }
+    const [s, e] = [ta.selectionStart, ta.selectionEnd];
+    const fragment = e > s && full.slice(s, e).trim() ? full.slice(s, e) : null;
+    const label = btn.textContent.trim();
+    grammarChipBusy(btn, label, async () => {
+      const data = await wrFetchJson('/api/grammar/transform', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ text: fragment || full, action, context: grammarOpts.context, target: grammarOpts.target, full_text: fragment ? full : null }),
+      });
+      grammarUndo = full;
+      ta.value = fragment ? full.slice(0, s) + data.text + full.slice(e) : data.text;
+      onGrammarInput();
+      document.getElementById('gcUndoText').textContent = `${label}: ${fragment ? 'фрагмент изменён' : 'текст изменён'}`;
+      document.getElementById('gcUndo').style.display = '';
+    });
+  }
+  function undoGrammarTransform(){
+    if (grammarUndo == null) return;
+    setGrammarText(grammarUndo);
+    grammarUndo = null;
+    document.getElementById('gcUndo').style.display = 'none';
+  }
+
+  function polishGrammar(){
+    const text = currentGrammarText();
+    if (!text.trim()) { showGrammarError('Сначала вставь или напиши текст.'); return; }
+    grammarChipBusy(document.getElementById('gcPolishBtn'), 'Пишу…', async () => {
+      const data = await wrFetchJson('/api/grammar/transform', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ text, action: 'polish', context: grammarOpts.context, target: grammarOpts.target }),
+      });
+      document.getElementById('gcPanelTitle').textContent = 'Эталонная версия текста';
+      document.getElementById('gcPanelBody').textContent = data.text;
+      const act = document.getElementById('gcPanelActions');
+      act.innerHTML = '';
+      [['Скопировать', () => copyText(data.text)], ['Заменить мой текст', () => {
+        grammarUndo = currentGrammarText();
+        setGrammarText(data.text);
+        document.getElementById('gcUndoText').textContent = 'Текст заменён эталоном';
+        document.getElementById('gcUndo').style.display = '';
+      }]].forEach(([label, fn]) => {
+        const b = document.createElement('button');
+        b.className = 'wrMini'; b.textContent = label; b.onclick = fn; act.appendChild(b);
+      });
+      const panel = document.getElementById('gcPanel');
+      panel.style.display = '';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  // ---- проверка ----
+  async function submitGrammar(){
+    leaveGrammarReview();
+    const text = document.getElementById('gcText').value;
+    if (!text.trim()) { showGrammarError('Вставь или напиши текст для проверки.'); return; }
+    const btn = document.getElementById('gcCheckBtn');
+    const html = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + '<span>Проверяю…</span>';
+    showGrammarError('');
+    document.getElementById('gcUndo').style.display = 'none';
+    try {
+      const data = await wrFetchJson('/api/grammar/check', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ text, ...grammarOpts }),
+      });
+      grammarResult = { ...data, text };
+      grammarDecisions = {};
+      grammarSelected = null;
+      document.getElementById('gcText').style.display = 'none';
+      document.getElementById('gcDoc').style.display = '';
+      ['gcAcceptAll', 'gcRejectAll'].forEach(id => { document.getElementById(id).disabled = !data.issues.length; });
+      document.getElementById('gcLangTag').textContent = data.detected_language ? data.detected_language.toUpperCase() : '';
+      renderGrammarResult();
+      document.getElementById('gcDoc').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      showGrammarError('Не удалось проверить: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = html;
+    }
+  }
+
+  function renderGrammarResult(){
+    const r = grammarResult;
+    let html = '', cursor = 0;
+    r.issues.forEach((it, idx) => {
+      html += escapeHtml(r.text.slice(cursor, it.start));
+      const state = grammarDecisions[idx] || '';
+      const inner = state === 'accepted' ? escapeHtml(it.suggestion)
+        : state === 'rejected' ? escapeHtml(it.original)
+        : `<span class="from">${escapeHtml(it.original)}</span> <span class="to">${escapeHtml(it.suggestion)}</span>`;
+      html += `<span class="wrMark cat-${it.category} ${state} ${grammarSelected === idx ? 'sel' : ''}" onclick="selectGrammarIssue(${idx}, true)">${inner}</span>`;
+      cursor = it.end;
+    });
+    document.getElementById('gcDoc').innerHTML = html + escapeHtml(r.text.slice(cursor));
+
+    const a = r.assessment;
+    const list = items => `<ul>${items.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+    const pending = r.issues.filter((_, i) => !grammarDecisions[i]).length;
+    document.getElementById('gcResults').innerHTML = `
+      <div class="gcSummary">
+        <div>${r.issues.length ? `<b>${r.issues.length}</b> ${pluralRu(r.issues.length, 'правка', 'правки', 'правок')}${pending && pending < r.issues.length ? ` · ещё ${pending} без решения` : ''}` : '<b>Ошибок не найдено</b> — текст чистый'}</div>
+        <button class="wrMini" onclick="leaveGrammarReview()">${PENCIL_ICON} Редактировать</button>
+      </div>
+      ${a ? `<div class="wrHero">${bandRing(a.score / 100 * 9, a.score)}
+        <div><div class="wrHeroK">Оценка текста</div><div class="wrHeroT">${escapeHtml(a.level || '')}</div>
+        <div class="wrHeroM">${escapeHtml(a.summary)}</div></div></div>
+        ${a.strengths.length ? `<div class="wrCard"><h4>Сильные стороны</h4>${list(a.strengths)}</div>` : ''}
+        ${a.improvements.length ? `<div class="wrCard"><h4>Что улучшить</h4>${list(a.improvements)}</div>` : ''}` : ''}
+      ${r.teacher_comment ? `<div class="wrCard teacher"><h4>Комментарий для ученика</h4><div style="white-space:pre-wrap">${escapeHtml(r.teacher_comment)}</div>
+        <div class="wrPanelActions"><button class="wrMini" onclick="copyText(grammarResult.teacher_comment).then(()=>{this.textContent='Скопировано'})">Скопировать</button></div></div>` : ''}
+      ${r.issues.map((it, idx) => {
+        const state = grammarDecisions[idx] || '';
+        const [catName, color] = WRITING_CATEGORIES[it.category] || [it.category, 'var(--text-muted)'];
+        return `<div class="wrIssue ${state} ${grammarSelected === idx ? 'sel' : ''}" id="gcIssue${idx}" style="border-left-color:${color}" onclick="selectGrammarIssue(${idx}, false)">
+          <div class="wrIssueCat">${idx + 1} · ${catName}</div>
+          <div class="wrIssueFix"><s>${escapeHtml(it.original)}</s> → <b>${escapeHtml(it.suggestion)}</b></div>
+          ${it.explanation ? `<div class="wrIssueWhy">${escapeHtml(it.explanation)}</div>` : ''}
+          <div class="wrIssueBtns">
+            <button class="wrMini ok ${state === 'accepted' ? 'on' : ''}" onclick="event.stopPropagation(); decideGrammar(${idx}, 'accepted')">${CHECK_ICON} Принять</button>
+            <button class="wrMini no ${state === 'rejected' ? 'on' : ''}" onclick="event.stopPropagation(); decideGrammar(${idx}, 'rejected')">${XMARK_ICON} Отклонить</button>
+          </div></div>`;
+      }).join('')}
+      <button class="btn btn-primary btn-wide" id="gcDocxBtn" style="margin-top:8px;" onclick="sendGrammarDocx()">Отчёт .docx в чат с ботом</button>`;
+    updateGrammarCounts();
+    saveGrammarDraft();
+  }
+
+  function pluralRu(n, one, few, many){
+    const m10 = n % 10, m100 = n % 100;
+    return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+  }
+
+  function selectGrammarIssue(idx, scrollToCard){
+    grammarSelected = idx;
+    renderGrammarResult();
+    const target = scrollToCard ? document.getElementById('gcIssue' + idx) : document.querySelector('#gcDoc .wrMark.sel');
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function decideGrammar(idx, state){
+    grammarDecisions[idx] = grammarDecisions[idx] === state ? undefined : state;
+    tg?.HapticFeedback?.selectionChanged();
+    renderGrammarResult();
+  }
+  function decideAllGrammar(state){
+    if (!grammarResult) return;
+    grammarResult.issues.forEach((_, idx) => { grammarDecisions[idx] = state; });
+    renderGrammarResult();
+  }
+
+  async function sendGrammarDocx(){
+    const btn = document.getElementById('gcDocxBtn');
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + ' Готовлю отчёт…';
+    try {
+      const { text, ...result } = grammarResult;
+      result.issues = result.issues.filter((_, i) => grammarDecisions[i] !== 'rejected');
+      await wrFetchJson('/api/grammar/docx', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          text, result,
+          filename: document.getElementById('gcFilename').value || 'Grammar_Check',
+          author: document.getElementById('gcAuthor').value || 'Assel AI',
+        }),
+      });
+      btn.textContent = 'Отправлено в чат с ботом ✓';
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Не удалось: ' + e.message;
+    }
+  }
+
+  // ---- ИИ-помощник ----
+  function openGrammarChat(){
+    const panel = document.getElementById('gcChatPanel');
+    panel.style.display = '';
+    renderGrammarChat();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function renderGrammarChat(){
+    document.getElementById('gcChatList').innerHTML = grammarChat.length
+      ? grammarChat.map(t => `<div class="chatBubble ${t.role === 'user' ? 'student' : 'teacher'}">${escapeHtml(t.text)}</div>`).join('')
+      : '<div class="hint" style="text-align:center;">Спроси про любое правило, слово или ошибку в тексте.</div>';
+  }
+  async function sendGrammarChat(preset){
+    const input = document.getElementById('gcChatInput');
+    const message = (preset || input.value).trim();
+    const btn = document.getElementById('gcChatSend');
+    if (!message || btn.disabled) return;
+    document.getElementById('gcChatPanel').style.display = '';
+    input.value = '';
+    const history = grammarChat.slice();
+    grammarChat.push({ role: 'user', text: message });
+    renderGrammarChat();
+    const list = document.getElementById('gcChatList');
+    list.insertAdjacentHTML('beforeend', `<div class="chatBubble teacher">${SPINNER_ICON} Думаю…</div>`);
+    btn.disabled = true;
+    try {
+      const data = await wrFetchJson('/api/grammar/chat', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          text: grammarResult ? grammarResult.text : currentGrammarText(),
+          issues: grammarResult ? grammarResult.issues : [],
+          history, message, ai_language: grammarOpts.ai_language,
+        }),
+      });
+      grammarChat.push({ role: 'ai', text: data.text });
+    } catch (e) {
+      grammarChat.pop();
+      input.value = message;
+      alert('Не удалось отправить: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      renderGrammarChat();
+      list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }
 </script>

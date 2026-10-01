@@ -36,3 +36,5 @@ WRITING_DAILY_LIMIT = int(os.environ.get("WRITING_DAILY_LIMIT", "20"))
 # Модель для Writing Checker отдельно от Speaking: длинный разбор эссе на русском/казахском
 # заметно грамотнее у моделей мощнее flash-lite, а скорость тут важна меньше, чем в диалоге.
 WRITING_GEMINI_MODEL = os.environ.get("WRITING_GEMINI_MODEL", "gemini-3.5-flash")
+# Grammar Checker (backend/routers/grammar.py): проверок в сутки на ученика; считается в памяти процесса.
+GRAMMAR_DAILY_LIMIT = int(os.environ.get("GRAMMAR_DAILY_LIMIT", "40"))

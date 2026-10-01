@@ -307,3 +307,53 @@ class WritingTextOut(BaseModel):
 
 class WritingChatRequest(BaseModel):
     message: str
+
+
+class GrammarCheckRequest(BaseModel):
+    text: str
+    text_language: str = "auto"
+    ai_language: str = "ru"
+    mode: str = "student"
+    context: str = "general"
+    target: str = "none"
+    explanations: bool = True
+    detailed: bool = True
+    use_context: bool = True
+
+
+class GrammarAssessmentOut(BaseModel):
+    score: int
+    level: str = ""
+    summary: str = ""
+    strengths: list[str] = []
+    improvements: list[str] = []
+
+
+class GrammarCheckOut(BaseModel):
+    detected_language: str = ""
+    issues: list[WritingIssueOut]
+    assessment: GrammarAssessmentOut | None = None
+    teacher_comment: str = ""
+
+
+class GrammarTransformRequest(BaseModel):
+    text: str
+    action: str
+    context: str = "general"
+    target: str = "none"
+    full_text: str | None = None  # весь документ, если переписываем только выделенный фрагмент
+
+
+class GrammarChatRequest(BaseModel):
+    text: str
+    message: str
+    ai_language: str = "ru"
+    issues: list[WritingIssueOut] = []
+    history: list[WritingChatTurn] = []
+
+
+class GrammarDocxRequest(BaseModel):
+    text: str
+    result: GrammarCheckOut  # issues внутри — только не отклонённые учеником правки
+    filename: str = "Grammar_Check"
+    author: str = "Assel AI"

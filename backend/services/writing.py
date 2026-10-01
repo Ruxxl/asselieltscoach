@@ -82,7 +82,7 @@ def _parse_json(text: str) -> dict:
         return json.loads(re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', "", text))
 
 
-async def _ask_json(parts, timeout: int = 40, system_instruction: str | None = None, fast: bool = False) -> dict:
+async def ask_json(parts, timeout: int = 40, system_instruction: str | None = None, fast: bool = False) -> dict:
     # У более мощной модели меньше бесплатная квота и изредка бывают ответы дольше минуты —
     # упёрлись в квоту/таймаут/сбой, отвечаем основной (flash-lite), чем ученик увидит ошибку.
     # fast=True — для коротких/английских ответов (чат, образец, скан), где важнее скорость.
@@ -146,7 +146,7 @@ Respond STRICTLY as JSON, no markdown:
 """
 
 
-def _locate_issues(essay: str, raw_issues) -> list[dict]:
+def locate_issues(essay: str, raw_issues) -> list[dict]:
     """Оставляем только правки, чей фрагмент реально есть в тексте (модель иногда «исправляет»
     цитату), и приводим его к точному написанию из эссе, чтобы фронтенд нашёл его поиском."""
     issues, used_until = [], 0
@@ -165,16 +165,24 @@ def _locate_issues(essay: str, raw_issues) -> list[dict]:
             at = lowered.find(original.lower())
             if at < 0 or any(at < i["end"] and i["start"] < at + len(original) for i in issues):
                 continue
+        end = at + len(original)
+        # Модель иногда цитирует фрагмент без идущего следом знака препинания, но возвращает его в исправлении
+        # ("Mr Smith" -> "Mr. Smith,") — тогда при замене знак удвоился бы. Захватываем его во фрагмент.
+        while suggestion and suggestion[-1] in ".,;:!?" and end < len(essay) and essay[end] == suggestion[-1] \
+                and not essay[at:end].endswith(suggestion[-1]):
+            end += 1
+        if any(at < i["end"] and i["start"] < end for i in issues):
+            continue
         category = str(raw.get("category") or "grammar").lower()
         issues.append({
             "start": at,
-            "end": at + len(original),
-            "original": essay[at : at + len(original)],
+            "end": end,
+            "original": essay[at:end],
             "suggestion": suggestion,
             "category": category if category in ISSUE_CATEGORIES else "grammar",
             "explanation": str(raw.get("explanation") or "").strip(),
         })
-        used_until = max(used_until, at + len(original))
+        used_until = max(used_until, end)
     issues.sort(key=lambda i: i["start"])
     return issues
 
@@ -254,7 +262,7 @@ async def check_essay(
 
     if sample_essay:
         data, sample = await asyncio.gather(
-            _ask_json(parts, timeout=70),
+            ask_json(parts, timeout=70),
             generate_sample(
                 task_type=task_type,
                 topic=topic or f"(not given — infer the question from this candidate response: {essay[:800]})",
@@ -263,7 +271,7 @@ async def check_essay(
             ),
         )
     else:
-        data, sample = await _ask_json(parts, timeout=70), None
+        data, sample = await ask_json(parts, timeout=70), None
 
     raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else {}
     criteria = {}
@@ -283,7 +291,7 @@ async def check_essay(
         "summary": str(data.get("summary") or "").strip(),
         "strengths": [str(s) for s in data.get("strengths") or [] if s],
         "improvements": [str(s) for s in data.get("improvements") or [] if s],
-        "issues": _locate_issues(essay, data.get("issues")) if assessable else [],
+        "issues": locate_issues(essay, data.get("issues")) if assessable else [],
         "teacher_comment": str(data.get("teacher_comment") or "").strip() if mode == "teacher" else "",
         "sample_essay": sample if assessable else None,
     }
@@ -301,7 +309,7 @@ by a blank line, natural (not robotic) language appropriate for that band. No ti
 Respond STRICTLY as JSON, no markdown: {{"essay": "..."}}
 """
     parts = [{"mime_type": image[1], "data": image[0]}, prompt] if image else prompt
-    data = await _ask_json(parts, timeout=45, fast=True)
+    data = await ask_json(parts, timeout=45, fast=True)
     return str(data.get("essay") or "").strip()
 
 
@@ -321,7 +329,7 @@ Plain text, short lines, use "•" for bullets, a blank line between sections, n
 
 Respond STRICTLY as JSON, no markdown: {{"text": "..."}}
 """
-    data = await _ask_json(prompt, timeout=40)
+    data = await ask_json(prompt, timeout=40)
     return str(data.get("text") or "").strip()
 
 
@@ -334,7 +342,7 @@ an empty string.
 
 Respond STRICTLY as JSON, no markdown: {"text": "..."}
 """
-    data = await _ask_json([{"mime_type": mime_type, "data": image_bytes}, prompt], timeout=40, fast=True)
+    data = await ask_json([{"mime_type": mime_type, "data": image_bytes}, prompt], timeout=40, fast=True)
     return str(data.get("text") or "").strip()
 
 
@@ -374,5 +382,5 @@ paragraphs at most, plain text without markdown symbols.
 Student: {message}
 
 Respond STRICTLY as JSON, no markdown: {{"reply": "..."}}"""
-    data = await _ask_json(prompt, timeout=40, system_instruction=system, fast=True)
+    data = await ask_json(prompt, timeout=40, system_instruction=system, fast=True)
     return str(data.get("reply") or "").strip()
