@@ -3008,6 +3008,7 @@
   async function openWritingCheck(id){
     try {
       openWritingResult(await wrFetchJson(`/api/writing/${id}`, { headers: authHeaders() }));
+      go('writingResult');
     } catch (e) {
       showWritingError(e.message);
     }
