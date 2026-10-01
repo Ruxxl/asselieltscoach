@@ -189,6 +189,27 @@ class SpeakingSession(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class WritingCheck(Base):
+    """Проверка эссе IELTS Writing (backend/routers/writing.py). Весь разбор ИИ — баллы, отзыв,
+    ошибки с позициями в тексте, образец — хранится одним JSON в result_json: фронтенду и .docx-отчёту
+    он нужен целиком, а отдельные колонки — только то, что видно в истории проверок."""
+
+    __tablename__ = "writing_checks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    task_type: Mapped[str] = mapped_column(String(16))  # task2 / task1_academic / task1_general
+    mode: Mapped[str] = mapped_column(String(16), default="student")  # student / teacher
+    language: Mapped[str] = mapped_column(String(4), default="ru")
+    target_band: Mapped[str] = mapped_column(String(16))
+    topic: Mapped[str] = mapped_column(Text, default="")
+    essay: Mapped[str] = mapped_column(Text)
+    overall_band: Mapped[float] = mapped_column(Float)
+    result_json: Mapped[str] = mapped_column(Text)
+    chat_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class NewsPost(Base):
     """Новость от преподавателя — публикуется командой /news в боте (см. bot/main.py)."""
 

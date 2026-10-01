@@ -422,6 +422,166 @@
   .mycourse .tt{font:600 12.5px var(--font-sans);}
   .mycourse .pb{height:6px; border-radius:999px; background:var(--surface-2); margin-top:5px; overflow:hidden;}
   .mycourse .pb i{display:block; height:100%; background:var(--accent-strong);}
+
+  /* ---- Writing Checker ---- */
+  .wrTeal{--wr:#0F766E; --wr-2:#14B8A6; --wr-tint:#CCFBF1; --wr-ink:#115E59;}
+  .wrHeadBtn{width:36px; height:36px; border-radius:11px; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); display:grid; place-items:center; cursor:pointer; box-shadow:var(--shadow-card);}
+  .wrHeadBtn svg{width:18px; height:18px;}
+  .wrCheckRow{display:flex; gap:10px; margin-bottom:14px;}
+  .wrCheckBtn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:10px; border:none; border-radius:16px; padding:16px 18px; cursor:pointer;
+    background:linear-gradient(120deg, var(--wr-ink) 0%, var(--wr) 45%, #2BA5A0 100%); color:#fff; font:700 17px var(--font-sans);
+    box-shadow:0 10px 24px rgba(15,118,110,.32);
+  }
+  .wrCheckBtn svg{width:22px; height:22px;}
+  .wrCheckBtn[disabled]{opacity:.6; cursor:wait;}
+  .wrGear{width:56px; flex:none; border-radius:16px; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); display:grid; place-items:center; cursor:pointer; box-shadow:var(--shadow-card); transition:transform .3s ease;}
+  .wrGear svg{width:22px; height:22px;}
+  .wrGear.open{color:var(--wr); border-color:var(--wr-2);}
+  .wrSettings{display:flex; flex-direction:column; gap:12px; margin-bottom:14px;}
+  .wrSettings.collapsed{display:none;}
+  .wrRow{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .wrLbl{font:600 12.5px var(--font-sans); color:var(--text-secondary);}
+  .wrSeg{display:inline-flex; background:var(--surface-2); border-radius:11px; padding:3px; gap:2px;}
+  .wrSeg button{border:none; background:transparent; border-radius:9px; padding:7px 14px; font:600 13px var(--font-sans); color:var(--text-muted); cursor:pointer;}
+  .wrSeg button.on{background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(3,74,110,.14);}
+  .wrSelect{
+    width:100%; appearance:none; -webkit-appearance:none; border:1.5px solid var(--text); border-radius:12px; padding:11px 38px 11px 13px;
+    font:500 14px var(--font-sans); color:var(--text); cursor:pointer;
+    background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2345607A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
+  }
+  .wrFieldLbl{display:block; font:600 12.5px var(--font-sans); color:var(--text); margin-bottom:6px;}
+  .wrChecks{display:grid; grid-template-columns:1fr 1fr; gap:10px 12px;}
+  .wrCheck{display:flex; align-items:center; gap:8px; font:500 13.5px var(--font-sans); color:var(--text); cursor:pointer; -webkit-user-select:none; user-select:none;}
+  .wrCheck input{appearance:none; -webkit-appearance:none; width:20px; height:20px; flex:none; margin:0; border:1.5px solid var(--text-muted); border-radius:6px; background:var(--surface); display:grid; place-items:center; cursor:pointer;}
+  .wrCheck input:checked{background:var(--wr); border-color:var(--wr);}
+  .wrCheck input:checked::after{content:''; width:10px; height:5px; border:2.2px solid #fff; border-top:none; border-right:none; transform:rotate(-45deg) translate(1px,-1px);}
+  .wrBands{display:flex; gap:6px; flex-wrap:wrap;}
+  .wrBand{border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:6px 12px; font:600 12.5px var(--font-sans); color:var(--text-secondary); cursor:pointer;}
+  .wrBand.on{background:var(--wr-tint); border-color:var(--wr-2); color:var(--wr-ink);}
+  .wrBox{border:1.5px solid var(--text); border-radius:16px; background:var(--surface); position:relative;}
+  .wrBox textarea{width:100%; border:none; outline:none; resize:none; background:transparent; font:500 15px/1.6 var(--font-sans); color:var(--text); padding:14px 16px; display:block;}
+  .wrBox textarea::placeholder{color:var(--text-muted);}
+  .wrBox:focus-within{border-color:var(--wr);}
+  .wrTopic textarea{min-height:84px;}
+  .wrImgPick{display:flex; align-items:center; gap:10px; margin-top:10px;}
+  .wrImgThumb{width:56px; height:56px; border-radius:10px; object-fit:cover; border:1px solid var(--border);}
+  .wrTools{display:flex; gap:8px; overflow-x:auto; padding:14px 0 10px; scrollbar-width:none;}
+  .wrTools::-webkit-scrollbar{display:none;}
+  .wrTool{flex:none; display:inline-flex; align-items:center; gap:6px; border:none; background:transparent; padding:6px 8px; border-radius:9px; font:600 14px var(--font-sans); color:var(--text-secondary); cursor:pointer; font-variant-numeric:tabular-nums;}
+  .wrTool svg{width:17px; height:17px;}
+  .wrTool.running{color:var(--wr); background:var(--wr-tint);}
+  .wrTool.over{color:var(--red); background:var(--red-tint);}
+  .wrEssay textarea{min-height:300px; padding-top:6px;}
+  .wrChips{display:flex; flex-wrap:wrap; gap:8px; padding:14px 14px 4px;}
+  .wrChip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--text-muted); background:var(--surface); border-radius:10px; padding:6px 11px; font:500 13px var(--font-sans); color:var(--text-secondary); cursor:pointer;}
+  .wrChip svg{width:15px; height:15px;}
+  .wrChip[disabled]{opacity:.55; cursor:wait;}
+  .wrCount{display:flex; justify-content:flex-end; gap:12px; padding:0 14px 10px; font:600 11px var(--font-sans); letter-spacing:.04em; color:var(--text-muted); font-variant-numeric:tabular-nums;}
+  .wrCount .low{color:var(--yellow);}
+  .wrCount .ok{color:var(--green);}
+  .wrPanel{margin-top:12px; border:1px solid var(--wr-2); background:linear-gradient(160deg, #F0FDFA 0%, var(--surface) 70%); border-radius:14px; padding:13px 14px; box-shadow:var(--shadow-card);}
+  .wrPanelHead{display:flex; align-items:center; gap:8px; margin-bottom:8px; font:700 11px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--wr);}
+  .wrPanelHead .xbtn{margin-left:auto;}
+  .wrPanelBody{font:500 13.5px/1.6 var(--font-sans); color:var(--text); white-space:pre-wrap;}
+  .wrPanelActions{display:flex; gap:8px; margin-top:10px;}
+  .wrHistItem{display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:14px; padding:11px 12px; margin-bottom:8px; cursor:pointer; box-shadow:var(--shadow-card);}
+  .wrHistBand{width:44px; height:44px; flex:none; border-radius:12px; display:grid; place-items:center; font:700 16px var(--font-sans); color:var(--wr-ink); background:var(--wr-tint); font-variant-numeric:tabular-nums;}
+  .wrHistTitle{font:600 13px/1.35 var(--font-sans); color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .wrHistMeta{font:500 11.5px var(--font-sans); color:var(--text-muted); margin-top:2px;}
+
+  .wrIntro{border-radius:20px; padding:18px; margin-bottom:18px; color:#fff; background:linear-gradient(120deg, var(--wr-ink) 0%, var(--wr) 55%, #2BA5A0 100%); box-shadow:0 10px 24px rgba(15,118,110,.28);}
+  .wrIntroT{font:700 18px/1.3 var(--font-sans); margin-bottom:6px;}
+  .wrIntroS{font:500 13.5px/1.5 var(--font-sans); color:#CCFBF1;}
+  .wrTasks{display:flex; flex-direction:column; gap:10px;}
+  .wrTask{display:flex; align-items:center; gap:14px; width:100%; text-align:left; cursor:pointer; padding:14px; border-radius:16px; border:1px solid var(--border); background:linear-gradient(120deg, var(--surface) 0%, var(--surface-2) 100%); box-shadow:var(--shadow-card);}
+  .wrTask:active{border-color:var(--wr-2);}
+  .wrTaskIc{width:46px; height:46px; flex:none; border-radius:13px; display:grid; place-items:center; background:var(--wr-tint); color:var(--wr);}
+  .wrTaskIc svg{width:24px; height:24px;}
+  .wrTaskT{font:700 15px var(--font-sans); color:var(--text);}
+  .wrTaskD{font:500 12.5px/1.4 var(--font-sans); color:var(--text-secondary); margin-top:2px;}
+  .wrTaskM{display:flex; gap:6px; margin-top:7px;}
+  .wrTaskM span{font:600 11px var(--font-sans); color:var(--wr-ink); background:var(--wr-tint); border-radius:999px; padding:2px 8px;}
+  .wrTaskGo{margin-left:auto; flex:none; color:var(--text-muted);}
+  .wrTaskGo svg{width:18px; height:18px;}
+  .wrDraft{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:16px; border:1.5px dashed var(--wr-2); background:var(--surface); margin-bottom:18px;}
+  .wrDraft .wrHistTitle{-webkit-line-clamp:1;}
+  .wrDraftBtns{display:flex; flex-direction:column; gap:6px; flex:none; margin-left:auto;}
+
+  /* результат */
+  .wrLoading{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; flex:1; gap:14px; padding:40px 0;}
+  .wrLoading .speakingOrb{width:110px; height:110px;}
+  .wrLoadingStep{font:600 14px var(--font-sans); color:var(--text-secondary); min-height:20px;}
+  .wrHero{display:flex; align-items:center; gap:18px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px; box-shadow:var(--shadow-card); margin-bottom:12px;}
+  .wrRing{width:104px; height:104px; flex:none; position:relative;}
+  .wrRing svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .wrRing .val{position:absolute; inset:0; display:grid; place-items:center; font:800 32px var(--font-sans); color:var(--text); font-variant-numeric:tabular-nums;}
+  .wrHeroK{font:700 10.5px var(--font-sans); letter-spacing:.08em; text-transform:uppercase; color:var(--wr);}
+  .wrHeroT{font:700 17px/1.3 var(--font-sans); color:var(--text); margin:4px 0 6px;}
+  .wrHeroM{font:500 12.5px/1.5 var(--font-sans); color:var(--text-secondary);}
+  .wrCrit{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow-card);}
+  .wrCritTop{display:flex; align-items:center; gap:10px;}
+  .wrCritAbbr{width:38px; height:28px; flex:none; border-radius:8px; display:grid; place-items:center; font:700 11.5px var(--font-sans); background:var(--surface-2); color:var(--text-secondary);}
+  .wrCritName{font:600 13.5px var(--font-sans); color:var(--text); flex:1;}
+  .wrCritBand{font:800 17px var(--font-sans); color:var(--text); font-variant-numeric:tabular-nums;}
+  .wrCritBar{height:6px; border-radius:999px; background:var(--surface-2); margin:9px 0 8px; overflow:hidden;}
+  .wrCritBar i{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg, var(--wr), var(--wr-2));}
+  .wrCritText{font:500 13px/1.55 var(--font-sans); color:var(--text-secondary);}
+  .wrWhy{margin-top:8px; padding:9px 11px; border-radius:10px; background:var(--surface-2); font:500 12.5px/1.5 var(--font-sans); color:var(--text-secondary);}
+  .wrWhy b{display:block; font:700 10px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--wr); margin-bottom:3px;}
+  .wrTabs{display:flex; background:var(--surface-2); border-radius:13px; padding:3px; gap:2px; margin:16px 0 12px; position:sticky; top:8px; z-index:3; box-shadow:0 4px 14px rgba(3,74,110,.10);}
+  .wrTabs button{flex:1; border:none; background:transparent; border-radius:10px; padding:9px 4px; font:600 13px var(--font-sans); color:var(--text-muted); cursor:pointer;}
+  .wrTabs button.on{background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(3,74,110,.14);}
+  .wrPane{display:none;}
+  .wrPane.on{display:block;}
+  .wrBulk{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:10px;}
+  .wrBulk .wrTool{font-size:13px; padding:6px 9px; border:1px solid var(--border); background:var(--surface);}
+  .wrLegend{display:flex; flex-wrap:wrap; gap:6px 12px; margin-bottom:10px; font:500 11.5px var(--font-sans); color:var(--text-secondary);}
+  .wrLegend span{display:inline-flex; align-items:center; gap:5px;}
+  .wrLegend i{width:10px; height:10px; border-radius:3px; display:inline-block;}
+  .wrDoc{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; font:500 15px/1.85 var(--font-sans); color:var(--text); white-space:pre-wrap; box-shadow:var(--shadow-card); margin-bottom:14px;}
+  .wrMark{border-radius:4px; padding:1px 2px; cursor:pointer; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px;}
+  .wrMark.sel{outline:2px solid currentColor; outline-offset:1px;}
+  .wrMark .from{text-decoration:line-through; opacity:.7;}
+  .wrMark .to{font-weight:700; text-decoration:none;}
+  .wrMark.accepted{background:var(--green-tint)!important; color:var(--green); text-decoration:none;}
+  .wrMark.rejected{background:transparent!important; color:inherit; text-decoration:none; cursor:pointer;}
+  .cat-grammar{background:var(--red-tint); text-decoration-color:var(--red);}
+  .cat-spelling, .cat-punctuation{background:var(--yellow-tint); text-decoration-color:var(--yellow);}
+  .cat-vocabulary{background:#F3E8FF; text-decoration-color:#7C3AED;}
+  .cat-word_choice{background:var(--blue-tint); text-decoration-color:var(--blue);}
+  .cat-coherence, .cat-style{background:#FCE7F3; text-decoration-color:#DB2777;}
+  .wrIssue{background:var(--surface); border:1px solid var(--border); border-left-width:4px; border-radius:12px; padding:11px 12px; margin-bottom:8px; box-shadow:var(--shadow-card); scroll-margin-top:70px;}
+  .wrIssue.sel{border-color:var(--wr-2); box-shadow:0 0 0 3px rgba(20,184,166,.2);}
+  .wrIssue.accepted{opacity:.6;}
+  .wrIssue.rejected{opacity:.45;}
+  .wrIssueCat{font:700 10px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); margin-bottom:5px;}
+  .wrIssueFix{font:500 14px/1.5 var(--font-sans); color:var(--text);}
+  .wrIssueFix s{color:var(--red);}
+  .wrIssueFix b{color:var(--green);}
+  .wrIssueWhy{font:500 12.5px/1.5 var(--font-sans); color:var(--text-secondary); margin-top:4px;}
+  .wrIssueBtns{display:flex; gap:6px; margin-top:9px;}
+  .wrMini{border:1px solid var(--border); background:var(--surface); border-radius:9px; padding:6px 11px; font:600 12px var(--font-sans); color:var(--text-secondary); cursor:pointer; display:inline-flex; align-items:center; gap:5px;}
+  .wrMini svg{width:13px; height:13px;}
+  .wrMini.ok{border-color:var(--green-border); color:var(--green);}
+  .wrMini.ok.on{background:var(--green); color:#fff; border-color:var(--green);}
+  .wrMini.no.on{background:var(--text-secondary); color:#fff; border-color:var(--text-secondary);}
+  .wrCard{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:13px 14px; margin-bottom:10px; box-shadow:var(--shadow-card); font:500 13.5px/1.6 var(--font-sans); color:var(--text);}
+  .wrCard h4{margin:0 0 6px; font:700 11px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--wr);}
+  .wrCard ul{margin:0; padding-left:18px;}
+  .wrCard li{margin-bottom:4px;}
+  .wrCard.teacher{border-color:var(--wr-2); background:linear-gradient(160deg, #F0FDFA 0%, var(--surface) 70%);}
+  .wrSample{white-space:pre-wrap; font:500 14.5px/1.75 var(--font-sans);}
+  .wrChatList{display:flex; flex-direction:column; gap:8px; margin-bottom:10px;}
+  .wrChatInput{display:flex; gap:8px; align-items:flex-end;}
+  .wrChatInput textarea{flex:1; min-height:44px; max-height:140px; resize:none;}
+  .wrChatSend{width:44px; height:44px; flex:none; border:none; border-radius:12px; background:var(--wr); color:#fff; display:grid; place-items:center; cursor:pointer;}
+  .wrChatSend svg{width:18px; height:18px;}
+  .wrChatSend[disabled]{opacity:.5;}
+  .wrQuick{display:flex; gap:6px; overflow-x:auto; margin-bottom:10px; scrollbar-width:none;}
+  .wrQuick::-webkit-scrollbar{display:none;}
+  .wrQuick button{flex:none; border:1px solid var(--wr-2); background:var(--surface); color:var(--wr-ink); border-radius:999px; padding:6px 11px; font:600 12px var(--font-sans); cursor:pointer;}
+  .wrNote{font:500 12px/1.5 var(--font-sans); color:var(--text-muted); text-align:center; margin-top:8px;}
 </style>
 </head>
 <body>
@@ -637,6 +797,123 @@
     <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('speaking')">ПРАКТИКОВАТЬ ЕЩЁ РАЗ</button></div>
   </section>
 
+  <!-- 19: writing checker — стартовый экран вкладки: что это, выбор задания, недописанный черновик и история.
+       Редактор открывается только после выбора, чтобы с порога было понятно, с чего начать. -->
+  <section class="screen wrTeal" data-screen="writing">
+    <div class="apphead"><div class="brand">Writing Checker</div></div>
+    <div class="wrIntro">
+      <div class="wrIntroT">Проверь своё эссе как на экзамене</div>
+      <div class="wrIntroS">Выбери задание, напиши или вставь текст — ИИ поставит балл по 4 критериям IELTS, подсветит ошибки и покажет образец ответа.</div>
+    </div>
+    <div class="aiError" id="wrStartError" style="display:none; margin-bottom:12px;"></div>
+    <div id="wrDraftBox"></div>
+    <div class="sectiontitle">Выбери задание</div>
+    <div class="wrTasks" id="wrTaskCards"></div>
+    <div class="sectiontitle" style="margin-top:22px;">Мои проверки</div>
+    <div id="wrHistoryList"><div class="hint">Загружаю…</div></div>
+  </section>
+
+  <!-- 19b: writing checker — редактор эссе: настройки проверки, задание, текст, инструменты (таймер, вставка,
+       скан с фото, пример ответа, идеи от ИИ). Проверка — backend/routers/writing.py. Черновик хранится в
+       localStorage, чтобы не потерять текст при случайном закрытии мини-аппа. -->
+  <section class="screen wrTeal" data-screen="writingEditor">
+    <div class="topbar"><button class="xbtn" onclick="go('writing')" aria-label="Назад"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" id="wrEditorBadge" style="margin-bottom:0;">Task 2</div></div>
+
+    <div class="wrCheckRow">
+      <button class="wrCheckBtn" id="wrCheckBtn" onclick="submitWriting()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h4"/><path d="M7 12h3"/><path d="M7 16h4"/><path d="m13.5 12.5 2 2 3.5-4"/></svg><span>Проверить эссе</span></button>
+      <button class="wrGear open" id="wrGear" onclick="toggleWritingSettings()" aria-label="Настройки проверки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button>
+    </div>
+    <div class="aiError" id="wrError" style="display:none; margin-bottom:12px;"></div>
+
+    <div class="wrSettings" id="wrSettings">
+      <div class="wrRow">
+        <span class="wrLbl">Режим:</span>
+        <div class="wrSeg" id="wrModeSeg">
+          <button data-v="student" onclick="setWritingOpt('mode','student')">Ученик</button>
+          <button data-v="teacher" onclick="setWritingOpt('mode','teacher')">Преподаватель</button>
+        </div>
+      </div>
+      <div>
+        <label class="wrFieldLbl" for="wrTaskType">Тип задания</label>
+        <select class="wrSelect" id="wrTaskType" onchange="setWritingOpt('task_type', this.value)">
+          <option value="task2">IELTS Writing Task 2 — эссе</option>
+          <option value="task1_academic">Task 1 Academic — график / таблица / схема</option>
+          <option value="task1_general">Task 1 General — письмо</option>
+        </select>
+      </div>
+      <div>
+        <label class="wrFieldLbl" for="wrLanguage">Язык отзыва ИИ</label>
+        <select class="wrSelect" id="wrLanguage" onchange="setWritingOpt('language', this.value)">
+          <option value="ru">Русский</option>
+          <option value="kk">Қазақша</option>
+          <option value="en">English</option>
+          <option value="uz">O‘zbekcha</option>
+        </select>
+      </div>
+      <div id="wrToneWrap" style="display:none;">
+        <label class="wrFieldLbl" for="wrTone">Тон комментария для ученика</label>
+        <select class="wrSelect" id="wrTone" onchange="setWritingOpt('tone', this.value)">
+          <option value="friendly">Дружелюбный</option>
+          <option value="neutral">Нейтральный</option>
+          <option value="strict">Строгий</option>
+        </select>
+      </div>
+      <div>
+        <span class="wrFieldLbl">Целевой балл</span>
+        <div class="wrBands" id="wrBands">
+          <button class="wrBand" data-v="5.5-6.5" onclick="setWritingOpt('target_band','5.5-6.5')">5.5–6.5</button>
+          <button class="wrBand" data-v="7.0-8.0" onclick="setWritingOpt('target_band','7.0-8.0')">7.0–8.0</button>
+          <button class="wrBand" data-v="8.5-9.0" onclick="setWritingOpt('target_band','8.5-9.0')">8.5–9.0</button>
+        </div>
+      </div>
+      <div class="wrChecks">
+        <label class="wrCheck"><input type="checkbox" id="wrOptReasoning" onchange="setWritingOpt('ai_reasoning', this.checked)">Логика оценки</label>
+        <label class="wrCheck"><input type="checkbox" id="wrOptWordChoice" onchange="setWritingOpt('improve_word_choice', this.checked)">Улучшить лексику</label>
+        <label class="wrCheck"><input type="checkbox" id="wrOptDetailed" onchange="setWritingOpt('detailed_feedback', this.checked)">Подробный разбор</label>
+        <label class="wrCheck"><input type="checkbox" id="wrOptSample" onchange="setWritingOpt('sample_essay', this.checked)">Образец 8.0+</label>
+      </div>
+    </div>
+
+    <div class="wrBox wrTopic"><textarea id="wrTopic" rows="3" placeholder="Впиши тему или вопрос задания…" oninput="autoGrowWriting(); saveWritingDraft()"></textarea></div>
+    <div class="wrImgPick" id="wrImgPick" style="display:none;">
+      <button class="wrChip" onclick="document.getElementById('wrImgInput').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg><span id="wrImgLabel">Прикрепить график</span></button>
+      <img class="wrImgThumb" id="wrImgThumb" alt="" style="display:none;">
+      <button class="xbtn" id="wrImgClear" onclick="clearWritingImage()" style="display:none;" aria-label="Убрать картинку">✕</button>
+      <input type="file" id="wrImgInput" accept="image/*" hidden onchange="pickWritingImage(this)">
+    </div>
+
+    <div class="wrTools">
+      <button class="wrTool" id="wrTimerBtn" onclick="toggleWritingTimer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg><span id="wrTimerText">Таймер</span></button>
+      <button class="wrTool" id="wrTimerReset" onclick="resetWritingTimer()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Сброс</button>
+      <button class="wrTool" onclick="copyWritingEssay()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="wrCopyText">Копировать</span></button>
+      <button class="wrTool" onclick="clearWritingEssay()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>Очистить</button>
+    </div>
+
+    <div class="wrBox wrEssay">
+      <div class="wrChips">
+        <button class="wrChip" onclick="pasteWritingEssay()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Вставить</button>
+        <button class="wrChip" id="wrScanBtn" onclick="document.getElementById('wrScanInput').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>Скан с фото</button>
+        <button class="wrChip" id="wrSampleBtn" onclick="requestWritingSample()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.6 2.4-1.2 1.2"/><path d="M3 21 15 9"/><path d="M15 3v2"/><path d="M19 9h2"/><path d="M11 5l1 1"/><path d="M18 13l1 1"/></svg>Пример ответа</button>
+        <button class="wrChip" id="wrIdeasBtn" onclick="requestWritingIdeas()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>ИИ-помощник</button>
+        <input type="file" id="wrScanInput" accept="image/*" hidden onchange="scanWritingImage(this)">
+      </div>
+      <textarea id="wrEssay" placeholder="Напиши или вставь своё эссе сюда…" oninput="onWritingEssayInput()"></textarea>
+      <div class="wrCount"><span>СИМВОЛОВ: <b id="wrChars">0</b></span><span>СЛОВ: <b id="wrWords">0</b></span></div>
+    </div>
+    <div class="wrPanel" id="wrPanel" style="display:none;">
+      <div class="wrPanelHead"><span id="wrPanelTitle">ИИ-помощник</span><button class="xbtn" onclick="document.getElementById('wrPanel').style.display='none'" aria-label="Закрыть">✕</button></div>
+      <div class="wrPanelBody" id="wrPanelBody"></div>
+      <div class="wrPanelActions" id="wrPanelActions"></div>
+    </div>
+  </section>
+
+  <!-- 20: writing checker — результат: общий балл, 4 критерия IELTS, правки в тексте с принятием/отклонением,
+       отзыв, образец и чат с ИИ по этому эссе. -->
+  <section class="screen wrTeal" data-screen="writingResult">
+    <div class="topbar"><button class="xbtn" onclick="go('writing')" aria-label="Назад"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" id="wrResultBadge" style="margin-bottom:0;">Task 2</div></div>
+    <div id="wrResultBody"></div>
+  </section>
+
   <!-- 13: profile -->
   <section class="screen" data-screen="profile">
     <div class="topbar"><button class="xbtn" onclick="go('home')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
@@ -714,6 +991,9 @@
   <button class="tabbtn" data-tab="speaking" onclick="go('speaking')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg></span><span class="tablabel">Speaking</span>
   </button>
+  <button class="tabbtn" data-tab="writing" onclick="go('writing')">
+    <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span><span class="tablabel">Writing</span>
+  </button>
   <button class="tabbtn" data-tab="profile" onclick="go('profile')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.4 3.4-7 7.5-7s7.5 2.6 7.5 7"/></svg></span><span class="tablabel">Профиль</span>
   </button>
@@ -753,7 +1033,7 @@
   const PENCIL_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const VOLUME_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
 
-  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'admin', 'speaking']);
+  const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'admin', 'speaking', 'writing']);
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
@@ -791,6 +1071,8 @@
     if (id === 'news') loadNews();
     if (id === 'admin') loadAdmin();
     if (id === 'speaking') renderSpeakingSetup();
+    if (id === 'writing') renderWritingStart();
+    if (id === 'writingEditor') requestAnimationFrame(autoGrowWriting);
     window.scrollTo(0,0);
   }
 
@@ -2089,6 +2371,699 @@
     if (!res.ok) { alert(data.detail || 'Не удалось удалить тему'); return; }
     await loadAdminSpeakingTopics();
     go('admin');
+  }
+
+  // ---- Writing Checker (backend/routers/writing.py) ----
+  const WRITING_DRAFT_KEY = 'asselWritingDraft';
+  const WRITING_TASKS = {
+    task2: { tag: 'Task 2', minWords: 250, minutes: 40 },
+    task1_academic: { tag: 'Task 1 Academic', minWords: 150, minutes: 20 },
+    task1_general: { tag: 'Task 1 General', minWords: 150, minutes: 20 },
+  };
+  const WRITING_CRITERIA = [
+    ['task_response', 'TR', 'Task Response'],
+    ['coherence_cohesion', 'CC', 'Coherence & Cohesion'],
+    ['lexical_resource', 'LR', 'Lexical Resource'],
+    ['grammar_accuracy', 'GRA', 'Grammar Range & Accuracy'],
+  ];
+  const WRITING_CATEGORIES = {
+    grammar: ['Грамматика', 'var(--red)'],
+    spelling: ['Орфография', 'var(--yellow)'],
+    punctuation: ['Пунктуация', 'var(--yellow)'],
+    vocabulary: ['Лексика', '#7C3AED'],
+    word_choice: ['Улучшение лексики', 'var(--blue)'],
+    coherence: ['Связность', '#DB2777'],
+    style: ['Стиль', '#DB2777'],
+  };
+  const writingOpts = {
+    mode: 'student', task_type: 'task2', language: 'ru', tone: 'friendly', target_band: '7.0-8.0',
+    ai_reasoning: true, improve_word_choice: false, detailed_feedback: true, sample_essay: true,
+  };
+  let writingImage = null;
+  let writingCheck = null;      // последний открытый результат (WritingCheckOut)
+  let writingDecisions = {};    // индекс правки -> 'accepted' | 'rejected'
+  let writingSelected = null;
+  let writingTimer = { left: null, handle: null };
+
+  function wrCountWords(text){ return (text.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) || []).length; }
+
+  function saveWritingDraft(){
+    try {
+      localStorage.setItem(WRITING_DRAFT_KEY, JSON.stringify({
+        opts: writingOpts,
+        topic: document.getElementById('wrTopic').value,
+        essay: document.getElementById('wrEssay').value,
+        settingsOpen: !document.getElementById('wrSettings').classList.contains('collapsed'),
+      }));
+    } catch (e) {}
+  }
+
+  (function restoreWritingDraft(){
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(WRITING_DRAFT_KEY) || 'null'); } catch (e) {}
+    if (draft) {
+      Object.assign(writingOpts, draft.opts || {});
+      document.getElementById('wrTopic').value = draft.topic || '';
+      document.getElementById('wrEssay').value = draft.essay || '';
+      if (draft.settingsOpen === false) toggleWritingSettings(false);
+    }
+    renderWritingOpts();
+    updateWritingCounts();
+  })();
+
+  function renderWritingOpts(){
+    document.querySelectorAll('#wrModeSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === writingOpts.mode));
+    document.querySelectorAll('#wrBands .wrBand').forEach(b => b.classList.toggle('on', b.dataset.v === writingOpts.target_band));
+    document.getElementById('wrTaskType').value = writingOpts.task_type;
+    document.getElementById('wrLanguage').value = writingOpts.language;
+    document.getElementById('wrTone').value = writingOpts.tone;
+    document.getElementById('wrToneWrap').style.display = writingOpts.mode === 'teacher' ? '' : 'none';
+    document.getElementById('wrOptReasoning').checked = writingOpts.ai_reasoning;
+    document.getElementById('wrOptWordChoice').checked = writingOpts.improve_word_choice;
+    document.getElementById('wrOptDetailed').checked = writingOpts.detailed_feedback;
+    document.getElementById('wrOptSample').checked = writingOpts.sample_essay;
+    document.getElementById('wrImgPick').style.display = writingOpts.task_type === 'task1_academic' ? '' : 'none';
+    document.getElementById('wrTopic').placeholder = {
+      task2: 'Впиши тему или вопрос эссе…',
+      task1_academic: 'Впиши задание: что показано на графике / таблице / схеме…',
+      task1_general: 'Впиши задание: кому и о чём нужно написать письмо…',
+    }[writingOpts.task_type];
+    document.getElementById('wrEditorBadge').textContent = WRITING_TASKS[writingOpts.task_type].tag;
+    if (writingTimer.left == null) document.getElementById('wrTimerText').textContent = `Таймер ${WRITING_TASKS[writingOpts.task_type].minutes}:00`;
+  }
+
+  function setWritingOpt(key, value){
+    writingOpts[key] = value;
+    renderWritingOpts();
+    updateWritingCounts();
+    saveWritingDraft();
+  }
+
+  function toggleWritingSettings(force){
+    const box = document.getElementById('wrSettings');
+    const open = force === undefined ? box.classList.contains('collapsed') : force;
+    box.classList.toggle('collapsed', !open);
+    document.getElementById('wrGear').classList.toggle('open', open);
+    saveWritingDraft();
+  }
+
+  // Поле растёт вместе с текстом — на телефоне вложенная прокрутка внутри рамки неудобна.
+  function autoGrowWriting(){
+    ['wrTopic', 'wrEssay'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    });
+  }
+
+  function updateWritingCounts(){
+    autoGrowWriting();
+    const text = document.getElementById('wrEssay').value;
+    const words = wrCountWords(text);
+    const min = WRITING_TASKS[writingOpts.task_type].minWords;
+    document.getElementById('wrChars').textContent = text.length;
+    const wordsEl = document.getElementById('wrWords');
+    wordsEl.textContent = `${words} / ${min}`;
+    wordsEl.className = words === 0 ? '' : words < min ? 'low' : 'ok';
+  }
+
+  function onWritingEssayInput(){
+    updateWritingCounts();
+    saveWritingDraft();
+  }
+
+  function showWritingError(msg){
+    const onStart = document.querySelector('.screen.active')?.dataset.screen === 'writing';
+    const el = document.getElementById(onStart ? 'wrStartError' : 'wrError');
+    el.textContent = msg || '';
+    el.style.display = msg ? 'block' : 'none';
+    if (msg) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  async function wrFetchJson(url, options){
+    const res = await fetch(url, options);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Ошибка сервера');
+    return data;
+  }
+
+  // ---- таймер: обратный отсчёт 40/20 минут по типу задания, тап — старт/пауза ----
+  function renderWritingTimer(){
+    const btn = document.getElementById('wrTimerBtn');
+    const left = writingTimer.left;
+    const abs = Math.abs(left);
+    const txt = `${left < 0 ? '+' : ''}${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, '0')}`;
+    document.getElementById('wrTimerText').textContent = txt;
+    btn.classList.toggle('running', !!writingTimer.handle && left >= 0);
+    btn.classList.toggle('over', left < 0);
+    document.getElementById('wrTimerReset').style.display = '';
+  }
+  function toggleWritingTimer(){
+    if (writingTimer.handle) {
+      clearInterval(writingTimer.handle);
+      writingTimer.handle = null;
+      renderWritingTimer();
+      return;
+    }
+    if (writingTimer.left == null) writingTimer.left = WRITING_TASKS[writingOpts.task_type].minutes * 60;
+    writingTimer.handle = setInterval(() => {
+      writingTimer.left -= 1;
+      if (writingTimer.left === 0) tg?.HapticFeedback?.notificationOccurred('warning');
+      renderWritingTimer();
+    }, 1000);
+    renderWritingTimer();
+  }
+  function resetWritingTimer(){
+    clearInterval(writingTimer.handle);
+    writingTimer = { left: null, handle: null };
+    const btn = document.getElementById('wrTimerBtn');
+    btn.classList.remove('running', 'over');
+    document.getElementById('wrTimerReset').style.display = 'none';
+    renderWritingOpts();
+  }
+
+  // ---- инструменты редактора ----
+  async function copyText(text){
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy'); ta.remove();
+    return ok;
+  }
+  async function copyWritingEssay(){
+    const ok = await copyText(document.getElementById('wrEssay').value);
+    const el = document.getElementById('wrCopyText');
+    el.textContent = ok ? 'Скопировано' : 'Не вышло';
+    setTimeout(() => { el.textContent = 'Копировать'; }, 1500);
+  }
+  function clearWritingEssay(){
+    const essay = document.getElementById('wrEssay');
+    if (essay.value && !confirm('Очистить текст эссе?')) return;
+    essay.value = '';
+    onWritingEssayInput();
+  }
+  function setWritingEssay(text){
+    const essay = document.getElementById('wrEssay');
+    essay.value = text;
+    onWritingEssayInput();
+    essay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  async function pasteWritingEssay(){
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) { setWritingEssay(text); return; }
+    } catch (e) {}
+    // В Telegram на телефоне чтение буфера из мини-аппа обычно запрещено — даём вставить вручную.
+    const essay = document.getElementById('wrEssay');
+    essay.focus();
+    showWritingError('Браузер не дал прочитать буфер обмена — вставь текст долгим нажатием в поле эссе.');
+    setTimeout(() => showWritingError(''), 4000);
+  }
+
+  async function withChipBusy(btnId, busyText, fn){
+    const btn = document.getElementById(btnId);
+    const html = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + busyText;
+    showWritingError('');
+    try { await fn(); } catch (e) { showWritingError(e.message); }
+    finally { btn.disabled = false; btn.innerHTML = html; }
+  }
+
+  function scanWritingImage(input){
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    withChipBusy('wrScanBtn', 'Распознаю…', async () => {
+      const form = new FormData();
+      form.append('image', file);
+      const data = await wrFetchJson('/api/writing/scan', { method: 'POST', headers: authHeaders(), body: form });
+      const essay = document.getElementById('wrEssay');
+      setWritingEssay(essay.value.trim() ? essay.value.trimEnd() + '\n\n' + data.text : data.text);
+    });
+  }
+
+  function showWritingPanel(title, text, actions){
+    document.getElementById('wrPanelTitle').textContent = title;
+    document.getElementById('wrPanelBody').textContent = text;
+    const act = document.getElementById('wrPanelActions');
+    act.innerHTML = '';
+    (actions || []).forEach(([label, fn]) => {
+      const b = document.createElement('button');
+      b.className = 'wrMini';
+      b.textContent = label;
+      b.onclick = fn;
+      act.appendChild(b);
+    });
+    const panel = document.getElementById('wrPanel');
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function requireWritingTopic(){
+    const topic = document.getElementById('wrTopic').value.trim();
+    if (!topic) {
+      showWritingError('Сначала впиши задание — тему или вопрос.');
+      document.getElementById('wrTopic').focus();
+    }
+    return topic;
+  }
+
+  function requestWritingSample(){
+    const topic = requireWritingTopic();
+    if (!topic) return;
+    withChipBusy('wrSampleBtn', 'Пишу…', async () => {
+      const data = await wrFetchJson('/api/writing/sample', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ task_type: writingOpts.task_type, topic, target_band: writingOpts.target_band }),
+      });
+      showWritingPanel(`Пример ответа · Band ${writingOpts.target_band.replace('-', '–')}`, data.text, [
+        ['Скопировать', () => copyText(data.text)],
+        ['Вставить в поле эссе', () => {
+          if (document.getElementById('wrEssay').value.trim() && !confirm('Заменить твой текст примером?')) return;
+          setWritingEssay(data.text);
+        }],
+      ]);
+    });
+  }
+
+  function requestWritingIdeas(){
+    const topic = requireWritingTopic();
+    if (!topic) return;
+    withChipBusy('wrIdeasBtn', 'Думаю…', async () => {
+      const data = await wrFetchJson('/api/writing/ideas', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ task_type: writingOpts.task_type, topic, language: writingOpts.language }),
+      });
+      showWritingPanel('ИИ-помощник · идеи и план', data.text, [['Скопировать', () => copyText(data.text)]]);
+    });
+  }
+
+  function pickWritingImage(input){
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    writingImage = file;
+    const thumb = document.getElementById('wrImgThumb');
+    thumb.src = URL.createObjectURL(file);
+    thumb.style.display = '';
+    document.getElementById('wrImgClear').style.display = '';
+    document.getElementById('wrImgLabel').textContent = 'Заменить график';
+  }
+  function clearWritingImage(){
+    writingImage = null;
+    document.getElementById('wrImgThumb').style.display = 'none';
+    document.getElementById('wrImgClear').style.display = 'none';
+    document.getElementById('wrImgLabel').textContent = 'Прикрепить график';
+  }
+
+  // ---- проверка ----
+  const WRITING_LOADING_STEPS = [
+    'Читаю задание и эссе…', 'Оцениваю Task Response…', 'Проверяю связность и структуру…',
+    'Разбираю лексику…', 'Ищу грамматические ошибки…', 'Считаю итоговый балл…',
+  ];
+
+  async function submitWriting(){
+    const essay = document.getElementById('wrEssay').value.trim();
+    const topic = document.getElementById('wrTopic').value.trim();
+    showWritingError('');
+    if (wrCountWords(essay) < 20) { showWritingError('Напиши эссе хотя бы из 20 слов — пока проверять нечего.'); return; }
+
+    const btn = document.getElementById('wrCheckBtn');
+    btn.disabled = true;
+    document.getElementById('wrResultBadge').textContent = WRITING_TASKS[writingOpts.task_type].tag;
+    document.getElementById('wrResultBody').innerHTML = `
+      <div class="wrLoading"><div class="speakingOrb speaking"></div>
+        <div class="wrLoadingStep" id="wrLoadingStep">${WRITING_LOADING_STEPS[0]}</div>
+        <div class="hint">Обычно это занимает 20–40 секунд</div></div>`;
+    go('writingResult');
+    let step = 0;
+    const stepTimer = setInterval(() => {
+      step = Math.min(step + 1, WRITING_LOADING_STEPS.length - 1);
+      const el = document.getElementById('wrLoadingStep');
+      if (el) el.textContent = WRITING_LOADING_STEPS[step];
+    }, 5000);
+
+    try {
+      const form = new FormData();
+      form.append('essay', essay);
+      form.append('topic', topic);
+      Object.entries(writingOpts).forEach(([k, v]) => form.append(k, String(v)));
+      if (writingImage && writingOpts.task_type === 'task1_academic') form.append('image', writingImage);
+      const data = await wrFetchJson('/api/writing/check', { method: 'POST', headers: authHeaders(), body: form });
+      if (writingTimer.handle) toggleWritingTimer();
+      openWritingResult(data);
+      loadWritingHistory();
+    } catch (e) {
+      go('writingEditor');
+      showWritingError('Не удалось проверить: ' + e.message);
+    } finally {
+      clearInterval(stepTimer);
+      btn.disabled = false;
+    }
+  }
+
+  async function openWritingCheck(id){
+    try {
+      openWritingResult(await wrFetchJson(`/api/writing/${id}`, { headers: authHeaders() }));
+    } catch (e) {
+      showWritingError(e.message);
+    }
+  }
+
+  function bandRing(band){
+    const r = 44, c = 2 * Math.PI * r, frac = Math.max(0, Math.min(1, band / 9));
+    return `<div class="wrRing"><svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="9"/>
+      <circle cx="52" cy="52" r="${r}" fill="none" stroke="url(#wrRingGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c * frac} ${c}"/>
+      <defs><linearGradient id="wrRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#0F766E"/></linearGradient></defs></svg>
+      <div class="val">${band.toFixed(1)}</div></div>`;
+  }
+
+  function openWritingResult(check){
+    writingCheck = check;
+    writingDecisions = {};
+    writingSelected = null;
+    const r = check.result;
+    const task = WRITING_TASKS[check.task_type];
+    const targetLow = parseFloat(check.target_band);
+    const gap = targetLow - r.overall_band;
+    const verdict = gap <= 0 ? `Цель ${check.target_band.replace('-', '–')} достигнута` : `До цели ${targetLow.toFixed(1)}: ещё +${gap.toFixed(1)}`;
+    document.getElementById('wrResultBadge').textContent = task.tag;
+
+    const crit = WRITING_CRITERIA.map(([key, abbr, name]) => {
+      const cr = r.criteria[key];
+      return `<div class="wrCrit"><div class="wrCritTop"><span class="wrCritAbbr">${abbr}</span><span class="wrCritName">${name}</span><span class="wrCritBand">${cr.band.toFixed(1)}</span></div>
+        <div class="wrCritBar"><i style="width:${cr.band / 9 * 100}%"></i></div>
+        <div class="wrCritText">${escapeHtml(cr.comment)}</div>
+        ${cr.reasoning ? `<div class="wrWhy"><b>Почему такой балл</b>${escapeHtml(cr.reasoning)}</div>` : ''}</div>`;
+    }).join('');
+
+    const usedCats = [...new Set(r.issues.map(i => i.category))];
+    const legend = usedCats.map(c => `<span><i class="cat-${c}"></i>${WRITING_CATEGORIES[c]?.[0] || c}</span>`).join('');
+    const list = items => `<ul>${items.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+
+    document.getElementById('wrResultBody').innerHTML = `
+      <div class="wrHero">${bandRing(r.overall_band)}
+        <div><div class="wrHeroK">Est. Overall Band</div>
+          <div class="wrHeroT">${verdict}</div>
+          <div class="wrHeroM">${r.word_count} слов${r.word_count < task.minWords ? ` — меньше минимума ${task.minWords}` : ''} · ${r.issues.length} правок</div></div>
+      </div>
+      ${crit}
+      <div class="wrTabs" id="wrTabs">
+        <button data-p="fixes" class="on" onclick="setWritingPane('fixes')">Правки</button>
+        <button data-p="feedback" onclick="setWritingPane('feedback')">Отзыв</button>
+        <button data-p="sample" onclick="setWritingPane('sample')">Образец</button>
+        <button data-p="chat" onclick="setWritingPane('chat')">Чат</button>
+      </div>
+
+      <div class="wrPane on" data-p="fixes">
+        ${r.issues.length ? `
+          <div class="wrBulk">
+            <button class="wrTool" onclick="decideAllWriting('accepted')">${CHECK_ICON} Принять все</button>
+            <button class="wrTool" onclick="decideAllWriting('rejected')">${XMARK_ICON} Отклонить все</button>
+            <button class="wrTool" onclick="copyCorrectedWriting(this)">Копировать текст</button>
+          </div>
+          <div class="wrLegend">${legend}</div>` : '<div class="wrCard">Ошибок не найдено — отличная работа!</div>'}
+        <div class="wrDoc" id="wrDoc"></div>
+        <div id="wrIssueList"></div>
+        <button class="btn btn-ghost btn-wide" onclick="editCorrectedWriting()">Продолжить редактировать в редакторе</button>
+      </div>
+
+      <div class="wrPane" data-p="feedback">
+        ${r.teacher_comment ? `<div class="wrCard teacher"><h4>Комментарий для ученика</h4><div style="white-space:pre-wrap">${escapeHtml(r.teacher_comment)}</div>
+          <div class="wrPanelActions"><button class="wrMini" onclick="copyText(writingCheck.result.teacher_comment).then(()=>{this.textContent='Скопировано'})">Скопировать</button></div></div>` : ''}
+        <div class="wrCard"><h4>Общий отзыв</h4>${escapeHtml(r.summary)}</div>
+        ${r.strengths.length ? `<div class="wrCard"><h4>Сильные стороны</h4>${list(r.strengths)}</div>` : ''}
+        ${r.improvements.length ? `<div class="wrCard"><h4>Что улучшить</h4>${list(r.improvements)}</div>` : ''}
+      </div>
+
+      <div class="wrPane" data-p="sample"><div id="wrSampleBox"></div></div>
+
+      <div class="wrPane" data-p="chat">
+        <div class="wrQuick">
+          <button onclick="sendWritingChat('Почему у меня такой балл за Grammar?')">Почему такой балл за GRA?</button>
+          <button onclick="sendWritingChat('Что сделать в первую очередь, чтобы получить на 1 балл больше?')">Как поднять балл на 1?</button>
+          <button onclick="sendWritingChat('Перепиши моё вступление на уровне Band 8.')">Улучши вступление</button>
+          <button onclick="sendWritingChat('Перепиши заключение более формально.')">Формальнее заключение</button>
+        </div>
+        <div class="wrChatList chatWrap" id="wrChatList"></div>
+        <div class="wrChatInput">
+          <textarea class="input" id="wrChatInput" rows="1" placeholder="Спроси про ошибку или попроси переписать абзац…"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWritingChat();}"></textarea>
+          <button class="wrChatSend" id="wrChatSend" onclick="sendWritingChat()" aria-label="Отправить">${SEND_ICON}</button>
+        </div>
+      </div>
+
+      <div class="bottombar" style="flex-direction:column; gap:10px; margin-top:18px;">
+        <button class="btn btn-primary btn-wide" id="wrDocxBtn" onclick="sendWritingDocx()">Отчёт .docx в чат с ботом</button>
+        <button class="btn btn-ghost btn-wide" onclick="startNewWriting()">Новое эссе</button>
+      </div>`;
+    renderWritingDoc();
+    renderWritingSample();
+    renderWritingChat();
+    window.scrollTo(0, 0);
+  }
+
+  function setWritingPane(p){
+    document.querySelectorAll('#wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+    document.querySelectorAll('.wrPane').forEach(el => el.classList.toggle('on', el.dataset.p === p));
+  }
+
+  // Эссе с подсветкой: правка отображается как «было → стало», принятая — только «стало», отклонённая — как было.
+  function renderWritingDoc(){
+    const { essay, result } = writingCheck;
+    let html = '', cursor = 0;
+    result.issues.forEach((it, idx) => {
+      html += escapeHtml(essay.slice(cursor, it.start));
+      const state = writingDecisions[idx] || '';
+      const inner = state === 'accepted' ? escapeHtml(it.suggestion)
+        : state === 'rejected' ? escapeHtml(it.original)
+        : `<span class="from">${escapeHtml(it.original)}</span> <span class="to">${escapeHtml(it.suggestion)}</span>`;
+      html += `<span class="wrMark cat-${it.category} ${state} ${writingSelected === idx ? 'sel' : ''}" onclick="selectWritingIssue(${idx}, true)">${inner}</span>`;
+      cursor = it.end;
+    });
+    html += escapeHtml(essay.slice(cursor));
+    document.getElementById('wrDoc').innerHTML = html;
+
+    document.getElementById('wrIssueList').innerHTML = result.issues.map((it, idx) => {
+      const state = writingDecisions[idx] || '';
+      const [catName, color] = WRITING_CATEGORIES[it.category] || [it.category, 'var(--text-muted)'];
+      return `<div class="wrIssue ${state} ${writingSelected === idx ? 'sel' : ''}" id="wrIssue${idx}" style="border-left-color:${color}" onclick="selectWritingIssue(${idx}, false)">
+        <div class="wrIssueCat">${idx + 1} · ${catName}</div>
+        <div class="wrIssueFix"><s>${escapeHtml(it.original)}</s> → <b>${escapeHtml(it.suggestion)}</b></div>
+        ${it.explanation ? `<div class="wrIssueWhy">${escapeHtml(it.explanation)}</div>` : ''}
+        <div class="wrIssueBtns">
+          <button class="wrMini ok ${state === 'accepted' ? 'on' : ''}" onclick="event.stopPropagation(); decideWriting(${idx}, 'accepted')">${CHECK_ICON} Принять</button>
+          <button class="wrMini no ${state === 'rejected' ? 'on' : ''}" onclick="event.stopPropagation(); decideWriting(${idx}, 'rejected')">${XMARK_ICON} Отклонить</button>
+        </div></div>`;
+    }).join('');
+  }
+
+  function selectWritingIssue(idx, scrollToCard){
+    writingSelected = idx;
+    renderWritingDoc();
+    const target = scrollToCard ? document.getElementById('wrIssue' + idx) : document.querySelector('.wrMark.sel');
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function decideWriting(idx, state){
+    writingDecisions[idx] = writingDecisions[idx] === state ? undefined : state;
+    tg?.HapticFeedback?.selectionChanged();
+    renderWritingDoc();
+  }
+
+  function decideAllWriting(state){
+    writingCheck.result.issues.forEach((_, idx) => { writingDecisions[idx] = state; });
+    renderWritingDoc();
+  }
+
+  // Итоговый текст: принятые правки применены, остальные (ещё не решённые и отклонённые) — как было.
+  function correctedWritingText(){
+    const { essay, result } = writingCheck;
+    let out = '', cursor = 0;
+    result.issues.forEach((it, idx) => {
+      out += essay.slice(cursor, it.start) + (writingDecisions[idx] === 'accepted' ? it.suggestion : it.original);
+      cursor = it.end;
+    });
+    return out + essay.slice(cursor);
+  }
+
+  async function copyCorrectedWriting(btn){
+    const ok = await copyText(correctedWritingText());
+    btn.textContent = ok ? 'Скопировано' : 'Не вышло';
+    setTimeout(() => { btn.textContent = 'Копировать текст'; }, 1500);
+  }
+
+  function editCorrectedWriting(){
+    document.getElementById('wrTopic').value = writingCheck.topic;
+    writingOpts.task_type = writingCheck.task_type;
+    renderWritingOpts();
+    go('writingEditor');
+    setWritingEssay(correctedWritingText());
+  }
+
+  function clearWritingDraft(){
+    document.getElementById('wrTopic').value = '';
+    document.getElementById('wrEssay').value = '';
+    document.getElementById('wrPanel').style.display = 'none';
+    showWritingError('');
+    clearWritingImage();
+    resetWritingTimer();
+    onWritingEssayInput();
+  }
+
+  function startNewWriting(){
+    clearWritingDraft();
+    go('writing');
+  }
+
+  // ---- стартовый экран вкладки ----
+  const WRITING_TASK_CARDS = [
+    { id: 'task2', title: 'Task 2 — эссе', desc: 'Мнение, аргументы, обсуждение двух точек зрения',
+      icon: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>' },
+    { id: 'task1_academic', title: 'Task 1 Academic', desc: 'Описание графика, таблицы, процесса или карты',
+      icon: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>' },
+    { id: 'task1_general', title: 'Task 1 General', desc: 'Официальное или неофициальное письмо',
+      icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>' },
+  ];
+
+  function writingHasDraft(){
+    return !!(document.getElementById('wrEssay').value.trim() || document.getElementById('wrTopic').value.trim());
+  }
+
+  function renderWritingStart(){
+    const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+    document.getElementById('wrTaskCards').innerHTML = WRITING_TASK_CARDS.map(t => {
+      const meta = WRITING_TASKS[t.id];
+      return `<button class="wrTask" onclick="startWritingTask('${t.id}')">
+        <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg></span>
+        <span><span class="wrTaskT">${t.title}</span><span class="wrTaskD" style="display:block">${t.desc}</span>
+          <span class="wrTaskM"><span>${meta.minutes} мин</span><span>от ${meta.minWords} слов</span></span></span>
+        <span class="wrTaskGo">${chevron}</span></button>`;
+    }).join('');
+
+    const box = document.getElementById('wrDraftBox');
+    if (writingHasDraft()) {
+      const essay = document.getElementById('wrEssay').value.trim();
+      const topic = document.getElementById('wrTopic').value.trim();
+      box.innerHTML = `<div class="wrDraft">
+        <span style="min-width:0;"><span class="wrIssueCat" style="display:block; color:var(--wr);">Черновик · ${WRITING_TASKS[writingOpts.task_type].tag}</span>
+          <span class="wrHistTitle">${escapeHtml(topic || essay.slice(0, 80) || 'Без темы')}</span>
+          <span class="wrHistMeta">${wrCountWords(essay)} слов</span></span>
+        <span class="wrDraftBtns">
+          <button class="wrMini ok on" onclick="go('writingEditor')">Продолжить</button>
+          <button class="wrMini" onclick="if(confirm('Удалить черновик?')){clearWritingDraft(); renderWritingStart();}">Удалить</button>
+        </span></div>`;
+    } else {
+      box.innerHTML = '';
+    }
+    loadWritingHistory();
+  }
+
+  function startWritingTask(taskType){
+    if (writingHasDraft() && !confirm('Начать новое задание? Текущий черновик будет удалён.')) return;
+    clearWritingDraft();
+    setWritingOpt('task_type', taskType);
+    go('writingEditor');
+    document.getElementById('wrTopic').focus();
+  }
+
+  function renderWritingSample(){
+    const box = document.getElementById('wrSampleBox');
+    const sample = writingCheck.result.sample_essay;
+    if (sample) {
+      box.innerHTML = `<div class="wrCard"><h4>Образец ответа · Band 8.0+</h4><div class="wrSample">${escapeHtml(sample)}</div>
+        <div class="wrPanelActions"><button class="wrMini" onclick="copyText(writingCheck.result.sample_essay).then(()=>{this.textContent='Скопировано'})">Скопировать</button></div></div>`;
+      return;
+    }
+    box.innerHTML = `<div class="wrCard">Образец не заказывали при проверке.
+      <div class="wrPanelActions"><button class="wrMini" id="wrGenSampleBtn" onclick="generateResultSample()">Сгенерировать образец</button></div></div>`;
+  }
+
+  async function generateResultSample(){
+    const btn = document.getElementById('wrGenSampleBtn');
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + ' Пишу…';
+    try {
+      const data = await wrFetchJson('/api/writing/sample', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ task_type: writingCheck.task_type, topic: writingCheck.topic || writingCheck.essay.slice(0, 600), target_band: '8.5-9.0' }),
+      });
+      writingCheck.result.sample_essay = data.text;
+      renderWritingSample();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Ошибка: ' + e.message;
+    }
+  }
+
+  function renderWritingChat(){
+    const list = document.getElementById('wrChatList');
+    const turns = writingCheck.chat || [];
+    list.innerHTML = turns.length
+      ? turns.map(t => `<div class="chatBubble ${t.role === 'user' ? 'student' : 'teacher'}">${escapeHtml(t.text)}</div>`).join('')
+      : '<div class="hint" style="text-align:center;">Задай вопрос про любую ошибку, балл или попроси переписать абзац.</div>';
+  }
+
+  async function sendWritingChat(preset){
+    const input = document.getElementById('wrChatInput');
+    const message = (preset || input.value).trim();
+    const btn = document.getElementById('wrChatSend');
+    if (!message || btn.disabled) return;
+    setWritingPane('chat');
+    input.value = '';
+    writingCheck.chat = [...(writingCheck.chat || []), { role: 'user', text: message }];
+    renderWritingChat();
+    const list = document.getElementById('wrChatList');
+    list.insertAdjacentHTML('beforeend', `<div class="chatBubble teacher" id="wrChatTyping">${SPINNER_ICON} Думаю…</div>`);
+    btn.disabled = true;
+    try {
+      const data = await wrFetchJson(`/api/writing/${writingCheck.id}/chat`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message }),
+      });
+      writingCheck.chat.push({ role: 'ai', text: data.text });
+    } catch (e) {
+      writingCheck.chat.pop();
+      input.value = message;
+      alert('Не удалось отправить: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      renderWritingChat();
+      list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }
+
+  async function sendWritingDocx(){
+    const btn = document.getElementById('wrDocxBtn');
+    btn.disabled = true;
+    btn.innerHTML = SPINNER_ICON + ' Готовлю отчёт…';
+    try {
+      await wrFetchJson(`/api/writing/${writingCheck.id}/docx`, { method: 'POST', headers: authHeaders() });
+      btn.textContent = 'Отправлено в чат с ботом ✓';
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Не удалось: ' + e.message;
+    }
+  }
+
+  async function loadWritingHistory(){
+    const box = document.getElementById('wrHistoryList');
+    try {
+      const items = await wrFetchJson('/api/writing/history', { headers: authHeaders() });
+      box.innerHTML = items.length ? items.map(it => `
+        <button class="wrHistItem" onclick="openWritingCheck(${it.id})">
+          <span class="wrHistBand">${it.overall_band.toFixed(1)}</span>
+          <span style="min-width:0;"><span class="wrHistTitle">${escapeHtml(it.topic || 'Без темы')}</span>
+          <span class="wrHistMeta">${WRITING_TASKS[it.task_type]?.tag || ''} · ${it.word_count} слов · ${new Date(it.created_at + 'Z').toLocaleDateString('ru-RU')}</span></span>
+        </button>`).join('') : '<div class="hint">Здесь появятся твои проверенные эссе.</div>';
+    } catch (e) {
+      box.innerHTML = `<div class="hint">${escapeHtml(e.message)}</div>`;
+    }
   }
 </script>
 </body>

@@ -232,3 +232,78 @@ class AdminCoursePatch(BaseModel):
     price_kzt: int | None = None
     order: int | None = None
     modules: list[AdminModuleIn] | None = None  # если задано — полностью заменяет список модулей
+
+
+class WritingIssueOut(BaseModel):
+    start: int
+    end: int
+    original: str
+    suggestion: str
+    category: str
+    explanation: str
+
+
+class WritingCriterionOut(BaseModel):
+    band: float
+    comment: str
+    reasoning: str = ""
+
+
+class WritingResultOut(BaseModel):
+    assessable: bool
+    overall_band: float
+    word_count: int
+    criteria: dict[str, WritingCriterionOut]
+    summary: str
+    strengths: list[str]
+    improvements: list[str]
+    issues: list[WritingIssueOut]
+    teacher_comment: str = ""
+    sample_essay: str | None = None
+
+
+class WritingChatTurn(BaseModel):
+    role: str  # user / ai
+    text: str
+
+
+class WritingCheckOut(BaseModel):
+    id: int
+    task_type: str
+    mode: str
+    language: str
+    target_band: str
+    topic: str
+    essay: str
+    created_at: datetime
+    result: WritingResultOut
+    chat: list[WritingChatTurn] = []
+
+
+class WritingHistoryItem(BaseModel):
+    id: int
+    task_type: str
+    topic: str
+    overall_band: float
+    word_count: int
+    created_at: datetime
+
+
+class WritingSampleRequest(BaseModel):
+    task_type: str
+    topic: str
+    target_band: str = "7.0-8.0"
+
+
+class WritingIdeasRequest(BaseModel):
+    task_type: str
+    topic: str
+    language: str = "ru"
+
+
+class WritingTextOut(BaseModel):
+    text: str
+
+
+class WritingChatRequest(BaseModel):
+    message: str

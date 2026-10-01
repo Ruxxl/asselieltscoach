@@ -15,6 +15,9 @@ services:
         sync: false
       - key: GEMINI_MODEL
         value: gemini-3.5-flash-lite
+      # Writing Checker: модель мощнее для разбора эссе (откат на GEMINI_MODEL при исчерпании квоты).
+      - key: WRITING_GEMINI_MODEL
+        value: gemini-3.5-flash
       - key: TEACHER_CHAT_ID
         value: "998292747"
       - key: DATABASE_URL

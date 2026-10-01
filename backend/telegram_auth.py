@@ -10,10 +10,12 @@ import hmac
 import json
 from urllib.parse import parse_qsl
 
-from backend.config import BOT_TOKEN
+from backend.config import BOT_TOKEN, DEV_USER_ID
 
 
 def parse_init_data(init_data: str | None) -> dict | None:
+    if not init_data and DEV_USER_ID:
+        return {"id": DEV_USER_ID, "first_name": "Dev"}
     if not init_data or not BOT_TOKEN:
         return None
 
