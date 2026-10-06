@@ -727,7 +727,7 @@
       <span><span class="wrTaskT">Калькулятор баллов IELTS</span><span class="wrTaskD" style="display:block">Переведи правильные ответы в бэнды и посчитай Overall</span></span>
       <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
     </button>
-    <button class="toolCard wrTeal" onclick="openGrammar()">
+    <button class="toolCard wrTeal" id="grammarToolCard" onclick="openGrammar()">
       <span class="wrTaskIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 3 10 3-10"/><path d="M5 13h4"/><path d="m13 13 3 3 5-6"/></svg></span>
       <span><span class="wrTaskT">Проверка грамматики</span><span class="wrTaskD" style="display:block">Орфография, пунктуация и стиль текста на любом языке</span></span>
       <span class="wrTaskGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
@@ -1318,10 +1318,14 @@
   // экраны уводит на главную. Код и API (backend/routers/writing.py) на месте — чтобы вернуть, поставить true.
   const WRITING_ENABLED = false;
   const WRITING_SCREENS = new Set(['writing', 'writingEditor', 'writingResult']);
+  // Grammar Checker тоже временно скрыт: карточки в «Инструментах» нет, переход на экран уводит на главную.
+  // Код и API (backend/routers/grammar.py) на месте — чтобы вернуть, поставить true.
+  const GRAMMAR_ENABLED = false;
   if (!WRITING_ENABLED) {
     document.getElementById('writingTabBtn').style.display = 'none';
     document.getElementById('calcWritingLink').style.display = 'none';
   }
+  if (!GRAMMAR_ENABLED) document.getElementById('grammarToolCard').style.display = 'none';
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
@@ -1343,6 +1347,7 @@
 
   function go(id){
     if (!WRITING_ENABLED && WRITING_SCREENS.has(id)) id = 'home';
+    if (!GRAMMAR_ENABLED && id === 'grammar') id = 'home';
     const prevScreen = document.querySelector('.screen.active')?.dataset.screen;
     if (prevScreen === 'speakingSession' && id !== 'speakingSession') abandonSpeakingCall();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
