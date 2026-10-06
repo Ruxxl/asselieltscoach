@@ -1032,7 +1032,7 @@
         <div><label class="wrFieldLbl" for="calcTask2">Task 2</label><select class="wrSelect" id="calcTask2" onchange="setScoreCalcBand('task2', this.value)"></select></div>
       </div>
       <div class="calcHint" id="calcWritingHint"></div>
-      <button class="calcLink" onclick="go('writing')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>Не знаешь балл? Проверь эссе с ИИ</button>
+      <button class="calcLink" id="calcWritingLink" onclick="go('writing')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8Z"/></svg>Не знаешь балл? Проверь эссе с ИИ</button>
     </div>
 
     <div class="calcCard">
@@ -1271,7 +1271,7 @@
   <button class="tabbtn" data-tab="speaking" onclick="go('speaking')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg></span><span class="tablabel">Speaking</span>
   </button>
-  <button class="tabbtn" data-tab="writing" onclick="go('writing')">
+  <button class="tabbtn" id="writingTabBtn" data-tab="writing" onclick="go('writing')">
     <span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span><span class="tablabel">Writing</span>
   </button>
   <button class="tabbtn" data-tab="profile" onclick="go('profile')">
@@ -1314,6 +1314,14 @@
   const VOLUME_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
 
   const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'admin', 'speaking', 'writing']);
+  // Writing Checker временно скрыт от учеников: вкладка и ссылки на него не показываются, а переход на его
+  // экраны уводит на главную. Код и API (backend/routers/writing.py) на месте — чтобы вернуть, поставить true.
+  const WRITING_ENABLED = false;
+  const WRITING_SCREENS = new Set(['writing', 'writingEditor', 'writingResult']);
+  if (!WRITING_ENABLED) {
+    document.getElementById('writingTabBtn').style.display = 'none';
+    document.getElementById('calcWritingLink').style.display = 'none';
+  }
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
@@ -1334,6 +1342,7 @@
   });
 
   function go(id){
+    if (!WRITING_ENABLED && WRITING_SCREENS.has(id)) id = 'home';
     const prevScreen = document.querySelector('.screen.active')?.dataset.screen;
     if (prevScreen === 'speakingSession' && id !== 'speakingSession') abandonSpeakingCall();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
