@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "assel-backend",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": ["DISABLE_BOT_POLLING=1", "DEV_USER_ID=1", "/Users/ruslanisin/Documents/EchoEnglishBot/.venv/bin/python", "-m", "uvicorn", "backend.main:app", "--reload", "--port", "8000", "--app-dir", "/Users/ruslanisin/Documents/EchoEnglishBot"],
+      "port": 8000
+    }
+  ]
+}
