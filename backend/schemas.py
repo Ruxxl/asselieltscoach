@@ -148,8 +148,13 @@ class SpeakingHelpRequest(BaseModel):
     question: str
 
 
+class SpeakingVocabItem(BaseModel):
+    phrase: str
+    translation: str
+
+
 class SpeakingHelpResult(BaseModel):
-    hint: str
+    vocabulary: list[SpeakingVocabItem]
     sample: str
 
 
@@ -158,7 +163,9 @@ class SpeakingSessionOut(BaseModel):
     status: str
     part: str
     corrected_answer: str | None = None
-    improvement_comments: list[str] | None = None
+    # Строки — старые сессии; новые — {"original", "better", "why"}.
+    improvement_comments: list[str | dict[str, str]] | None = None
+    criteria_feedback: dict[str, str] | None = None
     fluency_coherence: float | None = None
     lexical_resource: float | None = None
     grammar_accuracy: float | None = None

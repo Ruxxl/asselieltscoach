@@ -381,6 +381,16 @@
   .spkChip.on{border-color:var(--accent-strong); color:var(--accent); background:var(--accent-tint);}
   .spkChip svg{width:13px; height:13px;}
   .spkHelp{margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--surface-2); font:500 13px/1.55 var(--font-sans); color:var(--text-secondary); white-space:pre-wrap;}
+  .spkCritIntro{color:var(--text); margin-bottom:4px;}
+  .spkTip{margin-bottom:8px;}
+  .spkTip > b{color:var(--green); font-weight:600;}
+  .spkTipWhy{color:var(--text-secondary); font-size:12.5px;}
+  .spkCrit{margin-top:10px;}
+  .spkCrit:first-of-type{margin-top:2px;}
+  .spkCritHead{font:700 13px var(--font-sans); margin-bottom:2px;}
+  .spkVocab{margin:0; padding-left:18px; white-space:normal;}
+  .spkVocab li{margin:3px 0;}
+  .spkVocabEn{font-weight:600; color:var(--text);}
   .spkHelp b{display:block; font:600 10.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;}
   .spkAnswer{margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font:500 13px/1.5 var(--font-sans); color:var(--text-secondary);}
   .spkFix{margin-top:8px; padding:10px 12px; border-radius:10px; background:var(--green-tint); border:1px solid var(--green-border); font:500 13px/1.5 var(--font-sans); color:var(--text);}
@@ -2209,7 +2219,10 @@
       if (q.open) {
         help = q.loading || !q.help
           ? '<div class="spkHelp">Готовлю…</div>'
-          : `<div class="spkHelp"><b>${q.open === 'hint' ? 'Подсказка' : 'Пример ответа'}</b>${escapeHtml(q.open === 'hint' ? q.help.hint : q.help.sample)}</div>`;
+          : q.open === 'hint'
+            ? `<div class="spkHelp"><b>Useful vocabulary</b><ul class="spkVocab">${(q.help.vocabulary || []).map(v =>
+                `<li><span class="spkVocabEn">${escapeHtml(v.phrase)}</span> — ${escapeHtml(v.translation)}</li>`).join('')}</ul></div>`
+            : `<div class="spkHelp"><b>Пример ответа</b>${escapeHtml(q.help.sample)}</div>`;
       }
       card.innerHTML = `
         <div class="spkQHead"><span class="spkQNum">Q${i + 1}</span>Экзаменатор${CHEVRON_ICON}</div>
@@ -2451,10 +2464,10 @@
   function renderSpeakingReport(data){
     const reportEl = document.getElementById('speakingReportBody');
     const bands = [
-      ['Fluency & Coherence', data.fluency_coherence, 'var(--accent-strong)'],
-      ['Lexical Resource', data.lexical_resource, 'var(--blue)'],
-      ['Grammar Accuracy', data.grammar_accuracy, 'var(--green)'],
-      ['Pronunciation', data.pronunciation, 'var(--red)'],
+      ['Fluency & Coherence', data.fluency_coherence, 'var(--accent-strong)', 'fluency_coherence'],
+      ['Lexical Resource', data.lexical_resource, 'var(--blue)', 'lexical_resource'],
+      ['Grammar Accuracy', data.grammar_accuracy, 'var(--green)', 'grammar_accuracy'],
+      ['Pronunciation', data.pronunciation, 'var(--red)', 'pronunciation'],
     ];
     const tips = data.improvement_comments || [];
     if (!data.overall_band) {
@@ -2462,6 +2475,12 @@
       reportEl.innerHTML = `<div class="transcript"><b>Оценки нет</b>${escapeHtml(data.summary_feedback || 'Маловато сказано, чтобы оценить — попробуй ещё раз и отвечай подробнее.')}</div>`;
       return;
     }
+    // Разбор по каждому критерию на английском; у старых сессий его нет — показываем общий отзыв.
+    const criteria = data.criteria_feedback || {};
+    const feedbackHtml = bands.some(b => criteria[b[3]])
+      ? `<div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${data.summary_feedback ? `<div class="spkCritIntro">${escapeHtml(data.summary_feedback)}</div>` : ''}${bands.filter(b => criteria[b[3]]).map(([label, val, color, key]) => `
+          <div class="spkCrit"><div class="spkCritHead" style="color:${color};">${label} · ${(val || 0).toFixed(1)}</div>${escapeHtml(criteria[key])}</div>`).join('')}</div>`
+      : `<div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${escapeHtml(data.summary_feedback || '')}</div>`;
     reportEl.innerHTML = `
       <div class="center-col" style="flex:none; margin-bottom:14px;">
         <div style="font:600 13px var(--font-sans); color:var(--text-secondary);">Твой Band</div>
@@ -2472,10 +2491,12 @@
           <div class="skillrow"><div class="sl">${label}</div><div class="sb"><i style="width:${Math.min(100, Math.round((val || 0) / 9 * 100))}%; background:${color};"></i></div><div class="sv">${(val || 0).toFixed(1)}</div></div>
         `).join('')}
       </div>
-      <div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${escapeHtml(data.summary_feedback || '')}</div>
+      ${feedbackHtml}
       ${tips.length ? `
-        <div class="sectiontitle" style="margin-top:16px;">Советы</div>
-        <ul style="margin:0 0 12px; padding-left:20px; font:500 13.5px/1.6 var(--font-sans); color:var(--text);">${tips.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>` : ''}
+        <div class="sectiontitle" style="margin-top:16px;">${typeof tips[0] === 'string' ? 'Советы' : 'How to improve your answer'}</div>
+        <ul style="margin:0 0 12px; padding-left:20px; font:500 13.5px/1.6 var(--font-sans); color:var(--text);">${tips.map(c => typeof c === 'string'
+          ? `<li>${escapeHtml(c)}</li>`
+          : `<li class="spkTip">“${escapeHtml(c.original)}” → <b>“${escapeHtml(c.better)}”</b>${c.why ? `<div class="spkTipWhy">${escapeHtml(c.why)}</div>` : ''}</li>`).join('')}</ul>` : ''}
       ${data.corrected_answer ? `<div class="transcript"><b>Как мог бы звучать твой ответ</b>${escapeHtml(data.corrected_answer)}</div>` : ''}
     `;
   }

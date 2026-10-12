@@ -48,6 +48,8 @@ def _session_out(speaking_session: SpeakingSession) -> SpeakingSessionOut:
     out = SpeakingSessionOut.model_validate(speaking_session)
     if speaking_session.improvement_comments_json:
         out.improvement_comments = json.loads(speaking_session.improvement_comments_json)
+    if speaking_session.criteria_feedback_json:
+        out.criteria_feedback = json.loads(speaking_session.criteria_feedback_json)
     return out
 
 
@@ -199,6 +201,7 @@ async def finish_session(
     speaking_session.overall_band = scores["overall_band"]
     speaking_session.summary_feedback = scores["summary_feedback"]
     speaking_session.improvement_comments_json = json.dumps(scores["tips"], ensure_ascii=False)
+    speaking_session.criteria_feedback_json = json.dumps(scores["criteria_feedback"], ensure_ascii=False)
     if corrected:
         speaking_session.corrected_answer = corrected["corrected_answer"]
     speaking_session.finished_at = datetime.utcnow()

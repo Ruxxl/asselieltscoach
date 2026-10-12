@@ -177,6 +177,8 @@ class SpeakingSession(Base):
     topic_question: Mapped[str | None] = mapped_column(Text, nullable=True)
     corrected_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     improvement_comments_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Объяснение каждого из 4 баллов на английском: {"fluency_coherence": "...", ...}
+    criteria_feedback_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     fluency_coherence: Mapped[float | None] = mapped_column(Float, nullable=True)
     lexical_resource: Mapped[float | None] = mapped_column(Float, nullable=True)
     grammar_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
