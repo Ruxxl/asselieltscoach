@@ -21,7 +21,8 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: 'bad json' });
   }
-  if (!SECRET || SECRET === 'ВПИШИТЕ_СЮДА_ПАРОЛЬ' || req.secret !== SECRET) {
+  // Заглушка собрана из частей, чтобы «Заменить всё» при вписывании пароля не задело и эту проверку.
+  if (!SECRET || SECRET === 'ВПИШИТЕ_' + 'СЮДА_ПАРОЛЬ' || req.secret !== SECRET) {
     return json_({ ok: false, error: 'forbidden' });
   }
 
