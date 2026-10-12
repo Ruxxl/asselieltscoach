@@ -83,14 +83,10 @@
 
   .soonTag{font:600 10px var(--font-sans); letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2); padding:3px 8px; border-radius:999px;}
 
-  .checkoutTimer{display:flex; align-items:center; justify-content:center; gap:8px; font:600 13px var(--font-sans); color:var(--text-secondary); margin-bottom:16px;}
-  .checkoutTimerChip{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 12px; font:600 13px var(--font-sans); color:var(--text); font-variant-numeric:tabular-nums;}
   .checkoutAmount{text-align:center; font:600 40px var(--font-sans); color:var(--text); margin-bottom:24px;}
   .checkoutAmount .cur{font-size:24px; color:var(--text-muted); margin-left:4px;}
   .checkoutCard{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:var(--shadow-card); margin-bottom:10px;}
   .checkoutCard .field:last-child{margin-bottom:0;}
-  .checkoutRow{display:flex; gap:10px;}
-  .checkoutRow .field{flex:1;}
   .checkoutHint{font:500 11.5px/1.5 var(--font-sans); color:var(--text-muted); text-align:center;}
 
   .newsCard{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; box-shadow:var(--shadow-card);}
@@ -752,28 +748,32 @@
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="courseBuyBtn" onclick="onCourseBuyBtnClick()">ПРОДОЛЖИТЬ УРОК</button></div>
   </section>
 
-  <!-- 9b: checkout — визуальная имитация оплаты картой. Поля карты декоративные,
-       никуда не отправляются; реальный эквайринг ещё не подключен (см. Payment
-       в backend/models.py) — после "оплаты" срабатывает тот же мгновенный
-       мок-эндпоинт покупки, что и раньше. -->
+  <!-- 9b: checkout — подтверждение перед переходом на платёжную страницу Halyk Bank. Карта
+       вводится только у банка (backend/routers/payments.py), сюда данные карты не попадают. -->
   <section class="screen" data-screen="checkout">
     <div class="topbar"><button class="xbtn" onclick="cancelCheckout()"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
-    <div class="checkoutTimer">Оплатите в течение <span class="checkoutTimerChip" id="checkoutTimer">20:00</span></div>
     <div class="checkoutAmount"><span id="checkoutAmount">0</span><span class="cur">₸</span></div>
-
-    <div class="sectiontitle">Оплата картой <span class="soonTag" style="margin-left:4px;">демо</span></div>
+    <div class="sectiontitle">Оплата курса</div>
     <div class="checkoutCard">
-      <div class="field"><label>Номер карты</label><input class="input" id="ccNumber" placeholder="0000 0000 0000 0000" inputmode="numeric" maxlength="19" oninput="formatCardNumber(this)"></div>
-      <div class="checkoutRow">
-        <div class="field"><label>Срок действия</label><input class="input" id="ccExpiry" placeholder="ММ/ГГ" inputmode="numeric" maxlength="5" oninput="formatCardExpiry(this)"></div>
-        <div class="field"><label>CVV</label><input class="input" id="ccCvv" type="password" placeholder="•••" inputmode="numeric" maxlength="3"></div>
-      </div>
+      <div style="font:600 15px var(--font-sans); margin-bottom:6px;" id="checkoutCourseTitle"></div>
+      <div class="hint">Оплата картой на защищённой странице Halyk Bank. Данные карты вводятся у банка — приложение их не видит.</div>
     </div>
-    <div class="checkoutHint">Демо-экран интерфейса оплаты — данные карты никуда не отправляются, реальное списание не происходит.</div>
+    <div class="checkoutHint">После оплаты вы вернётесь в приложение, и курс откроется автоматически.</div>
 
     <div class="aiError" id="checkoutError" style="display:none; margin-top:10px;"></div>
     <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="checkoutPayBtn" onclick="completePurchase()">Оплатить <span id="checkoutPayAmount"></span></button></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="checkoutPayBtn" onclick="completePurchase()">Перейти к оплате · <span id="checkoutPayAmount"></span></button></div>
+  </section>
+
+  <!-- 9c: возврат со страницы банка (?payment=<id>) — ждём подтверждения оплаты от сервера -->
+  <section class="screen" data-screen="paymentReturn">
+    <div class="spacer"></div>
+    <div style="text-align:center;">
+      <div style="font:600 20px var(--font-sans); margin-bottom:8px;" id="paymentReturnTitle">Проверяем оплату…</div>
+      <div class="hint" id="paymentReturnText">Это займёт несколько секунд.</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" id="paymentReturnBtn" style="display:none;" onclick="go('home')">К КУРСАМ</button></div>
   </section>
 
   <!-- 10b: lesson reader — реальный контент урока с backend (сейчас: A1 Vocabulary/Grammar) -->
@@ -1599,47 +1599,41 @@
     if (nextModule) openLessonReader(nextModule.lessons[0].id);
   }
 
-  // ---- Экран оплаты — визуальная демка (см. комментарий у <section data-screen="checkout">) ----
-  let checkoutTimerInterval = null;
-  let checkoutSecondsLeft = 20 * 60;
-
-  function updateCheckoutTimer(){
-    const m = Math.floor(checkoutSecondsLeft / 60);
-    const s = checkoutSecondsLeft % 60;
-    document.getElementById('checkoutTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
-  }
-
+  // ---- Оплата курса: Halyk ePay, редирект на платёжную страницу банка ----
   function openCheckout(course){
     const amount = course.price_kzt.toLocaleString('ru-RU');
     document.getElementById('checkoutAmount').textContent = amount;
     document.getElementById('checkoutPayAmount').textContent = amount + ' ₸';
+    document.getElementById('checkoutCourseTitle').textContent = course.title;
     document.getElementById('checkoutError').style.display = 'none';
-    document.getElementById('ccNumber').value = '';
-    document.getElementById('ccExpiry').value = '';
-    document.getElementById('ccCvv').value = '';
-
-    checkoutSecondsLeft = 20 * 60;
-    updateCheckoutTimer();
-    if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
-    checkoutTimerInterval = setInterval(() => {
-      checkoutSecondsLeft--;
-      updateCheckoutTimer();
-      if (checkoutSecondsLeft <= 0) clearInterval(checkoutTimerInterval);
-    }, 1000);
-
     go('checkout');
   }
 
   function cancelCheckout(){
-    if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
     go('course');
   }
 
-  function formatCardNumber(el){
-    el.value = el.value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+  function markCourseOwned(code){
+    const cached = coursesCache.find(item => item.code === code);
+    if (cached) cached.owned = true;
+    if (currentCourse && currentCourse.code === code) currentCourse.owned = true;
+    renderCourseList();
+    renderMyCourses();
+    if (currentCourse) {
+      renderCourseModules(currentCourse);
+      updateCourseBuyBtn(currentCourse);
+    }
   }
-  function formatCardExpiry(el){
-    el.value = el.value.replace(/\D/g, '').slice(0, 4).replace(/(\d{2})(\d)/, '$1/$2');
+
+  function loadScriptOnce(src){
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const el = document.createElement('script');
+      el.src = src;
+      el.onload = resolve;
+      el.onerror = () => reject(new Error('Не удалось загрузить платёжную форму банка'));
+      document.head.appendChild(el);
+    });
   }
 
   async function completePurchase(){
@@ -1647,30 +1641,63 @@
     const errEl = document.getElementById('checkoutError');
     errEl.style.display = 'none';
     const btn = document.getElementById('checkoutPayBtn');
-    const prevText = btn.textContent;
+    const prevHtml = btn.innerHTML;
     btn.setAttribute('disabled', '');
-    btn.textContent = 'Обрабатываем…';
+    btn.textContent = 'Открываем оплату…';
     try {
-      await new Promise(r => setTimeout(r, 1100)); // имитация обработки платежа — реального эквайринга ещё нет
-      const res = await fetch(`/api/courses/${currentCourse.code}/purchase`, { method: 'POST', headers: authHeaders() });
+      const res = await fetch(`/api/payments/courses/${currentCourse.code}`, { method: 'POST', headers: authHeaders() });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Не удалось купить курс');
-      currentCourse.owned = true;
-      const cached = coursesCache.find(item => item.code === currentCourse.code);
-      if (cached) cached.owned = true;
-      renderCourseList();
-      renderMyCourses();
-      renderCourseModules(currentCourse);
-      updateCourseBuyBtn(currentCourse);
-      if (checkoutTimerInterval) clearInterval(checkoutTimerInterval);
-      go('course');
+      if (!res.ok) throw new Error(data.detail || 'Не удалось начать оплату');
+      if (data.owned) {
+        markCourseOwned(currentCourse.code);
+        go('course');
+        btn.innerHTML = prevHtml;
+        btn.removeAttribute('disabled');
+        return;
+      }
+      await loadScriptOnce(data.js_url);
+      // halyk.pay уводит эту же страницу на форму банка; назад вернёт backLink с ?payment=<id>.
+      window.halyk.pay(data.payment);
     } catch (e) {
       errEl.textContent = e.message;
       errEl.style.display = 'block';
-      btn.textContent = prevText;
-    } finally {
+      btn.innerHTML = prevHtml;
       btn.removeAttribute('disabled');
     }
+  }
+
+  async function handlePaymentReturn(paymentId){
+    // Убираем ?payment из адреса, чтобы перезагрузка мини-аппа не открывала этот экран снова.
+    history.replaceState(null, '', location.pathname + location.hash);
+    go('paymentReturn');
+    const titleEl = document.getElementById('paymentReturnTitle');
+    const textEl = document.getElementById('paymentReturnText');
+    const btn = document.getElementById('paymentReturnBtn');
+    // Банк подтверждает оплату не мгновенно — опрашиваем сервер ~40 секунд.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      let data = null;
+      try {
+        const res = await fetch('/api/payments/' + paymentId, { headers: authHeaders() });
+        if (res.ok) data = await res.json();
+      } catch (e) {}
+      if (data && data.status === 'paid') {
+        await loadCourses();
+        const course = coursesCache.find(item => item.code === data.course_code);
+        if (course) { openCourse(course); return; }
+        go('home');
+        return;
+      }
+      if (data && data.status === 'failed') {
+        titleEl.textContent = 'Оплата не прошла';
+        textEl.textContent = (data.failure_reason ? data.failure_reason + '. ' : '') + 'Деньги не списаны — попробуйте ещё раз.';
+        btn.style.display = '';
+        return;
+      }
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    titleEl.textContent = 'Оплата обрабатывается';
+    textEl.textContent = 'Банк ещё не подтвердил платёж. Если деньги списались, курс откроется сам в течение нескольких минут.';
+    btn.style.display = '';
   }
 
   // ---- Читалка реального урока + его тест (по образцу study.ru) ----
@@ -1785,6 +1812,8 @@
   }
 
   loadCourses();
+  const returnedPaymentId = new URLSearchParams(location.search).get('payment');
+  if (returnedPaymentId) handlePaymentReturn(returnedPaymentId);
 
   // ---- Голосовая проверка (mic + Web Speech live-caption + реальная оценка через Gemini) ----
   // Фабрика оставлена переиспользуемой: сейчас её использует только 3-й вопрос быстрого

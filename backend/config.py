@@ -38,3 +38,14 @@ WRITING_DAILY_LIMIT = int(os.environ.get("WRITING_DAILY_LIMIT", "20"))
 WRITING_GEMINI_MODEL = os.environ.get("WRITING_GEMINI_MODEL", "gemini-3.5-flash")
 # Grammar Checker (backend/routers/grammar.py): проверок в сутки на ученика; считается в памяти процесса.
 GRAMMAR_DAILY_LIMIT = int(os.environ.get("GRAMMAR_DAILY_LIMIT", "40"))
+
+# Оплата курсов через Halyk ePay — платёжная страница банка (redirect), см. backend/services/halyk.py.
+# Карта вводится только на стороне Halyk, поэтому PCI DSS не нужен. Пока не заданы все три
+# значения, покупка курса работает как раньше — мгновенно, без списания (пилот).
+HALYK_CLIENT_ID = os.environ.get("HALYK_CLIENT_ID", "")
+HALYK_CLIENT_SECRET = os.environ.get("HALYK_CLIENT_SECRET", "")
+HALYK_TERMINAL_ID = os.environ.get("HALYK_TERMINAL_ID", "")
+# "1" — тестовый контур банка (test-epay...), "0" — боевой. По умолчанию тест, чтобы боевые
+# ключи случайно не ушли в тестовые адреса и наоборот — переключать явно при запуске продаж.
+HALYK_TEST_MODE = os.environ.get("HALYK_TEST_MODE", "1") == "1"
+HALYK_ENABLED = bool(HALYK_CLIENT_ID and HALYK_CLIENT_SECRET and HALYK_TERMINAL_ID)

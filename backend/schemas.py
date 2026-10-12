@@ -171,8 +171,20 @@ class SpeakingSessionOut(BaseModel):
         from_attributes = True
 
 
-class PurchaseResult(BaseModel):
-    owned: bool
+class PaymentStartOut(BaseModel):
+    """owned=True — курс уже доступен (куплен раньше или Halyk ещё не настроен, пилот).
+    Иначе фронтенд подключает js_url и вызывает halyk.pay(payment)."""
+
+    owned: bool = False
+    payment_id: int | None = None
+    js_url: str | None = None
+    payment: dict | None = None
+
+
+class PaymentStatusOut(BaseModel):
+    status: str  # pending / paid / failed
+    course_code: str
+    failure_reason: str | None = None
 
 
 class NewsPostOut(BaseModel):
