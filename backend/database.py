@@ -29,6 +29,7 @@ _SPEAKING_SESSION_NEW_COLUMNS = {
     "topic_question": "TEXT",
     "corrected_answer": "TEXT",
     "improvement_comments_json": "TEXT",
+    "criteria_feedback_json": "TEXT",
 }
 
 

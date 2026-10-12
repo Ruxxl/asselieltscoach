@@ -184,7 +184,7 @@ Transcript (each line is one turn, "Student" or "Examiner"):
 {transcript_text}
 
 If the transcript is empty or far too short to judge (e.g. the student barely said anything), do NOT invent \
-a score — return 0 for every criterion and overall_band, and an honest summary_feedback (in Russian) \
+a score — return 0 for every criterion and overall_band, and an honest summary_feedback (in English) \
 explaining there wasn't enough speech to assess, and inviting the student to try again and speak more.
 
 Otherwise, score the STUDENT's speech only (ignore the examiner's lines) on the 4 official IELTS Speaking \
@@ -197,15 +197,36 @@ from indirect signs (self-corrections, filler words, broken sentences as transcr
 acoustic pronunciation; do not overstate confidence in this one criterion.
 
 overall_band = average of the 4 criteria, rounded to the nearest 0.5 (standard IELTS rounding).
-summary_feedback: 3-5 sentences in Russian, friendly and constructive — what went well and what to improve, \
-with concrete examples from the transcript where possible.
-tips: 3-5 concrete, actionable pieces of advice in Russian for raising the band next time, each tied to \
-something the student actually said (quote it and give a better English variant).
+
+All feedback below is in ENGLISH — clear, natural English a B1-B2 learner can follow, warm but honest, \
+written directly to the student ("you"), like a teacher's written feedback.
+summary_feedback: 2-3 sentences — an overall impression (e.g. "Your answer is quite strong! You express your \
+ideas clearly and use some good vocabulary.") and the estimated band.
+criteria_feedback: for EACH of the 4 criteria, 1-3 sentences explaining the band: name one concrete strength \
+and one concrete weakness, quoting the student's exact words in double quotes. Example for lexical_resource: \
+'Good expressions include "meaningful profession" and "creating my own online courses." However, "different \
+types of people" and "different nationalities" overlap in meaning.' For pronunciation, mention briefly that \
+it is estimated from the transcript only.
+tips: 3-5 of the most useful corrections, each fixing something the student actually said: "original" = their \
+exact words, "better" = a more natural / higher-band version, "why" = one short sentence explaining the \
+improvement (e.g. "This fixes the word order and sounds more natural.").
 
 Respond STRICTLY as JSON, no markdown wrapper:
 {{"fluency_coherence": 0-9, "lexical_resource": 0-9, "grammar_accuracy": 0-9, "pronunciation": 0-9, \
-"overall_band": 0-9, "summary_feedback": "...", "tips": ["...", "..."]}}
+"overall_band": 0-9, "criteria_feedback": {{"fluency_coherence": "...", "lexical_resource": "...", \
+"grammar_accuracy": "...", "pronunciation": "..."}}, "summary_feedback": "...", \
+"tips": [{{"original": "...", "better": "...", "why": "..."}}]}}
 """
+
+
+_CRITERIA = ("fluency_coherence", "lexical_resource", "grammar_accuracy", "pronunciation")
+
+
+def _tip(raw) -> dict | str:
+    """Исправление {"original", "better", "why"}; строку (если модель ответила по-старому) оставляем как есть."""
+    if isinstance(raw, dict):
+        return {k: str(raw.get(k, "")).strip() for k in ("original", "better", "why")}
+    return str(raw)
 
 
 async def score_session(history: list[dict], part: str) -> dict:
@@ -226,8 +247,13 @@ async def score_session(history: list[dict], part: str) -> dict:
         "grammar_accuracy": float(data.get("grammar_accuracy", 0)),
         "pronunciation": float(data.get("pronunciation", 0)),
         "overall_band": float(data.get("overall_band", 0)),
+        "criteria_feedback": {
+            key: str(text).strip()
+            for key, text in (data.get("criteria_feedback") or {}).items()
+            if key in _CRITERIA and text
+        },
         "summary_feedback": data.get("summary_feedback", ""),
-        "tips": [str(t) for t in data.get("tips", []) if t],
+        "tips": [_tip(t) for t in data.get("tips", []) if t],
     }
 
 
@@ -272,17 +298,18 @@ _HELP_PROMPT_TEMPLATE = """A student is practicing IELTS Speaking {part_desc} an
 "{question}"
 
 Give them:
-1. hint: 2-3 short ideas in Russian for what they could talk about, each with 1-2 useful English words or \
-phrases in brackets. One line per idea, no numbering.
-2. sample: a natural sample answer in English at about IELTS band 7 — {sample_length}, spoken style, first person.
+1. sample: a natural sample answer in English at about IELTS band 7 — {sample_length}, spoken style, first person.
+2. vocabulary: 5-6 useful collocations or phrases (band 7+, natural, not single basic words) that are used in \
+YOUR sample answer, in their dictionary form (e.g. "leave something until the last minute"), each with an \
+accurate Russian translation.
 
 Respond STRICTLY as JSON, no markdown:
-{{"hint": "...", "sample": "..."}}
+{{"sample": "...", "vocabulary": [{{"phrase": "...", "translation": "..."}}]}}
 """
 
 
 async def build_question_help(part: str, question: str) -> dict:
-    """Подсказка (идеи на русском) и пример ответа на конкретный вопрос экзаменатора."""
+    """Подсказка (5-6 словосочетаний из примера с переводом) и пример ответа на конкретный вопрос экзаменатора."""
     model = _model()
     prompt = _HELP_PROMPT_TEMPLATE.format(
         part_desc=_PART_LABELS.get(part, part),
@@ -295,4 +322,9 @@ async def build_question_help(part: str, question: str) -> dict:
         request_options={"timeout": 25},
     )
     data = json.loads(response.text.strip())
-    return {"hint": data.get("hint", ""), "sample": data.get("sample", "")}
+    vocabulary = [
+        {"phrase": str(v.get("phrase", "")).strip(), "translation": str(v.get("translation", "")).strip()}
+        for v in data.get("vocabulary") or []
+        if isinstance(v, dict) and v.get("phrase")
+    ]
+    return {"vocabulary": vocabulary[:6], "sample": data.get("sample", "")}
