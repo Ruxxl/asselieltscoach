@@ -34,3 +34,8 @@ services:
         sync: false
       - key: HALYK_TEST_MODE
         value: "1"
+      # Google Таблица как постоянная копия покупок и прогресса (sheets/apps_script.gs).
+      - key: SHEETS_WEBHOOK_URL
+        sync: false
+      - key: SHEETS_SECRET
+        sync: false
