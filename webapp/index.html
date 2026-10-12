@@ -1216,16 +1216,28 @@
     <div class="sectiontitle">Курсы</div>
     <div id="adminCourseList"></div>
     <button class="btn btn-ghost btn-wide" onclick="openAdminCourseForm(null)" style="margin-top:6px;">+ Добавить курс</button>
-    <div class="sectiontitle" style="margin-top:22px;">Темы Speaking (Part 1)</div>
-    <div id="adminSpeakingTopicList"></div>
-    <button class="btn btn-ghost btn-wide" onclick="openAdminSpeakingTopicForm(null)" style="margin-top:6px;">+ Добавить тему</button>
+    <div class="sectiontitle" style="margin-top:22px;">Разделы</div>
+    <div class="mycourse" style="cursor:pointer;" onclick="go('adminSpeakingTopics')">
+      <div style="flex:1"><div class="tt">Темы Speaking (Part 1)</div><div class="hint" id="adminSpeakingTopicCount">Загружаю…</div></div>
+      <div style="color:var(--text-muted);"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+    </div>
     <div class="sectiontitle" style="margin-top:22px;">Пользователи</div>
     <div id="adminUserList"></div>
   </section>
 
+  <!-- 16b: admin — список тем Speaking Part 1 (вынесен из главного экрана админки) -->
+  <section class="screen" data-screen="adminSpeakingTopics">
+    <div class="topbar"><button class="xbtn" onclick="go('admin')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
+    <div class="qtitle">Темы Speaking (Part 1)</div>
+    <div class="hint" style="margin-bottom:12px;">С этих тем ИИ-экзаменатор начинает Part 1. Неактивные темы ученики не видят.</div>
+    <div id="adminSpeakingTopicList"><div class="hint">Загружаю…</div></div>
+    <div class="spacer"></div>
+    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="openAdminSpeakingTopicForm(null)">+ Добавить тему</button></div>
+  </section>
+
   <!-- 17b: admin speaking topic create/edit form -->
   <section class="screen" data-screen="adminSpeakingTopicForm">
-    <div class="topbar"><button class="xbtn" onclick="go('admin')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
+    <div class="topbar"><button class="xbtn" onclick="go('adminSpeakingTopics')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
     <div class="qtitle" id="astfTitle">Новая тема</div>
     <div class="field"><label>Название</label><input id="astfTitleInput" class="input"></div>
     <div class="field"><label>Вопрос экзаменатора (на английском)</label><textarea id="astfQuestion" class="input" rows="3"></textarea></div>
@@ -1314,13 +1326,11 @@
   const VOLUME_ICON = '<svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
 
   const TABBAR_SCREENS = new Set(['home', 'course', 'profile', 'news', 'admin', 'speaking', 'writing']);
-  // Writing Checker временно скрыт от учеников: вкладка и ссылки на него не показываются, а переход на его
-  // экраны уводит на главную. Код и API (backend/routers/writing.py) на месте — чтобы вернуть, поставить true.
-  const WRITING_ENABLED = false;
+  // Выключатель Writing Checker: false прячет вкладку и ссылки на него, а переход на его экраны уводит на главную.
+  const WRITING_ENABLED = true;
   const WRITING_SCREENS = new Set(['writing', 'writingEditor', 'writingResult']);
-  // Grammar Checker тоже временно скрыт: карточки в «Инструментах» нет, переход на экран уводит на главную.
-  // Код и API (backend/routers/grammar.py) на месте — чтобы вернуть, поставить true.
-  const GRAMMAR_ENABLED = false;
+  // Выключатель Grammar Checker: false прячет карточку в «Инструментах», переход на экран уводит на главную.
+  const GRAMMAR_ENABLED = true;
   if (!WRITING_ENABLED) {
     document.getElementById('writingTabBtn').style.display = 'none';
     document.getElementById('calcWritingLink').style.display = 'none';
@@ -1364,6 +1374,7 @@
     }
     if (id === 'news') loadNews();
     if (id === 'admin') loadAdmin();
+    if (id === 'adminSpeakingTopics') loadAdminSpeakingTopics();
     if (id === 'speaking') renderSpeakingSetup();
     if (id === 'writing') renderWritingStart();
     if (id === 'writingEditor') requestAnimationFrame(autoGrowWriting);
@@ -2630,8 +2641,11 @@
   }
 
   function renderAdminSpeakingTopicList(){
+    const active = adminSpeakingTopicsCache.filter(t => t.is_active).length;
+    document.getElementById('adminSpeakingTopicCount').textContent =
+      `${adminSpeakingTopicsCache.length} тем · активных ${active}`;
     const el = document.getElementById('adminSpeakingTopicList');
-    el.innerHTML = '';
+    el.innerHTML = adminSpeakingTopicsCache.length ? '' : '<div class="hint">Тем пока нет</div>';
     adminSpeakingTopicsCache.forEach(t => {
       const row = document.createElement('div');
       row.className = 'mycourse';
@@ -2680,7 +2694,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Не удалось сохранить тему');
       await loadAdminSpeakingTopics();
-      go('admin');
+      go('adminSpeakingTopics');
     } catch (e) {
       errEl.textContent = e.message;
       errEl.style.display = 'block';
@@ -2693,7 +2707,7 @@
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { alert(data.detail || 'Не удалось удалить тему'); return; }
     await loadAdminSpeakingTopics();
-    go('admin');
+    go('adminSpeakingTopics');
   }
 
   // ---- Writing Checker (backend/routers/writing.py) ----
