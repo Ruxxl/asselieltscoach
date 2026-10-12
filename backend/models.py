@@ -88,9 +88,8 @@ class LessonQuestion(Base):
 class CoursePurchase(Base):
     """Факт покупки курса — реальная запись владения, не клиентская заглушка.
 
-    Оплата сейчас — мгновенная заглушка без реального эквайринга (см. Payment ниже
-    и бэкенд-задачу подключить провайдера, напр. ioka.kz); эта таблица уже даёт
-    настоящую серверную проверку доступа к урокам независимо от способа оплаты.
+    Создаётся после подтверждённой оплаты через Halyk ePay (см. Payment ниже), а пока Halyk
+    не настроен — сразу при покупке (пилот). Доступ к урокам проверяется по этой таблице.
     """
 
     __tablename__ = "course_purchases"
@@ -221,11 +220,27 @@ class NewsPost(Base):
 
 
 class Payment(Base):
-    __tablename__ = "payments"
+    """Платёж за курс через Halyk ePay (backend/routers/payments.py). Доступ к курсу выдаёт не
+    эта запись, а CoursePurchase, которая создаётся, только когда банк подтвердил оплату.
+
+    Таблица "course_payments", а не прежняя "payments": та была заготовкой без провайдера
+    (amount_rub), так и не использовалась, а create_all() не умеет менять колонки существующей таблицы.
+    """
+
+    __tablename__ = "course_payments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
-    amount_rub: Mapped[int] = mapped_column(Integer)
-    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending/paid/failed — TODO: реальный провайдер
+    amount_kzt: Mapped[int] = mapped_column(Integer)
+    invoice_id: Mapped[str] = mapped_column(String(15), unique=True)  # номер заказа для Halyk, 6–15 цифр
+    # Случайный секрет заказа: уходит в банк при получении токена и возвращается в postLink —
+    # так отличаем настоящее уведомление банка от подделанного запроса на наш эндпоинт.
+    secret_hash: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending / paid / failed
+    provider_status: Mapped[str | None] = mapped_column(String(32), nullable=True)  # statusName из Halyk
+    provider_reference: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    card_mask: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

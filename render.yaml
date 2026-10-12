@@ -25,3 +25,12 @@ services:
       # Озвучка реплик экзаменатора Speaking Practice (backend/services/tts.py).
       - key: DEEPGRAM_API_KEY
         sync: false
+      # Оплата курсов через Halyk ePay (backend/services/halyk.py). Пока ключей нет — покупка без оплаты.
+      - key: HALYK_CLIENT_ID
+        sync: false
+      - key: HALYK_CLIENT_SECRET
+        sync: false
+      - key: HALYK_TERMINAL_ID
+        sync: false
+      - key: HALYK_TEST_MODE
+        value: "1"
