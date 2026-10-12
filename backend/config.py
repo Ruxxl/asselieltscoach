@@ -28,7 +28,7 @@ UPLOADS_DIR = BASE_DIR / "uploads"
 # Озвучка реплик ИИ-экзаменатора Speaking Practice (backend/services/tts.py). Без ключа
 # фронтенд озвучивает встроенным в телефон голосом.
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY", "")
-DEEPGRAM_TTS_MODEL = os.environ.get("DEEPGRAM_TTS_MODEL", "aura-2-asteria-en")
+DEEPGRAM_TTS_MODEL = os.environ.get("DEEPGRAM_TTS_MODEL", "aura-2-pandora-en")  # британский женский голос
 
 # Writing Checker (backend/routers/writing.py): сколько эссе один ученик может проверить за сутки —
 # защищает бесплатную квоту Gemini от одного слишком активного пользователя.

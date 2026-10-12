@@ -2102,14 +2102,19 @@
       speakingAudioEl.onended = () => finish();
       speakingAudioEl.onerror = () => finish(new Error('audio error'));
       speakingAudioEl.src = 'data:audio/mpeg;base64,' + b64;
+      // Чуть медленнее обычного — ученикам легче разобрать британский акцент; высота голоса сохраняется.
+      speakingAudioEl.preservesPitch = true;
+      speakingAudioEl.playbackRate = EXAMINER_RATE;
       const p = speakingAudioEl.play();
       if (p) p.catch(err => finish(err));
     });
   }
 
+  const EXAMINER_RATE = 0.88;
+
   function pickEnglishVoice(){
     const voices = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
-    for (const re of [/Samantha/i, /Google US English/i, /Ava|Allison|Karen|Moira|Tessa/i, /en[-_]US/i]) {
+    for (const re of [/Serena|Kate|Stephanie/i, /Google UK English Female/i, /Daniel|Arthur|Google UK English/i, /en[-_]GB/i, /Samantha|Google US English/i]) {
       const v = voices.find(v => re.test(v.name) || re.test(v.lang));
       if (v) return v;
     }
@@ -2120,10 +2125,10 @@
     return new Promise(resolve => {
       if (!('speechSynthesis' in window) || !text) return resolve();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
+      u.lang = 'en-GB';
       const v = pickEnglishVoice();
       if (v) u.voice = v;
-      u.rate = 0.95;
+      u.rate = EXAMINER_RATE;
       u.onend = resolve;
       u.onerror = resolve;
       speechSynthesis.cancel();
