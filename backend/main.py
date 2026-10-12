@@ -9,6 +9,7 @@ from backend.config import BOT_TOKEN, DISABLE_BOT_POLLING, WEBAPP_DIR
 from backend.database import SessionLocal, init_db
 from backend.routers import admin, courses, grammar, lessons, news, payments, reading_test, speaking, writing
 from backend.seed_data import seed_if_empty, seed_speaking_topics_if_empty
+from backend.services import sheets
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,10 @@ async def lifespan(app: FastAPI):
     async with SessionLocal() as session:
         await seed_if_empty(session)
         await seed_speaking_topics_if_empty(session)
+    # После деплоя SQLite пустая — возвращаем учеников, покупки и прогресс из Google Таблицы.
+    async with SessionLocal() as session:
+        await sheets.restore(session)
+    sheets.start()
 
     bot_task = asyncio.create_task(_run_bot_forever()) if BOT_TOKEN and not DISABLE_BOT_POLLING else None
     try:
@@ -37,6 +42,7 @@ async def lifespan(app: FastAPI):
     finally:
         if bot_task:
             bot_task.cancel()
+        await sheets.stop()
 
 
 app = FastAPI(title="Assel IELTS API", lifespan=lifespan)

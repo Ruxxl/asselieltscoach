@@ -49,3 +49,9 @@ HALYK_TERMINAL_ID = os.environ.get("HALYK_TERMINAL_ID", "")
 # ключи случайно не ушли в тестовые адреса и наоборот — переключать явно при запуске продаж.
 HALYK_TEST_MODE = os.environ.get("HALYK_TEST_MODE", "1") == "1"
 HALYK_ENABLED = bool(HALYK_CLIENT_ID and HALYK_CLIENT_SECRET and HALYK_TERMINAL_ID)
+
+# Google Таблица как постоянная копия учеников, покупок, платежей и прогресса (backend/services/sheets.py):
+# URL веб-приложения Apps Script (sheets/apps_script.gs) и пароль, вписанный в SECRET этого скрипта.
+SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "")
+SHEETS_SECRET = os.environ.get("SHEETS_SECRET", "")
+SHEETS_ENABLED = bool(SHEETS_WEBHOOK_URL and SHEETS_SECRET)
