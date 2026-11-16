@@ -22,6 +22,9 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
 # к админке и к /news в боте. Узнать свой id можно, например, у @userinfobot.
 TEACHER_CHAT_ID = int(os.environ.get("TEACHER_CHAT_ID", "998292747"))
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/assel_ielts.db")
+# Доп. админы по Telegram username (без @, регистр не важен). Username подписан в initData,
+# но может смениться — надёжнее numeric id; добавить id можно в TEACHER_CHAT_ID/ADMIN_IDS.
+ADMIN_USERNAMES = {u.strip().lstrip("@").lower() for u in os.environ.get("ADMIN_USERNAMES", "assel_result").split(",") if u.strip()}
 WEBAPP_DIR = BASE_DIR / "webapp"
 UPLOADS_DIR = BASE_DIR / "uploads"
 

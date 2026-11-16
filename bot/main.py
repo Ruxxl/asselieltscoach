@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 
-from backend.config import BOT_TOKEN, TEACHER_CHAT_ID, WEBAPP_URL
+from backend.config import ADMIN_USERNAMES, BOT_TOKEN, TEACHER_CHAT_ID, WEBAPP_URL
 from backend.database import SessionLocal
 from backend.models import NewsPost
 
@@ -52,7 +52,8 @@ async def on_app(message: Message) -> None:
 
 
 def _is_teacher(message: Message) -> bool:
-    return bool(message.from_user and message.from_user.id == TEACHER_CHAT_ID)
+    u = message.from_user
+    return bool(u and (u.id == TEACHER_CHAT_ID or (u.username or "").lower() in ADMIN_USERNAMES))
 
 
 @router_dp.message(Command("news"))

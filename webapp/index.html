@@ -1347,6 +1347,7 @@
   }
   if (!GRAMMAR_ENABLED) document.getElementById('grammarToolCard').style.display = 'none';
   const ONBOARDED_KEY = 'echoIeltsOnboarded';
+  const ADMIN_USERNAMES = ['assel_result']; // синхронно с backend/config.py:ADMIN_USERNAMES
   const TEACHER_CHAT_ID = 998292747; // держим в синхроне с backend/config.py:TEACHER_CHAT_ID (проверка на клиенте — только для показа вкладки, настоящая защита на сервере)
 
   // Точка-индикатор под активной вкладкой плавно скользит между табами вместо мгновенного прыжка.
@@ -1410,7 +1411,7 @@
     if (tgUser.photo_url) {
       document.getElementById('pavatar').innerHTML = `<img src="${tgUser.photo_url}" alt="${tgUser.first_name || 'Аватар'}">`;
     }
-    if (tgUser.id === TEACHER_CHAT_ID) {
+    if (tgUser.id === TEACHER_CHAT_ID || ADMIN_USERNAMES.includes((tgUser.username || '').toLowerCase())) {
       document.getElementById('adminTabBtn').style.display = '';
     }
   }
