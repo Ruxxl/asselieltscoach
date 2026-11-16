@@ -320,13 +320,14 @@
   }
   .spkPreset.sel{border-color:#14B8A6; background:linear-gradient(120deg, #CCFBF1 0%, #E0F2FE 100%);}
   .spkPreset .tt{font:600 15px var(--font-sans); color:var(--text);}
+  .spkPresetSub{margin-top:4px; font:500 13px/1.4 var(--font-sans); color:var(--text-secondary);}
   .spkTags{display:flex; gap:6px; margin-top:8px;}
   .spkTag{font:500 11.5px var(--font-sans); color:var(--text-secondary); border:1px solid currentColor; border-radius:999px; padding:2px 9px;}
   .spkPreset.sel .spkTag, .spkPreset.sel .spkDur{color:#0F766E;}
   .spkDur{margin-left:auto; display:flex; align-items:center; gap:5px; font:600 13px var(--font-sans); color:var(--text-secondary); flex:none;}
   .spkDur svg{width:16px; height:16px;}
   .spkGo{
-    flex:none; border:none; border-radius:11px; padding:10px 14px; cursor:pointer;
+    flex:none; border:none; border-radius:11px; padding:10px 16px; cursor:pointer; white-space:nowrap;
     background:linear-gradient(135deg, #0F766E, #115E59); color:#fff; font:600 13px var(--font-sans);
     box-shadow:0 6px 16px rgba(15,118,110,.3);
   }
@@ -2018,8 +2019,8 @@
       const card = document.createElement('div');
       card.className = 'spkPreset';
       card.innerHTML = `
-        <div><div class="tt">${p.title}</div><div class="spkTags"><span class="spkTag">IELTS</span><span class="spkTag">${p.tag}</span><span class="spkTag">${p.sub}</span></div></div>
-        <button class="spkGo">Выбрать тему</button>`;
+        <div style="flex:1; min-width:0;"><div class="tt">${p.title}</div><div class="spkPresetSub">${p.sub}</div></div>
+        <button class="spkGo">Выбрать</button>`;
       card.onclick = () => openSpeakingPicker(p.id);
       el.appendChild(card);
     });
