@@ -874,12 +874,9 @@
     <div id="speakingStepBody"></div>
     <div class="speakingStatus" id="speakingStatus"></div>
     <div class="spacer"></div>
-    <div class="bottombar sticky" style="flex-direction:column; gap:10px;">
+    <div class="bottombar sticky">
       <button class="holdTalkBtn" id="speakingHoldBtn">Нажми <span class="kbd">и говори</span></button>
-      <div style="display:flex; gap:10px; width:100%;">
-        <button class="btn btn-ghost" id="speakingPrevBtn" onclick="speakingStepMove(-1)" aria-label="Предыдущий вопрос">←</button>
-        <button class="btn btn-primary btn-wide" id="speakingNextBtn" onclick="speakingStepMove(1)">СЛЕДУЮЩИЙ ВОПРОС</button>
-      </div>
+      <button class="btn btn-primary btn-wide" id="speakingDoneBtn" style="display:none;" onclick="exitSpeakingSession()">ВЫБРАТЬ ДРУГУЮ ТЕМУ</button>
     </div>
   </section>
 
@@ -2145,7 +2142,7 @@
     });
   }
 
-  const EXAMINER_RATE = 0.88;
+  const EXAMINER_RATE = 0.96; // почти естественный темп: 0.88 звучало замедленно и роботизированно
 
   function pickEnglishVoice(){
     const voices = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
@@ -2185,7 +2182,10 @@
     }
   }
 
-  // ---- Экран вопроса ----
+  // ---- Экран практики: лента вопросов ----
+  // Вопрос задаёт ИИ-экзаменатор голосом. Ученик отвечает (кнопка записи внизу) -> разбор грамматики ->
+  // примерная оценка -> через паузу ИИ САМ задаёт следующий вопрос. Нажимать "дальше" не нужно.
+  const SPEAKING_NEXT_DELAY_MS = 3500; // пауза после оценки: успеть прочитать разбор до следующего вопроса
   const spkStep = () => spk && spk.steps[spk.i];
   const spkBold = (text) => escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong class="spkChg">$1</strong>');
 
@@ -2197,12 +2197,10 @@
   function setHoldBtn(state){
     const btn = document.getElementById('speakingHoldBtn');
     if (!btn) return;
-    const step = spkStep();
     btn.classList.toggle('active', state === 'recording');
     btn.disabled = state === 'busy';
     btn.innerHTML = state === 'recording' ? 'Говорю <span class="kbd">нажми, чтобы отправить</span>'
       : state === 'busy' ? 'Проверяю ответ…'
-      : step && step.answer != null ? 'Записать ответ заново'
       : 'Нажми <span class="kbd">и говори</span>';
   }
 
@@ -2217,15 +2215,7 @@
     return data;
   }
 
-  function renderSpeakingStep(){
-    if (!spk) return;
-    const step = spkStep();
-    const total = spk.steps.length;
-    document.getElementById('speakingProgText').textContent = `Вопрос ${spk.i + 1} из ${total}`;
-    document.getElementById('speakingProgBar').style.width = `${Math.round((spk.i + 1) / total * 100)}%`;
-    document.getElementById('speakingPrevBtn').disabled = spk.i === 0;
-    document.getElementById('speakingNextBtn').textContent = spk.i === total - 1 ? 'ЗАКОНЧИТЬ' : 'СЛЕДУЮЩИЙ ВОПРОС';
-
+  function spkStepHtml(step, i){
     let help = '';
     if (step.openHelp) {
       help = step.helpLoading || !step.help
@@ -2240,7 +2230,12 @@
     if (step.answer != null) {
       const has = step.answer.trim().length > 0;
       result += `<div class="spkBlock"><div class="spkAnswer" style="margin-top:0; padding-top:0; border-top:none;"><b>Твой ответ</b>${escapeHtml(has ? step.answer : '… (не удалось разобрать речь — запиши ещё раз)')}</div></div>`;
-      if (has) {
+      if (has && step.teacher_say) {
+        result += `<div class="spkBlock"><div class="spkHelp" style="background:var(--accent-tint);"><b>Преподаватель</b>${escapeHtml(step.teacher_say)}</div></div>`;
+      }
+      if (has && step.on_topic === false) {
+        result += `<div class="spkBlock"><div class="spkFix" style="background:var(--yellow-tint); border-color:var(--yellow-border);"><b style="color:var(--yellow);">Ответ не по теме вопроса</b>${escapeHtml(step.topic_comment || 'Ответь, пожалуйста, на заданный вопрос.')}<div class="spkFixTip">Послушай вопрос ещё раз и ответь именно на него.</div></div></div>`;
+      } else if (has) {
         result += `<div class="spkBlock"><div class="spkBlockTitle">Грамматика</div>` + (step.corrections.length
           ? `<div class="spkFix">${step.corrections.map(c => `
               <div class="spkFixItem"><span class="was">${escapeHtml(c.original)}</span> → <span class="now">${escapeHtml(c.better)}</span>${c.why ? `<div class="spkFixTip">${escapeHtml(c.why)}</div>` : ''}</div>`).join('')}</div>`
@@ -2249,12 +2244,11 @@
           result += `<div class="spkBlock"><div class="spkBlockTitle">Что повторить</div><ul class="spkReview">${step.review_topics.map(t =>
             `<li><b>${escapeHtml(t.topic)}</b>${t.note ? ` — ${escapeHtml(t.note)}` : ''}</li>`).join('')}</ul></div>`;
         }
-        result += `<div class="spkQActions" style="margin-top:14px;">
-            <button class="spkChip big${step.estimate ? ' on' : ''}" id="spkEstBtn" onclick="spkEstimate()"${step.estimating ? ' disabled' : ''}>Примерная оценка</button>
-            <button class="spkChip big${step.improved ? ' on' : ''}" id="spkImpBtn" onclick="spkImprove()"${step.improving ? ' disabled' : ''}>Улучшить мой ответ</button>
-          </div>`;
-        if (step.estimating) result += '<div class="spkHelp">Считаю оценку…</div>';
+        if (step.estimating) result += '<div class="spkHelp">Считаю примерную оценку…</div>';
         if (step.estimate) result += renderSpeakingEstimate(step.estimate);
+        result += `<div class="spkQActions" style="margin-top:14px;">
+            <button class="spkChip big${step.improved ? ' on' : ''}" onclick="spkImprove(${i})"${step.improving ? ' disabled' : ''}>Улучшить мой ответ</button>
+          </div>`;
         if (step.improving) result += '<div class="spkHelp">Улучшаю ответ…</div>';
         if (step.improved) {
           result += `<div class="spkBlock"><div class="transcript"><b>Улучшенный ответ · Band ${step.improved.current_band.toFixed(1)} → ${step.improved.target_band.toFixed(1)}</b>${spkBold(step.improved.improved_answer)}<div class="spkNote">Жирным выделено то, что изменилось по сравнению с твоим ответом.</div></div></div>`;
@@ -2262,19 +2256,32 @@
       }
     }
 
-    document.getElementById('speakingStepBody').innerHTML = `
-      <div class="spkQ"><div class="spkQBody">
-        <div class="spkKind">${SPEAKING_KIND_LABELS[step.kind] || ''}</div>
+    return `
+      <div class="spkQ" id="spkCard${i}" style="margin-bottom:12px;"><div class="spkQBody">
+        <div class="spkKind">${SPEAKING_KIND_LABELS[step.kind] || ''} · ${i + 1}/${spk.steps.length}</div>
         <div class="spkQText${step.kind === 'part2' ? ' card' : ''}">${step.kind === 'part2' ? escapeHtml(step.question) : `<b>${escapeHtml(step.question)}</b>`}</div>
         <div class="spkQActions">
-          <button class="spkChip" onclick="spkListen()">${LISTEN_ICON}Послушать</button>
-          <button class="spkChip${step.openHelp === 'hint' ? ' on' : ''}" onclick="spkToggleHelp('hint')">${HINT_ICON}Подсказка</button>
-          <button class="spkChip${step.openHelp === 'sample' ? ' on' : ''}" onclick="spkToggleHelp('sample')">${SAMPLE_ICON}Готовый ответ</button>
+          <button class="spkChip" onclick="unlockSpeakingAudio(); spkListen(${i}, 'repeat')">${LISTEN_ICON}Повторить вопрос</button>
+          <button class="spkChip${step.openHelp === 'hint' ? ' on' : ''}" onclick="spkToggleHelp(${i}, 'hint')">${HINT_ICON}Подсказка</button>
+          <button class="spkChip${step.openHelp === 'sample' ? ' on' : ''}" onclick="spkToggleHelp(${i}, 'sample')">${SAMPLE_ICON}Готовый ответ</button>
         </div>
         ${help}
         ${result}
       </div></div>`;
-    setHoldBtn(speakingBusy ? 'busy' : speakingRecorder ? 'recording' : 'idle');
+  }
+
+  function renderSpeakingFeed(){
+    if (!spk) return;
+    const total = spk.steps.length;
+    document.getElementById('speakingProgText').textContent = spk.done ? `Все вопросы пройдены (${total})` : `Вопрос ${spk.i + 1} из ${total}`;
+    document.getElementById('speakingProgBar').style.width = `${Math.round((spk.done ? total : spk.i + 1) / total * 100)}%`;
+    const finished = spk.done
+      ? '<div class="spkQ" style="margin-bottom:12px;"><div class="spkQBody"><b>Готово!</b><div class="spkHelp">Ты ответил на все вопросы темы. Выбери другую тему, чтобы продолжить практику.</div></div></div>'
+      : '';
+    document.getElementById('speakingStepBody').innerHTML = spk.steps.slice(0, spk.i + 1).map(spkStepHtml).join('') + finished;
+    document.getElementById('speakingHoldBtn').style.display = spk.done ? 'none' : '';
+    document.getElementById('speakingDoneBtn').style.display = spk.done ? '' : 'none';
+    if (!spk.done) setHoldBtn(speakingBusy ? 'busy' : speakingRecorder ? 'recording' : 'idle');
   }
 
   function renderSpeakingEstimate(est){
@@ -2295,21 +2302,21 @@
       <div class="spkNote">Оценка приблизительная: считается по расшифровке одного ответа, произношение — тоже по тексту, не по звуку.</div></div></div>`;
   }
 
-  async function spkListen(){
-    const step = spkStep();
+  // Преподаватель задаёт вопрос голосом: mode 'ask' — с вводной фразой, 'repeat' — просто повторяет вопрос.
+  async function spkListen(i, mode = 'ask'){
+    const step = spk && spk.steps[i];
     if (!step || speakingRecorder) return;
-    unlockSpeakingAudio();
-    const text = step.question.split('\n').map(l => l.trim().replace(/[.:]+$/, '')).filter(Boolean).join('. ');
-    if (step.audio === undefined) {
-      try { step.audio = (await speakingApi('speak', { index: step.index })).audio_b64; } catch (e) { step.audio = null; }
-    }
-    speakExaminer(text, step.audio);
+    const sessionId = spk.sessionId;
+    let line;
+    try { line = await speakingApi('speak', { index: step.index, mode }); } catch (e) { return; }
+    if (!spk || spk.sessionId !== sessionId || speakingRecorder || speakingBusy) return;
+    await speakExaminer(line.text, line.audio_b64);
   }
 
-  async function spkToggleHelp(kind){
-    const step = spkStep();
+  async function spkToggleHelp(i, kind){
+    const step = spk.steps[i];
     step.openHelp = step.openHelp === kind ? null : kind;
-    renderSpeakingStep();
+    renderSpeakingFeed();
     if (!step.openHelp || step.help || step.helpLoading) return;
     const sessionId = spk.sessionId;
     step.helpLoading = true;
@@ -2322,16 +2329,16 @@
       if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось получить подсказку: ' + e.message);
     } finally {
       step.helpLoading = false;
-      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+      if (spk && spk.sessionId === sessionId) renderSpeakingFeed();
     }
   }
 
-  async function spkEstimate(){
-    const step = spkStep();
-    if (step.estimate) { step.estimate = null; renderSpeakingStep(); return; } // повторное нажатие сворачивает блок
+  // Примерная оценка считается сама сразу после разбора ответа.
+  async function spkEstimate(i){
+    const step = spk.steps[i];
     const sessionId = spk.sessionId;
     step.estimating = true;
-    renderSpeakingStep();
+    renderSpeakingFeed();
     try {
       const data = await speakingApi('estimate', { index: step.index });
       if (spk && spk.sessionId === sessionId) step.estimate = data;
@@ -2339,16 +2346,16 @@
       if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось получить оценку: ' + e.message);
     } finally {
       step.estimating = false;
-      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+      if (spk && spk.sessionId === sessionId) renderSpeakingFeed();
     }
   }
 
-  async function spkImprove(){
-    const step = spkStep();
-    if (step.improved) { step.improved = null; renderSpeakingStep(); return; }
+  async function spkImprove(i){
+    const step = spk.steps[i];
+    if (step.improved) { step.improved = null; renderSpeakingFeed(); return; } // повторное нажатие сворачивает блок
     const sessionId = spk.sessionId;
     step.improving = true;
-    renderSpeakingStep();
+    renderSpeakingFeed();
     try {
       const data = await speakingApi('improve', { index: step.index });
       if (spk && spk.sessionId === sessionId) step.improved = data;
@@ -2356,20 +2363,24 @@
       if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось улучшить ответ: ' + e.message);
     } finally {
       step.improving = false;
-      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+      if (spk && spk.sessionId === sessionId) renderSpeakingFeed();
     }
   }
 
-  function speakingStepMove(delta){
-    if (!spk || speakingBusy || speakingRecorder) return;
-    const next = spk.i + delta;
-    if (next < 0) return;
-    if (next >= spk.steps.length) { go('speakingTopicPicker'); renderSpeakingTopicPicker(); return; }
-    stopSpeakingPlayback();
-    spk.i = next;
-    setSpeakingStatus('');
-    renderSpeakingStep();
-    window.scrollTo(0, 0);
+  // После оценки — пауза, и ИИ сам задаёт следующий вопрос (или завершает тему).
+  function spkScheduleNext(){
+    clearTimeout(spk.timer);
+    if (spk.i >= spk.steps.length - 1) { spk.done = true; stopSpeakingPlayback(); renderSpeakingFeed(); return; }
+    setSpeakingStatus('Следующий вопрос — через несколько секунд…');
+    const sessionId = spk.sessionId;
+    spk.timer = setTimeout(() => {
+      if (!spk || spk.sessionId !== sessionId || speakingRecorder || speakingBusy) return;
+      spk.i += 1;
+      setSpeakingStatus('');
+      renderSpeakingFeed();
+      document.getElementById('spkCard' + spk.i)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      spkListen(spk.i, 'ask');
+    }, SPEAKING_NEXT_DELAY_MS);
   }
 
   // topicId — из экрана выбора темы (кнопка "Начать").
@@ -2392,11 +2403,12 @@
       if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
       ++speakingToken;
       speakingBusy = false;
-      spk = { sessionId: data.session_id, part: data.part, title: data.topic_title, i: 0, steps: data.steps };
+      spk = { sessionId: data.session_id, part: data.part, title: data.topic_title, i: 0, steps: data.steps, done: false, timer: null };
       document.getElementById('speakingSessionBadge').textContent = data.topic_title;
       setSpeakingStatus('');
       go('speakingSession');
-      renderSpeakingStep();
+      renderSpeakingFeed();
+      spkListen(0, 'ask'); // преподаватель здоровается и задаёт первый вопрос
     } catch (e) {
       errEl.textContent = 'Не удалось начать: ' + e.message;
       errEl.style.display = 'block';
@@ -2409,8 +2421,9 @@
   // ---- Запись ответа: нажал — пишем, нажал ещё раз — отправляем на проверку ----
   async function speakingHoldToggle(e){
     if (e) e.preventDefault();
-    if (!spk || speakingBusy) return;
+    if (!spk || speakingBusy || spk.done) return;
     if (!speakingRecorder) {
+      clearTimeout(spk.timer); // ученик решил переписать ответ — следующий вопрос подождёт
       unlockSpeakingAudio();
       stopSpeakingPlayback();
       try {
@@ -2461,12 +2474,26 @@
       if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
       if (token !== speakingToken) return;
       step.answer = data.student_said;
+      step.on_topic = data.on_topic;
+      step.topic_comment = data.topic_comment;
+      step.teacher_say = data.teacher_say;
       step.corrections = data.corrections;
       step.review_topics = data.review_topics;
       step.estimate = null; step.improved = null;
       speakingBusy = false;
       setSpeakingStatus('');
-      renderSpeakingStep();
+      renderSpeakingFeed();
+      if (!data.student_said.trim()) { setSpeakingStatus('Не удалось разобрать речь — запиши ответ ещё раз.'); return; }
+      // Преподаватель сразу реагирует голосом: поправляет, хвалит или, если ответ не по теме, возвращает к вопросу.
+      const said = data.teacher_say ? speakExaminer(data.teacher_say, data.audio_b64) : Promise.resolve();
+      if (!data.on_topic) {
+        setSpeakingStatus('Ответ не по теме — послушай вопрос и ответь на него.');
+        return;
+      }
+      await spkEstimate(spk.i);
+      await said; // дослушиваем реплику преподавателя, и только потом идёт следующий вопрос
+      if (token !== speakingToken || speakingRecorder || speakingBusy) return;
+      spkScheduleNext();
     } catch (err) {
       if (token !== speakingToken) return;
       speakingBusy = false;
@@ -2479,6 +2506,7 @@
 
   function abandonSpeakingCall(){
     ++speakingToken;
+    if (spk) clearTimeout(spk.timer);
     if (speakingRecorder) {
       speakingRecorder.onstop = null;
       try { speakingRecorder.stop(); } catch (e) {}

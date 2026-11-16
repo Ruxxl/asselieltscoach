@@ -147,7 +147,13 @@ class SpeakingStepRequest(BaseModel):
     index: int
 
 
+class SpeakingSpeakRequest(BaseModel):
+    index: int
+    mode: str = "ask"  # ask — преподаватель задаёт вопрос (с вводной фразой); repeat — только повторяет его
+
+
 class SpeakingSpeakResult(BaseModel):
+    text: str  # что произносит преподаватель (для запасного голоса и отображения)
     audio_b64: str | None = None  # mp3; None — фронтенд озвучит speechSynthesis
 
 
@@ -174,6 +180,10 @@ class SpeakingReviewTopic(BaseModel):
 
 class SpeakingAnswerResult(BaseModel):
     student_said: str
+    on_topic: bool = True  # False — ответ не по вопросу: разбор не делаем, вопрос задаём заново
+    topic_comment: str = ""
+    teacher_say: str = ""  # реплика преподавателя вслух: реакция на ответ, подсказка или "ты отвлёкся, вопрос был…"
+    audio_b64: str | None = None  # mp3 реплики преподавателя
     corrections: list[SpeakingCorrectionItem]
     review_topics: list[SpeakingReviewTopic]
 

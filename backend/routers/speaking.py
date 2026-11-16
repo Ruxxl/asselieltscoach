@@ -13,6 +13,7 @@ from backend.schemas import (
     SpeakingEstimateResult,
     SpeakingHelpResult,
     SpeakingImproveResult,
+    SpeakingSpeakRequest,
     SpeakingSpeakResult,
     SpeakingStartRequest,
     SpeakingStartResult,
@@ -26,6 +27,7 @@ from backend.services.speaking import (
     check_answer,
     estimate_answer,
     improve_answer,
+    spoken_question,
 )
 from backend.services.tts import synthesize_b64
 
@@ -79,6 +81,8 @@ def _ai_error(exc: Exception) -> HTTPException:
 
 def _answered_step(steps: list[dict], index: int) -> dict:
     step = _step(steps, index)
+    if step.get("on_topic") is False:
+        raise HTTPException(status_code=400, detail="Ответ был не по теме вопроса — ответь на сам вопрос.")
     answer = (step.get("answer") or "").strip()
     if len(answer.split()) < _MIN_WORDS_TO_ASSESS:
         raise HTTPException(status_code=400, detail="Сначала запиши ответ на этот вопрос — подробнее, чем пара слов.")
@@ -136,20 +140,38 @@ async def start_session(
     )
 
 
+# Вводные фразы преподавателя перед следующим вопросом — чтобы звучало как живой урок, а не как робот.
+_LEADS = ("Okay, next question.", "Good. Let's move on.", "Alright, here's another one.", "Great. Next one.")
+
+
+def _teacher_line(steps: list[dict], index: int, topic_title: str | None, mode: str) -> str:
+    step = steps[index]
+    question = spoken_question(step["question"])
+    if mode == "repeat":
+        return question
+    if index == 0:
+        if step["kind"] == "part2":
+            return f"Hello! Let's practise Part 2. Here is your topic card. {question}"
+        return f"Hello! Let's talk about {topic_title or 'this topic'}. {question}"
+    if step["kind"] == "part3" and steps[index - 1]["kind"] == "part2":
+        return f"Thank you. Now let's discuss the topic a little more. {question}"
+    return f"{_LEADS[index % len(_LEADS)]} {question}"
+
+
 @router.post("/{session_id}/speak", response_model=SpeakingSpeakResult)
 async def speak_question(
     session_id: int,
-    body: SpeakingStepRequest,
+    body: SpeakingSpeakRequest,
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
-    """Озвучка вопроса голосом экзаменатора (кнопка «Послушать»)."""
+    """Преподаватель задаёт вопрос голосом (с вводной фразой) или повторяет его по кнопке."""
     user = await require_user(session, x_telegram_init_data)
     speaking_session = await _get_own_session(session, session_id, user.id)
-    step = _step(_load_steps(speaking_session), body.index)
-    # Карточку читаем целиком, строки склеиваем в предложения.
-    text = ". ".join(line.strip().rstrip(".:") for line in step["question"].splitlines() if line.strip())
-    return SpeakingSpeakResult(audio_b64=await synthesize_b64(text))
+    steps = _load_steps(speaking_session)
+    _step(steps, body.index)
+    text = _teacher_line(steps, body.index, speaking_session.topic_title, body.mode)
+    return SpeakingSpeakResult(text=text, audio_b64=await synthesize_b64(text))
 
 
 @router.post("/{session_id}/help", response_model=SpeakingHelpResult)
@@ -202,13 +224,15 @@ async def submit_answer(
         raise _ai_error(exc) from exc
 
     step["answer"] = result["student_said"]
+    step["on_topic"] = result["on_topic"]
+    step["teacher_say"] = result["teacher_say"]
     step["corrections"] = result["corrections"]
     step["review_topics"] = result["review_topics"]
     step.pop("estimate", None)  # ответ новый — прежние оценка и улучшение к нему не относятся
     step.pop("improved", None)
     speaking_session.transcript_json = json.dumps(steps, ensure_ascii=False)
     await session.commit()
-    return SpeakingAnswerResult(**result)
+    return SpeakingAnswerResult(**result, audio_b64=await synthesize_b64(result["teacher_say"]))
 
 
 @router.post("/{session_id}/estimate", response_model=SpeakingEstimateResult)
