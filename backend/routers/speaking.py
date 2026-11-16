@@ -1,8 +1,7 @@
-import asyncio
 import json
-from datetime import datetime
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,30 +9,52 @@ from backend.auth import require_user
 from backend.database import get_session
 from backend.models import SpeakingSession, SpeakingTopic
 from backend.schemas import (
-    SpeakingHelpRequest,
+    SpeakingAnswerResult,
+    SpeakingEstimateResult,
     SpeakingHelpResult,
-    SpeakingSessionOut,
+    SpeakingImproveResult,
+    SpeakingSpeakResult,
     SpeakingStartRequest,
     SpeakingStartResult,
+    SpeakingStep,
+    SpeakingStepRequest,
     SpeakingTopicPublicOut,
-    SpeakingTurnResult,
 )
 from backend.services.speaking import (
     GeminiNotConfigured,
-    build_corrected_report,
     build_question_help,
-    continue_conversation,
-    score_session,
-    start_conversation,
+    check_answer,
+    estimate_answer,
+    improve_answer,
 )
 from backend.services.tts import synthesize_b64
 
 router = APIRouter(prefix="/api/speaking", tags=["speaking"])
 
-_VALID_PARTS = {"part1", "part2", "part3"}
+# Меньше слов — оценивать и улучшать нечего: честнее попросить ответить подробнее.
+_MIN_WORDS_TO_ASSESS = 4
 
 
-def _load_history(speaking_session: SpeakingSession) -> list[dict]:
+def topic_questions(topic: SpeakingTopic) -> list[str]:
+    """Вопросы темы: из questions_json, а у старых тем с одним вопросом — question_text."""
+    if topic.questions_json:
+        questions = json.loads(topic.questions_json)
+        if questions:
+            return questions
+    return [] if topic.part == "part2" else [topic.question_text]
+
+
+def build_steps(topic: SpeakingTopic) -> list[dict]:
+    """Part 1 — вопросы темы по одному; Part 2 — карточка, а за ней вопросы Part 3 к ней."""
+    questions = topic_questions(topic)
+    if topic.part == "part2":
+        return [{"kind": "part2", "question": topic.question_text}] + [
+            {"kind": "part3", "question": q} for q in questions
+        ]
+    return [{"kind": "part1", "question": q} for q in questions]
+
+
+def _load_steps(speaking_session: SpeakingSession) -> list[dict]:
     return json.loads(speaking_session.transcript_json) if speaking_session.transcript_json else []
 
 
@@ -44,13 +65,24 @@ async def _get_own_session(session: AsyncSession, session_id: int, user_id: int)
     return speaking_session
 
 
-def _session_out(speaking_session: SpeakingSession) -> SpeakingSessionOut:
-    out = SpeakingSessionOut.model_validate(speaking_session)
-    if speaking_session.improvement_comments_json:
-        out.improvement_comments = json.loads(speaking_session.improvement_comments_json)
-    if speaking_session.criteria_feedback_json:
-        out.criteria_feedback = json.loads(speaking_session.criteria_feedback_json)
-    return out
+def _step(steps: list[dict], index: int) -> dict:
+    if index < 0 or index >= len(steps):
+        raise HTTPException(status_code=400, detail="Нет такого вопроса")
+    return steps[index]
+
+
+def _ai_error(exc: Exception) -> HTTPException:
+    if isinstance(exc, GeminiNotConfigured):
+        return HTTPException(status_code=503, detail=str(exc))
+    return HTTPException(status_code=502, detail=f"Ошибка ИИ: {exc}")
+
+
+def _answered_step(steps: list[dict], index: int) -> dict:
+    step = _step(steps, index)
+    answer = (step.get("answer") or "").strip()
+    if len(answer.split()) < _MIN_WORDS_TO_ASSESS:
+        raise HTTPException(status_code=400, detail="Сначала запиши ответ на этот вопрос — подробнее, чем пара слов.")
+    return step
 
 
 @router.get("/topics", response_model=list[SpeakingTopicPublicOut])
@@ -58,7 +90,16 @@ async def list_speaking_topics(session: AsyncSession = Depends(get_session)):
     rows = await session.execute(
         select(SpeakingTopic).where(SpeakingTopic.is_active == True).order_by(SpeakingTopic.order)  # noqa: E712
     )
-    return rows.scalars().all()
+    return [
+        SpeakingTopicPublicOut(
+            id=t.id,
+            title=t.title,
+            part=t.part or "part1",
+            category=t.category or "other",
+            question_count=len(build_steps(t)),
+        )
+        for t in rows.scalars().all()
+    ]
 
 
 @router.post("/start", response_model=SpeakingStartResult)
@@ -68,55 +109,86 @@ async def start_session(
     session: AsyncSession = Depends(get_session),
 ):
     user = await require_user(session, x_telegram_init_data)
-    if body.part not in _VALID_PARTS:
-        raise HTTPException(status_code=400, detail="Неизвестная часть теста")
-
-    topic: SpeakingTopic | None = None
-    if body.part == "part1":
-        if body.topic_id is None:
-            raise HTTPException(status_code=400, detail="Выбери тему для Part 1")
-        topic = await session.get(SpeakingTopic, body.topic_id)
-        if not topic or not topic.is_active:
-            raise HTTPException(status_code=400, detail="Тема не найдена")
-    elif body.topic_id is not None:
-        raise HTTPException(status_code=400, detail="topic_id поддерживается только для Part 1")
-
-    topic_question = topic.question_text if topic else None
-    try:
-        opening = await start_conversation(body.part, topic_question)
-    except GeminiNotConfigured as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {exc}") from exc
+    topic = await session.get(SpeakingTopic, body.topic_id)
+    if not topic or not topic.is_active:
+        raise HTTPException(status_code=400, detail="Тема не найдена")
+    steps = build_steps(topic)
+    if not steps:
+        raise HTTPException(status_code=400, detail="В теме пока нет вопросов")
 
     speaking_session = SpeakingSession(
         user_id=user.id,
-        part=body.part,
-        topic_id=topic.id if topic else None,
-        topic_title=topic.title if topic else None,
-        topic_question=topic_question,
-        transcript_json=json.dumps([{"speaker": "ai", "text": opening["ai_message"]}], ensure_ascii=False),
+        part=topic.part or "part1",
+        status="active",
+        topic_id=topic.id,
+        topic_title=topic.title,
+        topic_question=topic.question_text,
+        transcript_json=json.dumps(steps, ensure_ascii=False),
     )
     session.add(speaking_session)
     await session.commit()
     await session.refresh(speaking_session)
-
     return SpeakingStartResult(
-        session_id=speaking_session.id, **opening, audio_b64=await synthesize_b64(opening["ai_message"])
+        session_id=speaking_session.id,
+        topic_title=topic.title,
+        part=speaking_session.part,
+        steps=[SpeakingStep(index=i, **s) for i, s in enumerate(steps)],
     )
 
 
-@router.post("/{session_id}/turn", response_model=SpeakingTurnResult)
-async def submit_turn(
+@router.post("/{session_id}/speak", response_model=SpeakingSpeakResult)
+async def speak_question(
     session_id: int,
-    audio: UploadFile,
+    body: SpeakingStepRequest,
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
+    """Озвучка вопроса голосом экзаменатора (кнопка «Послушать»)."""
     user = await require_user(session, x_telegram_init_data)
     speaking_session = await _get_own_session(session, session_id, user.id)
-    if speaking_session.status != "active":
-        raise HTTPException(status_code=400, detail="Эта сессия уже завершена")
+    step = _step(_load_steps(speaking_session), body.index)
+    # Карточку читаем целиком, строки склеиваем в предложения.
+    text = ". ".join(line.strip().rstrip(".:") for line in step["question"].splitlines() if line.strip())
+    return SpeakingSpeakResult(audio_b64=await synthesize_b64(text))
+
+
+@router.post("/{session_id}/help", response_model=SpeakingHelpResult)
+async def question_help(
+    session_id: int,
+    body: SpeakingStepRequest,
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    """Кнопки «Подсказка» (5-6 опорных фраз) и «Готовый ответ» — по запросу, ответ кэшируется в сессии."""
+    user = await require_user(session, x_telegram_init_data)
+    speaking_session = await _get_own_session(session, session_id, user.id)
+    steps = _load_steps(speaking_session)
+    step = _step(steps, body.index)
+    if step.get("help"):
+        return SpeakingHelpResult(**step["help"])
+    try:
+        result = await build_question_help(step["kind"], step["question"])
+    except Exception as exc:
+        raise _ai_error(exc) from exc
+    step["help"] = result
+    speaking_session.transcript_json = json.dumps(steps, ensure_ascii=False)
+    await session.commit()
+    return SpeakingHelpResult(**result)
+
+
+@router.post("/{session_id}/answer", response_model=SpeakingAnswerResult)
+async def submit_answer(
+    session_id: int,
+    audio: UploadFile,
+    index: Annotated[int, Form()],
+    x_telegram_init_data: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_session),
+):
+    """Голосовой ответ ученика: расшифровка + грамматический разбор (только грамматика и темы для повторения)."""
+    user = await require_user(session, x_telegram_init_data)
+    speaking_session = await _get_own_session(session, session_id, user.id)
+    steps = _load_steps(speaking_session)
+    step = _step(steps, index)
 
     audio_bytes = await audio.read()
     if not audio_bytes:
@@ -124,96 +196,64 @@ async def submit_turn(
     # MediaRecorder на iOS пишет audio/mp4, на Android/десктопе — audio/webm;codecs=opus;
     # Gemini нужен голый MIME без параметров кодека.
     mime_type = (audio.content_type or "audio/webm").split(";")[0]
-
-    history = _load_history(speaking_session)
     try:
-        result = await continue_conversation(
-            speaking_session.part, speaking_session.topic_question, history, audio_bytes, mime_type
-        )
-    except GeminiNotConfigured as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        result = await check_answer(step["kind"], step["question"], audio_bytes, mime_type)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {exc}") from exc
+        raise _ai_error(exc) from exc
 
-    history.append({"speaker": "user", "text": result["student_said"], "correction": result["correction"]})
-    history.append({"speaker": "ai", "text": result["ai_message"]})
-    speaking_session.transcript_json = json.dumps(history, ensure_ascii=False)
+    step["answer"] = result["student_said"]
+    step["corrections"] = result["corrections"]
+    step["review_topics"] = result["review_topics"]
+    step.pop("estimate", None)  # ответ новый — прежние оценка и улучшение к нему не относятся
+    step.pop("improved", None)
+    speaking_session.transcript_json = json.dumps(steps, ensure_ascii=False)
     await session.commit()
+    return SpeakingAnswerResult(**result)
 
-    return SpeakingTurnResult(**result, audio_b64=await synthesize_b64(result["ai_message"]))
 
-
-@router.post("/{session_id}/help", response_model=SpeakingHelpResult)
-async def question_help(
+@router.post("/{session_id}/estimate", response_model=SpeakingEstimateResult)
+async def estimate(
     session_id: int,
-    body: SpeakingHelpRequest,
+    body: SpeakingStepRequest,
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
-    """Кнопки "Подсказка"/"Пример ответа" у карточки вопроса — генерим по запросу, а не на
-    каждый ход, чтобы не замедлять ответ экзаменатора."""
+    """Кнопка «Примерная оценка»: 4 критерия IELTS Speaking по ответу ученика."""
     user = await require_user(session, x_telegram_init_data)
     speaking_session = await _get_own_session(session, session_id, user.id)
-    question = body.question.strip()[:500]
-    if not question:
-        raise HTTPException(status_code=400, detail="Пустой вопрос")
+    steps = _load_steps(speaking_session)
+    step = _answered_step(steps, body.index)
+    if step.get("estimate"):
+        return SpeakingEstimateResult(**step["estimate"])
     try:
-        return SpeakingHelpResult(**await build_question_help(speaking_session.part, question))
-    except GeminiNotConfigured as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        result = await estimate_answer(step["kind"], step["question"], step["answer"])
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {exc}") from exc
+        raise _ai_error(exc) from exc
+    step["estimate"] = result
+    speaking_session.transcript_json = json.dumps(steps, ensure_ascii=False)
+    await session.commit()
+    return SpeakingEstimateResult(**result)
 
 
-@router.post("/{session_id}/finish", response_model=SpeakingSessionOut)
-async def finish_session(
+@router.post("/{session_id}/improve", response_model=SpeakingImproveResult)
+async def improve(
     session_id: int,
+    body: SpeakingStepRequest,
     x_telegram_init_data: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ):
-    """Итог: для всех частей — 4 балла IELTS, отзыв и советы; Part 1 (с темой) дополнительно —
-    исправленная версия ответа."""
+    """Кнопка «Улучшить мой ответ»: тот же ответ, но на 1-1.5 балла выше (на основе слов ученика)."""
     user = await require_user(session, x_telegram_init_data)
     speaking_session = await _get_own_session(session, session_id, user.id)
-    if speaking_session.status == "done":
-        return _session_out(speaking_session)
-
-    history = _load_history(speaking_session)
+    steps = _load_steps(speaking_session)
+    step = _answered_step(steps, body.index)
+    if step.get("improved"):
+        return SpeakingImproveResult(**step["improved"])
     try:
-        if speaking_session.part == "part1":
-            scores, corrected = await asyncio.gather(
-                score_session(history, speaking_session.part),
-                build_corrected_report(history, speaking_session.topic_question),
-            )
-        else:
-            scores, corrected = await score_session(history, speaking_session.part), None
+        result = await improve_answer(step["kind"], step["question"], step["answer"])
     except Exception as exc:
-        speaking_session.status = "error"
-        speaking_session.error_message = "Не удалось получить оценку ИИ."
-        await session.commit()
-        raise HTTPException(status_code=502, detail="Не удалось получить оценку ИИ.") from exc
-
-    speaking_session.status = "done"
-    speaking_session.fluency_coherence = scores["fluency_coherence"]
-    speaking_session.lexical_resource = scores["lexical_resource"]
-    speaking_session.grammar_accuracy = scores["grammar_accuracy"]
-    speaking_session.pronunciation = scores["pronunciation"]
-    speaking_session.overall_band = scores["overall_band"]
-    speaking_session.summary_feedback = scores["summary_feedback"]
-    speaking_session.improvement_comments_json = json.dumps(scores["tips"], ensure_ascii=False)
-    speaking_session.criteria_feedback_json = json.dumps(scores["criteria_feedback"], ensure_ascii=False)
-    if corrected:
-        speaking_session.corrected_answer = corrected["corrected_answer"]
-    speaking_session.finished_at = datetime.utcnow()
+        raise _ai_error(exc) from exc
+    step["improved"] = result
+    speaking_session.transcript_json = json.dumps(steps, ensure_ascii=False)
     await session.commit()
-    return _session_out(speaking_session)
-
-
-@router.get("/{session_id}", response_model=SpeakingSessionOut)
-async def get_session_report(
-    session_id: int,
-    x_telegram_init_data: str | None = Header(default=None),
-    session: AsyncSession = Depends(get_session),
-):
-    user = await require_user(session, x_telegram_init_data)
-    return _session_out(await _get_own_session(session, session_id, user.id))
+    return SpeakingImproveResult(**result)

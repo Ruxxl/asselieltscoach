@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -186,6 +188,34 @@ async def delete_course(
     return {"deleted": True}
 
 
+_SPEAKING_PARTS = {"part1", "part2"}
+_SPEAKING_CATEGORIES = {"permanent", "new", "other"}
+
+
+def _topic_out(topic: SpeakingTopic) -> SpeakingTopicOut:
+    return SpeakingTopicOut(
+        id=topic.id,
+        title=topic.title,
+        question_text=topic.question_text,
+        questions=json.loads(topic.questions_json) if topic.questions_json else [],
+        part=topic.part or "part1",
+        category=topic.category or "other",
+        order=topic.order,
+        is_active=topic.is_active,
+    )
+
+
+def _clean_questions(questions: list[str]) -> list[str]:
+    return [q.strip() for q in questions if q and q.strip()]
+
+
+def _check_part_category(part: str | None, category: str | None) -> None:
+    if part is not None and part not in _SPEAKING_PARTS:
+        raise HTTPException(status_code=400, detail="Часть должна быть part1 или part2")
+    if category is not None and category not in _SPEAKING_CATEGORIES:
+        raise HTTPException(status_code=400, detail="Неизвестная категория темы")
+
+
 @router.get("/speaking-topics", response_model=list[SpeakingTopicOut])
 async def list_speaking_topics(
     x_telegram_init_data: str | None = Header(default=None),
@@ -193,7 +223,7 @@ async def list_speaking_topics(
 ):
     await require_admin(session, x_telegram_init_data)
     rows = await session.execute(select(SpeakingTopic).order_by(SpeakingTopic.order))
-    return rows.scalars().all()
+    return [_topic_out(t) for t in rows.scalars().all()]
 
 
 @router.post("/speaking-topics", response_model=SpeakingTopicOut)
@@ -203,16 +233,21 @@ async def create_speaking_topic(
     session: AsyncSession = Depends(get_session),
 ):
     await require_admin(session, x_telegram_init_data)
+    _check_part_category(payload.part, payload.category)
+    questions = _clean_questions(payload.questions)
     topic = SpeakingTopic(
         title=payload.title,
         question_text=payload.question_text,
+        questions_json=json.dumps(questions, ensure_ascii=False) if questions else None,
+        part=payload.part,
+        category=payload.category,
         order=payload.order,
         is_active=payload.is_active,
     )
     session.add(topic)
     await session.commit()
     await session.refresh(topic)
-    return topic
+    return _topic_out(topic)
 
 
 @router.patch("/speaking-topics/{topic_id}", response_model=SpeakingTopicOut)
@@ -223,6 +258,7 @@ async def patch_speaking_topic(
     session: AsyncSession = Depends(get_session),
 ):
     await require_admin(session, x_telegram_init_data)
+    _check_part_category(payload.part, payload.category)
     topic = await session.get(SpeakingTopic, topic_id)
     if not topic:
         raise HTTPException(status_code=404, detail="Тема не найдена")
@@ -230,12 +266,19 @@ async def patch_speaking_topic(
         topic.title = payload.title
     if payload.question_text is not None:
         topic.question_text = payload.question_text
+    if payload.questions is not None:
+        questions = _clean_questions(payload.questions)
+        topic.questions_json = json.dumps(questions, ensure_ascii=False) if questions else None
+    if payload.part is not None:
+        topic.part = payload.part
+    if payload.category is not None:
+        topic.category = payload.category
     if payload.order is not None:
         topic.order = payload.order
     if payload.is_active is not None:
         topic.is_active = payload.is_active
     await session.commit()
-    return topic
+    return _topic_out(topic)
 
 
 @router.delete("/speaking-topics/{topic_id}")

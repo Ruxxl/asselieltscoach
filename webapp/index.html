@@ -398,6 +398,28 @@
   .spkFixTip{margin-top:5px; color:var(--text-secondary); font-size:12.5px;}
   .spkAnswer b{display:block; font:600 10.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); margin-bottom:3px;}
 
+  .spkGroupTitle{font:600 11.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); margin:18px 0 8px;}
+  .spkGroupTitle:first-child{margin-top:2px;}
+  .spkTopic small{display:block; margin-top:3px; font:500 11.5px var(--font-sans); color:var(--text-secondary);}
+  .spkTopic.sel small{color:#0F766E;}
+  .spkProgText{font:600 12.5px var(--font-sans); color:var(--text-secondary);}
+  .spkProg{height:5px; border-radius:99px; background:var(--surface-2); overflow:hidden; margin:6px 0 14px;}
+  .spkProg i{display:block; height:100%; background:var(--accent-strong); transition:width .25s ease;}
+  .spkKind{font:600 10.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:5px;}
+  .spkQText.card{white-space:pre-wrap;}
+  .spkBlock{margin-top:12px;}
+  .spkBlockTitle{font:600 10.5px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;}
+  .spkChip.big{padding:9px 13px; font-size:12.5px;}
+  .spkChip[disabled]{opacity:.5; pointer-events:none;}
+  .spkFixItem{margin-top:8px; font:500 13px/1.5 var(--font-sans); color:var(--text);}
+  .spkFixItem:first-of-type{margin-top:0;}
+  .spkFixItem .was{color:var(--red); text-decoration:line-through; text-decoration-thickness:1px;}
+  .spkFixItem .now{color:var(--green); font-weight:600;}
+  .spkReview{margin:0; padding-left:18px; font:500 13px/1.55 var(--font-sans); color:var(--text);}
+  .spkReview li{margin:3px 0;}
+  .spkChg{font-weight:700; color:var(--text);}
+  .spkNote{font:500 11.5px/1.5 var(--font-sans); color:var(--text-muted); margin-top:8px;}
+
   .holdTalkBtn{
     display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
     padding:15px 20px; border-radius:999px; border:1px solid var(--border);
@@ -818,53 +840,40 @@
     <div id="newsList"><div class="hint">Загружаю…</div></div>
   </section>
 
-  <!-- 16: speaking practice — выбор части: карточки-пресеты, у выбранной — кнопка "Выбрать тему" (Part 1)
-       или "Начать" (Part 2/3) -->
+  <!-- 16: speaking practice — выбор части: Part 1 (вопросы по темам) или Part 2 и 3 (карточка + вопросы Part 3) -->
   <section class="screen" data-screen="speaking">
     <div class="apphead"><div class="brand">Speaking Practice</div></div>
     <div class="sectiontitle">Выбери часть</div>
-    <div class="aiError" id="speakingStartError" style="display:none; margin-bottom:10px;"></div>
     <div id="speakingPresets" class="spkPresets"></div>
   </section>
 
-  <!-- 16b: speaking practice Part 1 — выбор темы, затем "Начать" -->
+  <!-- 16b: speaking practice — выбор темы, затем "Начать" -->
   <section class="screen" data-screen="speakingTopicPicker">
-    <div class="topbar"><button class="xbtn" onclick="go('speaking')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge">Part 1</div></div>
+    <div class="topbar"><button class="xbtn" onclick="go('speaking')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><div class="badge" id="speakingPickerBadge">Part 1</div></div>
     <div class="sectiontitle">Выбери тему</div>
-    <div id="speakingTopicList" class="spkTopics"><div class="hint">Загружаю…</div></div>
+    <div id="speakingTopicList"><div class="hint">Загружаю…</div></div>
     <div class="spacer"></div>
     <div class="aiError" id="speakingTopicError" style="display:none; margin-bottom:10px;"></div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingTopicStartBtn" disabled onclick="startSpeakingSession(speakingChoice.topicId)">НАЧАТЬ</button></div>
   </section>
 
-  <!-- 17: speaking practice — пошаговый диалог с ИИ-экзаменатором: нажал — говоришь, нажал ещё раз —
-       реплика уходит на бэкенд (backend/routers/speaking.py), ответ приходит текстом и голосом.
-       Сверху шар экзаменатора и последняя реплика, ниже — карточки вопросов с подсказкой и примером. -->
+  <!-- 17: speaking practice — один вопрос за раз: подсказка (5-6 фраз) и готовый ответ -> запись своего ответа
+       (backend/routers/speaking.py) -> грамматический разбор и темы для повторения -> кнопки
+       "Примерная оценка" (4 критерия IELTS) и "Улучшить мой ответ" (на 1-1.5 балла выше). -->
   <section class="screen" data-screen="speakingSession">
     <div class="topbar"><button class="xbtn" onclick="exitSpeakingSession()"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button><div class="badge" id="speakingSessionBadge">Speaking</div></div>
-    <div class="speakingOrb" id="speakingOrb"></div>
-    <div class="spkControls">
-      <button class="spkReplay" id="speakingReplayBtn" onclick="replayLastExaminer()" aria-label="Повторить реплику" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg></button>
-      <button class="spkToggle" id="speakingToggleMsgBtn" onclick="toggleLastExaminerMessage()"><span>Скрыть сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
-    </div>
-    <div class="spkLastMsg" id="speakingLastMsg"></div>
-    <div class="spkYou" id="speakingYouSaid" style="display:none;"></div>
+    <div class="spkProgText" id="speakingProgText"></div>
+    <div class="spkProg"><i id="speakingProgBar" style="width:0%"></i></div>
+    <div id="speakingStepBody"></div>
     <div class="speakingStatus" id="speakingStatus"></div>
-    <div class="sectiontitle">Вопросы</div>
-    <div class="spkQList" id="speakingQList"></div>
     <div class="spacer"></div>
     <div class="bottombar" style="flex-direction:column; gap:10px;">
-      <button class="holdTalkBtn" id="speakingHoldBtn" disabled>Нажми <span class="kbd">и говори</span></button>
-      <button class="btn btn-ghost btn-wide" id="speakingEndBtn" onclick="endSpeakingCall()">ЗАВЕРШИТЬ И ОЦЕНИТЬ</button>
+      <button class="holdTalkBtn" id="speakingHoldBtn">Нажми <span class="kbd">и говори</span></button>
+      <div style="display:flex; gap:10px; width:100%;">
+        <button class="btn btn-ghost" id="speakingPrevBtn" onclick="speakingStepMove(-1)" aria-label="Предыдущий вопрос">←</button>
+        <button class="btn btn-primary btn-wide" id="speakingNextBtn" onclick="speakingStepMove(1)">СЛЕДУЮЩИЙ ВОПРОС</button>
+      </div>
     </div>
-  </section>
-
-  <!-- 18: speaking practice — отчёт с оценкой по критериям IELTS -->
-  <section class="screen" data-screen="speakingReport">
-    <div class="apphead"><div class="brand">Результат Speaking</div></div>
-    <div id="speakingReportBody"><div class="hint">Считаю оценку…</div></div>
-    <div class="spacer"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="go('speaking')">ПРАКТИКОВАТЬ ЕЩЁ РАЗ</button></div>
   </section>
 
   <!-- 19: writing checker — стартовый экран вкладки: что это, выбор задания, недописанный черновик и история.
@@ -1228,7 +1237,7 @@
     <button class="btn btn-ghost btn-wide" onclick="openAdminCourseForm(null)" style="margin-top:6px;">+ Добавить курс</button>
     <div class="sectiontitle" style="margin-top:22px;">Разделы</div>
     <div class="mycourse" style="cursor:pointer;" onclick="go('adminSpeakingTopics')">
-      <div style="flex:1"><div class="tt">Темы Speaking (Part 1)</div><div class="hint" id="adminSpeakingTopicCount">Загружаю…</div></div>
+      <div style="flex:1"><div class="tt">Темы Speaking</div><div class="hint" id="adminSpeakingTopicCount">Загружаю…</div></div>
       <div style="color:var(--text-muted);"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
     </div>
     <div class="sectiontitle" style="margin-top:22px;">Пользователи</div>
@@ -1238,8 +1247,8 @@
   <!-- 16b: admin — список тем Speaking Part 1 (вынесен из главного экрана админки) -->
   <section class="screen" data-screen="adminSpeakingTopics">
     <div class="topbar"><button class="xbtn" onclick="go('admin')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
-    <div class="qtitle">Темы Speaking (Part 1)</div>
-    <div class="hint" style="margin-bottom:12px;">С этих тем ИИ-экзаменатор начинает Part 1. Неактивные темы ученики не видят.</div>
+    <div class="qtitle">Темы Speaking</div>
+    <div class="hint" style="margin-bottom:12px;">Part 1 — вопросы темы по одному; Part 2 &amp; 3 — карточка и вопросы Part 3 к ней. Неактивные темы ученики не видят.</div>
     <div id="adminSpeakingTopicList"><div class="hint">Загружаю…</div></div>
     <div class="spacer"></div>
     <div class="bottombar"><button class="btn btn-primary btn-wide" onclick="openAdminSpeakingTopicForm(null)">+ Добавить тему</button></div>
@@ -1250,7 +1259,10 @@
     <div class="topbar"><button class="xbtn" onclick="go('adminSpeakingTopics')"><svg class="svgicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button></div>
     <div class="qtitle" id="astfTitle">Новая тема</div>
     <div class="field"><label>Название</label><input id="astfTitleInput" class="input"></div>
-    <div class="field"><label>Вопрос экзаменатора (на английском)</label><textarea id="astfQuestion" class="input" rows="3"></textarea></div>
+    <div class="field"><label>Часть</label><select id="astfPart" class="input" onchange="updateAdminSpeakingFormLabels()"><option value="part1">Part 1 — вопросы по теме</option><option value="part2">Part 2 &amp; 3 — карточка и вопросы Part 3</option></select></div>
+    <div class="field" id="astfCategoryField"><label>Раздел (Part 1)</label><select id="astfCategory" class="input"><option value="permanent">Постоянные темы</option><option value="new">Новые темы</option><option value="other">Остальные темы</option></select></div>
+    <div class="field" id="astfQuestionField"><label id="astfQuestionLabel">Первый вопрос (на английском)</label><textarea id="astfQuestion" class="input" rows="3"></textarea></div>
+    <div class="field"><label id="astfQuestionsLabel">Все вопросы темы — по одному на строку</label><textarea id="astfQuestions" class="input" rows="8"></textarea></div>
     <div class="field"><label>Порядок</label><input id="astfOrder" type="number" class="input"></div>
     <div class="field"><label><input type="checkbox" id="astfActive"> Активна</label></div>
     <div class="aiError" id="astfError" style="display:none; margin-top:10px;"></div>
@@ -1976,60 +1988,48 @@
   renderQuickQuestion(0, 'quickQ1Sentence', 'quickQ1Options', 'quickQ1Next');
   renderQuickQuestion(1, 'quickQ2Sentence', 'quickQ2Options', 'quickQ2Next');
 
-  // ---- Speaking Practice: пошаговый диалог с ИИ-экзаменатором ----
-  // Выбрал часть -> (Part 1) выбрал тему -> "Начать": экзаменатор задаёт вопрос. Ученик жмёт кнопку и
-  // говорит (MediaRecorder, как в reading-check), жмёт ещё раз — клип уходит на бэкенд
-  // (backend/routers/speaking.py): Gemini расшифровывает и отвечает как экзаменатор, ответ
-  // озвучивается голосом Deepgram (audio_b64) или, если его нет, встроенным speechSynthesis.
-  // Итог — POST /finish по кнопке "Завершить" или когда экзаменатор сам закрыл разговор.
+  // ---- Speaking Practice: тренировка по одному вопросу ----
+  // Часть -> тема -> вопросы темы по одному (Part 2: карточка, затем вопросы Part 3). На каждый вопрос:
+  // "Подсказка" (5-6 опорных фраз), "Готовый ответ", запись своего ответа (MediaRecorder -> /answer:
+  // расшифровка + только грамматические ошибки + темы для повторения), затем по кнопкам "Примерная
+  // оценка" (4 критерия IELTS) и "Улучшить мой ответ" (на 1-1.5 балла выше). Бэкенд — backend/routers/speaking.py.
 
   const SPEAKING_PARTS = [
-    { id: 'part1', title: 'IELTS Speaking Part 1', tag: 'Part 1', minutes: 5 },
-    { id: 'part2', title: 'IELTS Speaking Part 2', tag: 'Part 2', minutes: 3 },
-    { id: 'part3', title: 'IELTS Speaking Part 3', tag: 'Part 3', minutes: 5 },
+    { id: 'part1', title: 'IELTS Speaking Part 1', tag: 'Part 1', sub: 'Вопросы по темам' },
+    { id: 'part2', title: 'IELTS Speaking Part 2 & 3', tag: 'Part 2 & 3', sub: 'Карточка и обсуждение' },
   ];
-  const CLOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  const SPEAKING_CATEGORIES = [['permanent', 'Постоянные темы'], ['new', 'Новые темы'], ['other', 'Остальные темы']];
+  const SPEAKING_KIND_LABELS = { part1: 'Part 1', part2: 'Part 2 · карточка', part3: 'Part 3' };
   const HINT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>';
   const SAMPLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
-  const CHEVRON_ICON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
+  const LISTEN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 
   let speakingChoice = { part: 'part1', topicId: null };
-  let currentSpeakingSessionId = null;
+  let spk = null;                  // {sessionId, part, title, i, steps:[{index, kind, question, ...}]}
   let speakingStarting = false;
   let speakingRecorder = null;
-  let speakingBusy = false;            // ждём ответ сервера на реплику
-  let speakingFinished = false;        // экзаменатор сам закрыл разговор
-  let speakingFinishRequested = false; // нажали "Завершить", пока реплика ещё в пути
-  let speakingToken = 0;               // гасит запоздавшие ответы брошенной/завершённой сессии
-  let speakingQuestions = [];          // [{question, answer, help:{hint,sample}|null, open:null|'hint'|'sample'}]
-  let lastExaminer = null;             // {text, question, audioB64} — для кнопки повтора
+  let speakingBusy = false;        // ждём ответ сервера на запись
+  let speakingToken = 0;           // гасит запоздавшие ответы брошенной/закрытой сессии
 
   function renderSpeakingSetup(){
     const el = document.getElementById('speakingPresets');
     el.innerHTML = '';
     SPEAKING_PARTS.forEach(p => {
-      const selected = speakingChoice.part === p.id;
       const card = document.createElement('div');
-      card.className = 'spkPreset' + (selected ? ' sel' : '');
+      card.className = 'spkPreset';
       card.innerHTML = `
-        <div><div class="tt">${p.title}</div><div class="spkTags"><span class="spkTag">IELTS</span><span class="spkTag">${p.tag}</span></div></div>
-        <div class="spkDur">${CLOCK_ICON}${p.minutes} min</div>
-        ${selected ? `<button class="spkGo">${p.id === 'part1' ? 'Выбрать тему' : 'Начать'}</button>` : ''}`;
-      card.onclick = () => { speakingChoice.part = p.id; renderSpeakingSetup(); };
-      const go_ = card.querySelector('.spkGo');
-      if (go_) go_.onclick = (e) => { e.stopPropagation(); onSpeakingPresetGo(); };
+        <div><div class="tt">${p.title}</div><div class="spkTags"><span class="spkTag">IELTS</span><span class="spkTag">${p.tag}</span><span class="spkTag">${p.sub}</span></div></div>
+        <button class="spkGo">Выбрать тему</button>`;
+      card.onclick = () => openSpeakingPicker(p.id);
       el.appendChild(card);
     });
   }
 
-  function onSpeakingPresetGo(){
-    if (speakingChoice.part === 'part1') {
-      speakingChoice.topicId = null;
-      go('speakingTopicPicker');
-      renderSpeakingTopicPicker();
-    } else {
-      startSpeakingSession(null);
-    }
+  function openSpeakingPicker(part){
+    speakingChoice = { part, topicId: null };
+    document.getElementById('speakingPickerBadge').textContent = SPEAKING_PARTS.find(p => p.id === part)?.tag || 'Speaking';
+    go('speakingTopicPicker');
+    renderSpeakingTopicPicker();
   }
 
   async function renderSpeakingTopicPicker(){
@@ -2041,23 +2041,40 @@
     try {
       const res = await fetch('/api/speaking/topics');
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const topics = await res.json();
+      const topics = (await res.json()).filter(t => t.part === speakingChoice.part);
       if (!topics.length) { el.innerHTML = '<div class="hint">Темы ещё не добавлены.</div>'; return; }
       el.innerHTML = '';
-      topics.forEach(t => {
-        const btn = document.createElement('button');
-        btn.className = 'spkTopic' + (speakingChoice.topicId === t.id ? ' sel' : '');
-        btn.textContent = t.title;
-        btn.onclick = () => {
-          speakingChoice.topicId = t.id;
-          el.querySelectorAll('.spkTopic').forEach(b => b.classList.toggle('sel', b === btn));
-          startBtn.disabled = false;
-        };
-        el.appendChild(btn);
-      });
+      const addGroup = (title, list) => {
+        if (!list.length) return;
+        if (title) { const h = document.createElement('div'); h.className = 'spkGroupTitle'; h.textContent = title; el.appendChild(h); }
+        const grid = document.createElement('div');
+        grid.className = 'spkTopics';
+        list.forEach(t => {
+          const btn = document.createElement('button');
+          btn.className = 'spkTopic';
+          btn.innerHTML = `${escapeHtml(t.title)}<small>${t.question_count} ${speakingPlural(t.question_count)}</small>`;
+          btn.onclick = () => {
+            speakingChoice.topicId = t.id;
+            el.querySelectorAll('.spkTopic').forEach(b => b.classList.toggle('sel', b === btn));
+            startBtn.disabled = false;
+          };
+          grid.appendChild(btn);
+        });
+        el.appendChild(grid);
+      };
+      if (speakingChoice.part === 'part1') {
+        SPEAKING_CATEGORIES.forEach(([key, title]) => addGroup(title, topics.filter(t => t.category === key)));
+      } else {
+        addGroup('', topics);
+      }
     } catch (e) {
       el.innerHTML = '<div style="color:var(--red); font-size:13px;">Не удалось загрузить темы.</div>';
     }
+  }
+
+  function speakingPlural(n){
+    const m10 = n % 10, m100 = n % 100;
+    return m10 === 1 && m100 !== 11 ? 'вопрос' : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 'вопроса' : 'вопросов';
   }
 
   // ---- Звук: mp3 от Deepgram через <audio>, speechSynthesis как запасной голос ----
@@ -2161,180 +2178,231 @@
     }
   }
 
-  function replayLastExaminer(){
-    if (!lastExaminer || speakingRecorder) return;
-    unlockSpeakingAudio();
-    speakExaminer(lastExaminer.text, lastExaminer.audioB64);
-  }
-
-  // ---- Экран звонка: последняя реплика + карточки вопросов ----
-  function renderLastExaminer(){
-    const el = document.getElementById('speakingLastMsg');
-    if (!lastExaminer) { el.innerHTML = ''; return; }
-    const { text, question } = lastExaminer;
-    const at = question ? text.lastIndexOf(question) : -1;
-    el.innerHTML = at < 0
-      ? escapeHtml(text)
-      : escapeHtml((text.slice(0, at) + text.slice(at + question.length)).trim()) + `<b>${escapeHtml(question)}</b>`;
-    document.getElementById('speakingReplayBtn').disabled = false;
-  }
-
-  function showYouSaid(text, correction){
-    const el = document.getElementById('speakingYouSaid');
-    if (text == null) { el.style.display = 'none'; el.innerHTML = ''; return; }
-    el.innerHTML = `<b>Ты сказал</b>${escapeHtml(text || '…')}` +
-      (correction ? `<div class="spkYouFix"><b>Как лучше</b>${escapeHtml(correction.better)}${correction.tip ? `<div style="opacity:.85; margin-top:4px;">${escapeHtml(correction.tip)}</div>` : ''}</div>` : '');
-    el.style.display = 'block';
-  }
-
-  function toggleLastExaminerMessage(){
-    const msg = document.getElementById('speakingLastMsg');
-    const btn = document.getElementById('speakingToggleMsgBtn');
-    const hidden = msg.classList.toggle('hidden');
-    btn.classList.toggle('collapsed', hidden);
-    btn.querySelector('span').textContent = hidden ? 'Показать сообщение' : 'Скрыть сообщение';
-  }
-
-  function setExaminerMessage(text, question, audioB64){
-    lastExaminer = { text, question, audioB64 };
-    renderLastExaminer();
-    const last = speakingQuestions[speakingQuestions.length - 1];
-    const repeated = last && question && last.question.toLowerCase() === question.toLowerCase();
-    if (question && !repeated) {
-      // Сворачиваем всё, кроме только что отвеченной карточки — там видно "Твой ответ".
-      speakingQuestions.slice(0, -1).forEach(q => { q.collapsed = true; });
-      speakingQuestions.push({ question, answer: null, help: null, open: null, loading: false, collapsed: false });
-    } else if (repeated) {
-      last.answer = null; // экзаменатор переспросил — ждём новый ответ на тот же вопрос
-    }
-    renderSpeakingQuestions();
-  }
-
-  function renderSpeakingQuestions(){
-    const list = document.getElementById('speakingQList');
-    list.innerHTML = '';
-    speakingQuestions.forEach((q, i) => {
-      const card = document.createElement('div');
-      card.className = 'spkQ' + (q.collapsed ? ' collapsed' : '');
-      let help = '';
-      if (q.open) {
-        help = q.loading || !q.help
-          ? '<div class="spkHelp">Готовлю…</div>'
-          : q.open === 'hint'
-            ? `<div class="spkHelp"><b>Useful vocabulary</b><ul class="spkVocab">${(q.help.vocabulary || []).map(v =>
-                `<li><span class="spkVocabEn">${escapeHtml(v.phrase)}</span> — ${escapeHtml(v.translation)}</li>`).join('')}</ul></div>`
-            : `<div class="spkHelp"><b>Пример ответа</b>${escapeHtml(q.help.sample)}</div>`;
-      }
-      card.innerHTML = `
-        <div class="spkQHead"><span class="spkQNum">Q${i + 1}</span>Экзаменатор${CHEVRON_ICON}</div>
-        <div class="spkQBody">
-          <div class="spkQText">${escapeHtml(q.question)}</div>
-          <div class="spkQActions">
-            <button class="spkChip${q.open === 'hint' ? ' on' : ''}" data-kind="hint">${HINT_ICON}Подсказка</button>
-            <button class="spkChip${q.open === 'sample' ? ' on' : ''}" data-kind="sample">${SAMPLE_ICON}Пример ответа</button>
-          </div>
-          ${help}
-          ${q.answer != null ? `<div class="spkAnswer"><b>Твой ответ</b>${escapeHtml(q.answer || '…')}</div>` : ''}
-          ${q.correction ? `<div class="spkFix"><b>Как лучше сказать</b>${escapeHtml(q.correction.better)}${q.correction.tip ? `<div class="spkFixTip">${escapeHtml(q.correction.tip)}</div>` : ''}</div>` : ''}
-        </div>`;
-      card.querySelector('.spkQHead').onclick = () => { q.collapsed = !q.collapsed; renderSpeakingQuestions(); };
-      card.querySelectorAll('.spkChip').forEach(chip => {
-        chip.onclick = () => toggleQuestionHelp(q, chip.dataset.kind);
-      });
-      list.appendChild(card);
-    });
-  }
-
-  async function toggleQuestionHelp(q, kind){
-    q.open = q.open === kind ? null : kind;
-    renderSpeakingQuestions();
-    if (!q.open || q.help || q.loading || !currentSpeakingSessionId) return;
-    q.loading = true;
-    try {
-      const res = await fetch(`/api/speaking/${currentSpeakingSessionId}/help`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ question: q.question }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-      q.help = data;
-    } catch (e) {
-      q.open = null;
-      setSpeakingStatus('Не удалось получить подсказку: ' + e.message);
-    } finally {
-      q.loading = false;
-      renderSpeakingQuestions();
-    }
-  }
+  // ---- Экран вопроса ----
+  const spkStep = () => spk && spk.steps[spk.i];
+  const spkBold = (text) => escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong class="spkChg">$1</strong>');
 
   function setSpeakingStatus(text){
     const el = document.getElementById('speakingStatus');
-    if (el) el.textContent = text;
+    if (el) el.textContent = text || '';
   }
 
   function setHoldBtn(state){
     const btn = document.getElementById('speakingHoldBtn');
+    if (!btn) return;
+    const step = spkStep();
     btn.classList.toggle('active', state === 'recording');
-    btn.disabled = state === 'busy' || state === 'done';
+    btn.disabled = state === 'busy';
     btn.innerHTML = state === 'recording' ? 'Говорю <span class="kbd">нажми, чтобы отправить</span>'
-      : state === 'busy' ? 'Экзаменатор думает…'
-      : state === 'done' ? 'Разговор завершён'
+      : state === 'busy' ? 'Проверяю ответ…'
+      : step && step.answer != null ? 'Записать ответ заново'
       : 'Нажми <span class="kbd">и говори</span>';
-    document.getElementById('speakingOrb')?.classList.toggle('listening', state === 'recording');
   }
 
-  // topicId задан только для Part 1 (кнопка "Начать" на экране выбора темы).
+  async function speakingApi(path, body){
+    const res = await fetch(`/api/speaking/${spk.sessionId}/${path}`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
+    return data;
+  }
+
+  function renderSpeakingStep(){
+    if (!spk) return;
+    const step = spkStep();
+    const total = spk.steps.length;
+    document.getElementById('speakingProgText').textContent = `Вопрос ${spk.i + 1} из ${total}`;
+    document.getElementById('speakingProgBar').style.width = `${Math.round((spk.i + 1) / total * 100)}%`;
+    document.getElementById('speakingPrevBtn').disabled = spk.i === 0;
+    document.getElementById('speakingNextBtn').textContent = spk.i === total - 1 ? 'ЗАКОНЧИТЬ' : 'СЛЕДУЮЩИЙ ВОПРОС';
+
+    let help = '';
+    if (step.openHelp) {
+      help = step.helpLoading || !step.help
+        ? '<div class="spkHelp">Готовлю…</div>'
+        : step.openHelp === 'hint'
+          ? `<div class="spkHelp"><b>Опорные слова и фразы</b><ul class="spkVocab">${step.help.vocabulary.map(v =>
+              `<li><span class="spkVocabEn">${escapeHtml(v.phrase)}</span> — ${escapeHtml(v.translation)}</li>`).join('')}</ul></div>`
+          : `<div class="spkHelp"><b>Готовый ответ</b>${escapeHtml(step.help.sample)}</div>`;
+    }
+
+    let result = '';
+    if (step.answer != null) {
+      const has = step.answer.trim().length > 0;
+      result += `<div class="spkBlock"><div class="spkAnswer" style="margin-top:0; padding-top:0; border-top:none;"><b>Твой ответ</b>${escapeHtml(has ? step.answer : '… (не удалось разобрать речь — запиши ещё раз)')}</div></div>`;
+      if (has) {
+        result += `<div class="spkBlock"><div class="spkBlockTitle">Грамматика</div>` + (step.corrections.length
+          ? `<div class="spkFix">${step.corrections.map(c => `
+              <div class="spkFixItem"><span class="was">${escapeHtml(c.original)}</span> → <span class="now">${escapeHtml(c.better)}</span>${c.why ? `<div class="spkFixTip">${escapeHtml(c.why)}</div>` : ''}</div>`).join('')}</div>`
+          : '<div class="spkFix">Грамматических ошибок не нашёл — отличный ответ!</div>') + '</div>';
+        if (step.review_topics.length) {
+          result += `<div class="spkBlock"><div class="spkBlockTitle">Что повторить</div><ul class="spkReview">${step.review_topics.map(t =>
+            `<li><b>${escapeHtml(t.topic)}</b>${t.note ? ` — ${escapeHtml(t.note)}` : ''}</li>`).join('')}</ul></div>`;
+        }
+        result += `<div class="spkQActions" style="margin-top:14px;">
+            <button class="spkChip big${step.estimate ? ' on' : ''}" id="spkEstBtn" onclick="spkEstimate()"${step.estimating ? ' disabled' : ''}>Примерная оценка</button>
+            <button class="spkChip big${step.improved ? ' on' : ''}" id="spkImpBtn" onclick="spkImprove()"${step.improving ? ' disabled' : ''}>Улучшить мой ответ</button>
+          </div>`;
+        if (step.estimating) result += '<div class="spkHelp">Считаю оценку…</div>';
+        if (step.estimate) result += renderSpeakingEstimate(step.estimate);
+        if (step.improving) result += '<div class="spkHelp">Улучшаю ответ…</div>';
+        if (step.improved) {
+          result += `<div class="spkBlock"><div class="transcript"><b>Улучшенный ответ · Band ${step.improved.current_band.toFixed(1)} → ${step.improved.target_band.toFixed(1)}</b>${spkBold(step.improved.improved_answer)}<div class="spkNote">Жирным выделено то, что изменилось по сравнению с твоим ответом.</div></div></div>`;
+        }
+      }
+    }
+
+    document.getElementById('speakingStepBody').innerHTML = `
+      <div class="spkQ"><div class="spkQBody">
+        <div class="spkKind">${SPEAKING_KIND_LABELS[step.kind] || ''}</div>
+        <div class="spkQText${step.kind === 'part2' ? ' card' : ''}">${step.kind === 'part2' ? escapeHtml(step.question) : `<b>${escapeHtml(step.question)}</b>`}</div>
+        <div class="spkQActions">
+          <button class="spkChip" onclick="spkListen()">${LISTEN_ICON}Послушать</button>
+          <button class="spkChip${step.openHelp === 'hint' ? ' on' : ''}" onclick="spkToggleHelp('hint')">${HINT_ICON}Подсказка</button>
+          <button class="spkChip${step.openHelp === 'sample' ? ' on' : ''}" onclick="spkToggleHelp('sample')">${SAMPLE_ICON}Готовый ответ</button>
+        </div>
+        ${help}
+        ${result}
+      </div></div>`;
+    setHoldBtn(speakingBusy ? 'busy' : speakingRecorder ? 'recording' : 'idle');
+  }
+
+  function renderSpeakingEstimate(est){
+    const bands = [
+      ['Fluency & Coherence', est.fluency_coherence, 'var(--accent-strong)', 'fluency_coherence'],
+      ['Lexical Resource', est.lexical_resource, 'var(--blue)', 'lexical_resource'],
+      ['Grammar Accuracy', est.grammar_accuracy, 'var(--green)', 'grammar_accuracy'],
+      ['Pronunciation', est.pronunciation, 'var(--red)', 'pronunciation'],
+    ];
+    if (!est.overall_band) {
+      return '<div class="spkBlock"><div class="transcript"><b>Оценки нет</b>Слишком мало сказано, чтобы оценить — ответь подробнее.</div></div>';
+    }
+    const fb = est.criteria_feedback || {};
+    return `<div class="spkBlock"><div class="transcript"><b>Примерная оценка · Band ${est.overall_band.toFixed(1)}</b>
+      ${bands.map(([label, val, color, key]) => `
+        <div class="skillrow"><div class="sl">${label}</div><div class="sb"><i style="width:${Math.min(100, Math.round((val || 0) / 9 * 100))}%; background:${color};"></i></div><div class="sv">${(val || 0).toFixed(1)}</div></div>
+        ${fb[key] ? `<div class="spkCrit" style="margin-top:2px; margin-bottom:8px;">${escapeHtml(fb[key])}</div>` : ''}`).join('')}
+      <div class="spkNote">Оценка приблизительная: считается по расшифровке одного ответа, произношение — тоже по тексту, не по звуку.</div></div></div>`;
+  }
+
+  async function spkListen(){
+    const step = spkStep();
+    if (!step || speakingRecorder) return;
+    unlockSpeakingAudio();
+    const text = step.question.split('\n').map(l => l.trim().replace(/[.:]+$/, '')).filter(Boolean).join('. ');
+    if (step.audio === undefined) {
+      try { step.audio = (await speakingApi('speak', { index: step.index })).audio_b64; } catch (e) { step.audio = null; }
+    }
+    speakExaminer(text, step.audio);
+  }
+
+  async function spkToggleHelp(kind){
+    const step = spkStep();
+    step.openHelp = step.openHelp === kind ? null : kind;
+    renderSpeakingStep();
+    if (!step.openHelp || step.help || step.helpLoading) return;
+    const sessionId = spk.sessionId;
+    step.helpLoading = true;
+    try {
+      const data = await speakingApi('help', { index: step.index });
+      if (!spk || spk.sessionId !== sessionId) return;
+      step.help = data;
+    } catch (e) {
+      step.openHelp = null;
+      if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось получить подсказку: ' + e.message);
+    } finally {
+      step.helpLoading = false;
+      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+    }
+  }
+
+  async function spkEstimate(){
+    const step = spkStep();
+    if (step.estimate) { step.estimate = null; renderSpeakingStep(); return; } // повторное нажатие сворачивает блок
+    const sessionId = spk.sessionId;
+    step.estimating = true;
+    renderSpeakingStep();
+    try {
+      const data = await speakingApi('estimate', { index: step.index });
+      if (spk && spk.sessionId === sessionId) step.estimate = data;
+    } catch (e) {
+      if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось получить оценку: ' + e.message);
+    } finally {
+      step.estimating = false;
+      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+    }
+  }
+
+  async function spkImprove(){
+    const step = spkStep();
+    if (step.improved) { step.improved = null; renderSpeakingStep(); return; }
+    const sessionId = spk.sessionId;
+    step.improving = true;
+    renderSpeakingStep();
+    try {
+      const data = await speakingApi('improve', { index: step.index });
+      if (spk && spk.sessionId === sessionId) step.improved = data;
+    } catch (e) {
+      if (spk && spk.sessionId === sessionId) setSpeakingStatus('Не удалось улучшить ответ: ' + e.message);
+    } finally {
+      step.improving = false;
+      if (spk && spk.sessionId === sessionId && spkStep() === step) renderSpeakingStep();
+    }
+  }
+
+  function speakingStepMove(delta){
+    if (!spk || speakingBusy || speakingRecorder) return;
+    const next = spk.i + delta;
+    if (next < 0) return;
+    if (next >= spk.steps.length) { go('speakingTopicPicker'); renderSpeakingTopicPicker(); return; }
+    stopSpeakingPlayback();
+    spk.i = next;
+    setSpeakingStatus('');
+    renderSpeakingStep();
+    window.scrollTo(0, 0);
+  }
+
+  // topicId — из экрана выбора темы (кнопка "Начать").
   async function startSpeakingSession(topicId){
-    if (speakingStarting) return;
+    if (speakingStarting || topicId == null) return;
     speakingStarting = true;
     unlockSpeakingAudio();
-    const fromTopics = topicId != null;
-    const btn = fromTopics ? document.getElementById('speakingTopicStartBtn') : document.querySelector('.spkPreset.sel .spkGo');
-    const errEl = document.getElementById(fromTopics ? 'speakingTopicError' : 'speakingStartError');
+    const btn = document.getElementById('speakingTopicStartBtn');
+    const errEl = document.getElementById('speakingTopicError');
     errEl.style.display = 'none';
-    const btnText = btn?.textContent;
-    if (btn) { btn.disabled = true; btn.textContent = 'Начинаю…'; }
+    const btnText = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Начинаю…';
     try {
-      const body = { part: speakingChoice.part };
-      if (fromTopics) body.topic_id = topicId;
       const res = await fetch('/api/speaking/start', {
         method: 'POST',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(body),
+        body: JSON.stringify({ topic_id: topicId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-
-      currentSpeakingSessionId = data.session_id;
-      const token = ++speakingToken;
-      speakingFinished = false;
+      ++speakingToken;
       speakingBusy = false;
-      speakingFinishRequested = false;
-      speakingQuestions = [];
-      showYouSaid(null);
-      document.getElementById('speakingSessionBadge').textContent =
-        SPEAKING_PARTS.find(p => p.id === speakingChoice.part)?.tag || 'Speaking';
-      document.getElementById('speakingEndBtn').disabled = false;
-      setHoldBtn('idle');
+      spk = { sessionId: data.session_id, part: data.part, title: data.topic_title, i: 0, steps: data.steps };
+      document.getElementById('speakingSessionBadge').textContent = data.topic_title;
+      setSpeakingStatus('');
       go('speakingSession');
-      setExaminerMessage(data.ai_message, data.question, data.audio_b64);
-      setSpeakingStatus('Экзаменатор говорит — можешь перебить кнопкой');
-      await speakExaminer(data.ai_message, data.audio_b64);
-      if (token === speakingToken && !speakingRecorder && !speakingBusy) setSpeakingStatus('Нажми кнопку и отвечай');
+      renderSpeakingStep();
     } catch (e) {
       errEl.textContent = 'Не удалось начать: ' + e.message;
       errEl.style.display = 'block';
     } finally {
       speakingStarting = false;
-      if (btn) { btn.disabled = false; btn.textContent = btnText; }
+      btn.disabled = false; btn.textContent = btnText;
     }
   }
 
-  // ---- Тап-переключатель: нажал — пишем, нажал ещё раз — отправляем реплику ----
+  // ---- Запись ответа: нажал — пишем, нажал ещё раз — отправляем на проверку ----
   async function speakingHoldToggle(e){
     if (e) e.preventDefault();
-    if (!currentSpeakingSessionId || speakingBusy || speakingFinished) return;
+    if (!spk || speakingBusy) return;
     if (!speakingRecorder) {
       unlockSpeakingAudio();
       stopSpeakingPlayback();
@@ -2345,7 +2413,7 @@
         rec.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
         rec.onstop = () => {
           stream.getTracks().forEach(t => t.stop());
-          sendSpeakingTurn(new Blob(chunks, { type: rec.mimeType || 'audio/webm' }));
+          sendSpeakingAnswer(new Blob(chunks, { type: rec.mimeType || 'audio/webm' }));
         };
         rec.start();
         speakingRecorder = rec;
@@ -2368,78 +2436,37 @@
     if (btn) btn.addEventListener('click', speakingHoldToggle);
   })();
 
-  async function sendSpeakingTurn(blob){
+  async function sendSpeakingAnswer(blob){
     const token = speakingToken;
-    const sessionId = currentSpeakingSessionId;
-    setSpeakingStatus('Экзаменатор думает…');
+    const step = spkStep();
+    const sessionId = spk.sessionId;
+    setSpeakingStatus('Проверяю ответ…');
     const form = new FormData();
     form.append('audio', blob, 'answer.' + ((blob.type || '').includes('mp4') ? 'm4a' : 'webm'));
+    form.append('index', String(step.index));
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 70000);
     try {
-      const res = await fetch(`/api/speaking/${sessionId}/turn`, {
+      const res = await fetch(`/api/speaking/${sessionId}/answer`, {
         method: 'POST', headers: authHeaders(), body: form, signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
       if (token !== speakingToken) return;
-
-      const openQ = [...speakingQuestions].reverse().find(q => q.answer == null);
-      if (openQ) { openQ.answer = data.student_said; openQ.correction = data.correction; }
-      showYouSaid(data.student_said, data.correction);
+      step.answer = data.student_said;
+      step.corrections = data.corrections;
+      step.review_topics = data.review_topics;
+      step.estimate = null; step.improved = null;
       speakingBusy = false;
-      speakingFinished = data.finished;
-      setExaminerMessage(data.ai_message, data.question, data.audio_b64);
-      if (speakingFinishRequested) { finishSpeakingSession(); return; }
-      setHoldBtn(data.finished ? 'done' : 'idle');
-      setSpeakingStatus(data.finished ? 'Экзаменатор завершает разговор…' : 'Экзаменатор говорит — можешь перебить кнопкой');
-      await speakExaminer(data.ai_message, data.audio_b64);
-      if (token !== speakingToken) return;
-      if (data.finished) { finishSpeakingSession(); return; }
-      if (!speakingRecorder && !speakingBusy) setSpeakingStatus('Нажми кнопку и отвечай');
+      setSpeakingStatus('');
+      renderSpeakingStep();
     } catch (err) {
       if (token !== speakingToken) return;
       speakingBusy = false;
-      if (speakingFinishRequested) { finishSpeakingSession(); return; }
+      setSpeakingStatus(err.name === 'AbortError' ? 'Сервер не ответил. Запиши ещё раз.' : 'Не получилось: ' + err.message + ' Запиши ещё раз.');
       setHoldBtn('idle');
-      setSpeakingStatus(err.name === 'AbortError'
-        ? 'Сервер не ответил. Скажи ещё раз.'
-        : 'Не получилось: ' + err.message + ' Скажи ещё раз.');
     } finally {
       clearTimeout(timeoutId);
-    }
-  }
-
-  function endSpeakingCall(){
-    if (!currentSpeakingSessionId) return;
-    if (!speakingRecorder && !speakingBusy && !speakingQuestions.some(q => q.answer)) {
-      setSpeakingStatus('Ответь хотя бы на один вопрос — тогда будет что оценить.');
-      return;
-    }
-    if (speakingRecorder || speakingBusy) {
-      // Последняя реплика ещё не дошла до бэкенда — дождёмся её, иначе она не попадёт в отчёт.
-      speakingFinishRequested = true;
-      document.getElementById('speakingEndBtn').disabled = true;
-      setSpeakingStatus('Дождусь ответа и завершу…');
-      if (speakingRecorder) speakingHoldToggle();
-      return;
-    }
-    finishSpeakingSession();
-  }
-
-  async function finishSpeakingSession(){
-    const sessionId = currentSpeakingSessionId;
-    if (!sessionId) return;
-    go('speakingReport'); // уход с экрана звонка сам глушит запись и звук (abandonSpeakingCall)
-    const reportEl = document.getElementById('speakingReportBody');
-    reportEl.innerHTML = '<div class="hint">Считаю оценку…</div>';
-    try {
-      const res = await fetch(`/api/speaking/${sessionId}/finish`, { method: 'POST', headers: authHeaders() });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
-      renderSpeakingReport(data);
-    } catch (err) {
-      reportEl.innerHTML = `<div class="aiError">${escapeHtml(err.message || 'Не удалось получить оценку.')}</div>`;
     }
   }
 
@@ -2453,55 +2480,13 @@
     }
     stopSpeakingPlayback();
     speakingBusy = false;
-    speakingFinishRequested = false;
-    currentSpeakingSessionId = null;
-    setHoldBtn('idle');
+    spk = null;
   }
 
   function exitSpeakingSession(){
-    go('speaking');
+    go('speakingTopicPicker');
+    renderSpeakingTopicPicker();
   }
-
-  function renderSpeakingReport(data){
-    const reportEl = document.getElementById('speakingReportBody');
-    const bands = [
-      ['Fluency & Coherence', data.fluency_coherence, 'var(--accent-strong)', 'fluency_coherence'],
-      ['Lexical Resource', data.lexical_resource, 'var(--blue)', 'lexical_resource'],
-      ['Grammar Accuracy', data.grammar_accuracy, 'var(--green)', 'grammar_accuracy'],
-      ['Pronunciation', data.pronunciation, 'var(--red)', 'pronunciation'],
-    ];
-    const tips = data.improvement_comments || [];
-    if (!data.overall_band) {
-      // 0 — модель честно не стала оценивать (слишком мало речи); пустые шкалы выглядели бы как поломка.
-      reportEl.innerHTML = `<div class="transcript"><b>Оценки нет</b>${escapeHtml(data.summary_feedback || 'Маловато сказано, чтобы оценить — попробуй ещё раз и отвечай подробнее.')}</div>`;
-      return;
-    }
-    // Разбор по каждому критерию на английском; у старых сессий его нет — показываем общий отзыв.
-    const criteria = data.criteria_feedback || {};
-    const feedbackHtml = bands.some(b => criteria[b[3]])
-      ? `<div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${data.summary_feedback ? `<div class="spkCritIntro">${escapeHtml(data.summary_feedback)}</div>` : ''}${bands.filter(b => criteria[b[3]]).map(([label, val, color, key]) => `
-          <div class="spkCrit"><div class="spkCritHead" style="color:${color};">${label} · ${(val || 0).toFixed(1)}</div>${escapeHtml(criteria[key])}</div>`).join('')}</div>`
-      : `<div class="transcript" style="margin-top:14px;"><b>Обратная связь</b>${escapeHtml(data.summary_feedback || '')}</div>`;
-    reportEl.innerHTML = `
-      <div class="center-col" style="flex:none; margin-bottom:14px;">
-        <div style="font:600 13px var(--font-sans); color:var(--text-secondary);">Твой Band</div>
-        <div class="resultlevel">${(data.overall_band ?? 0).toFixed(1)}</div>
-      </div>
-      <div style="width:100%;">
-        ${bands.map(([label, val, color]) => `
-          <div class="skillrow"><div class="sl">${label}</div><div class="sb"><i style="width:${Math.min(100, Math.round((val || 0) / 9 * 100))}%; background:${color};"></i></div><div class="sv">${(val || 0).toFixed(1)}</div></div>
-        `).join('')}
-      </div>
-      ${feedbackHtml}
-      ${tips.length ? `
-        <div class="sectiontitle" style="margin-top:16px;">${typeof tips[0] === 'string' ? 'Советы' : 'How to improve your answer'}</div>
-        <ul style="margin:0 0 12px; padding-left:20px; font:500 13.5px/1.6 var(--font-sans); color:var(--text);">${tips.map(c => typeof c === 'string'
-          ? `<li>${escapeHtml(c)}</li>`
-          : `<li class="spkTip">“${escapeHtml(c.original)}” → <b>“${escapeHtml(c.better)}”</b>${c.why ? `<div class="spkTipWhy">${escapeHtml(c.why)}</div>` : ''}</li>`).join('')}</ul>` : ''}
-      ${data.corrected_answer ? `<div class="transcript"><b>Как мог бы звучать твой ответ</b>${escapeHtml(data.corrected_answer)}</div>` : ''}
-    `;
-  }
-
 
   // ---- Новости от преподавателя ----
   function formatDate(iso){
@@ -2678,7 +2663,8 @@
       row.className = 'mycourse';
       row.style.cursor = 'pointer';
       row.style.opacity = t.is_active ? 1 : .5;
-      row.innerHTML = `<div style="flex:1"><div class="tt">${escapeHtml(t.title)}</div><div class="hint">${escapeHtml(t.question_text)}</div></div>`;
+      const label = t.part === 'part2' ? 'Part 2 & 3' : 'Part 1';
+      row.innerHTML = `<div style="flex:1"><div class="tt">${escapeHtml(t.title)}</div><div class="hint">${label} · ${t.questions.length || 1} ${speakingPlural(t.questions.length || 1)}</div></div>`;
       row.onclick = () => openAdminSpeakingTopicForm(t);
       el.appendChild(row);
     });
@@ -2688,12 +2674,24 @@
     adminEditingSpeakingTopicId = topic ? topic.id : null;
     document.getElementById('astfTitle').textContent = topic ? 'Изменить тему' : 'Новая тема';
     document.getElementById('astfTitleInput').value = topic ? topic.title : '';
+    document.getElementById('astfPart').value = topic ? topic.part : 'part1';
+    document.getElementById('astfCategory').value = topic ? topic.category : 'other';
     document.getElementById('astfQuestion').value = topic ? topic.question_text : '';
+    document.getElementById('astfQuestions').value = topic ? (topic.questions.length ? topic.questions : (topic.part === 'part2' ? [] : [topic.question_text])).join('\n') : '';
+    updateAdminSpeakingFormLabels();
     document.getElementById('astfOrder').value = topic ? topic.order : adminSpeakingTopicsCache.length;
     document.getElementById('astfActive').checked = topic ? topic.is_active : true;
     document.getElementById('astfDeleteBtn').style.display = topic ? '' : 'none';
     document.getElementById('astfError').style.display = 'none';
     go('adminSpeakingTopicForm');
+  }
+
+  function updateAdminSpeakingFormLabels(){
+    const card = document.getElementById('astfPart').value === 'part2';
+    document.getElementById('astfQuestionLabel').textContent = card ? 'Карточка Part 2 (Describe… / You should say…)' : 'Первый вопрос (на английском)';
+    document.getElementById('astfQuestionsLabel').textContent = card ? 'Вопросы Part 3 к карточке — по одному на строку' : 'Все вопросы темы — по одному на строку';
+    document.getElementById('astfQuestion').rows = card ? 7 : 3;
+    document.getElementById('astfCategoryField').style.display = card ? 'none' : '';
   }
 
   async function saveAdminSpeakingTopic(){
@@ -2702,11 +2700,15 @@
     const payload = {
       title: document.getElementById('astfTitleInput').value.trim(),
       question_text: document.getElementById('astfQuestion').value.trim(),
+      questions: document.getElementById('astfQuestions').value.split('\n').map(l => l.trim()).filter(Boolean),
+      part: document.getElementById('astfPart').value,
+      category: document.getElementById('astfCategory').value,
       order: Number(document.getElementById('astfOrder').value) || 0,
       is_active: document.getElementById('astfActive').checked,
     };
+    if (payload.part === 'part1' && !payload.question_text && payload.questions.length) payload.question_text = payload.questions[0];
     if (!payload.title || !payload.question_text) {
-      errEl.textContent = 'Заполни название и вопрос';
+      errEl.textContent = 'Заполни название и вопрос (для Part 2 — карточку)';
       errEl.style.display = 'block';
       return;
     }
