@@ -78,6 +78,14 @@ async def _generate_json(parts, timeout: int = _TIMEOUT) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def spoken_question(question: str, short: bool = False) -> str:
+    """Вопрос в виде, пригодном для озвучки; карточка Part 2 читается целиком (short — только "Describe…")."""
+    lines = [ln.strip().rstrip(".:") for ln in question.splitlines() if ln.strip()]
+    if short and lines:
+        lines = lines[:1]
+    return ". ".join(lines)
+
+
 def _kind_desc(kind: str) -> str:
     return _KIND_LABELS.get(kind, _KIND_LABELS["part1"])
 
@@ -124,6 +132,19 @@ _CHECK_PROMPT_TEMPLATE = """A student is practicing IELTS Speaking {part_desc}. 
 The attached audio is the student's spoken answer. Do this:
 1. Transcribe exactly what the student said, in English, with natural punctuation. Keep their mistakes — do NOT \
 correct the transcript. If the audio is silent or unintelligible, set "student_said" to "" and leave the lists empty.
+1b. Decide whether the answer actually ADDRESSES THE QUESTION ("on_topic"). Set it to false when the student talks \
+about something unrelated, answers a different question, only says a word or two with no content, or just says \
+they don't know. Set it to true for any relevant answer, even a short, simple, ungrammatical or unusual one \
+(Part 1 answers are allowed to be brief). For a Part 2 cue card the answer must be about the card's topic. If \
+"on_topic" is false, write "topic_comment": one or two short sentences in RUSSIAN saying what was wrong (e.g. the \
+question was about X, but you talked about Y) and what to say instead; leave "corrections" and "review_topics" \
+empty. If it is true, set "topic_comment" to "".
+1c. "teacher_say": what you, a friendly British IELTS teacher, would SAY OUT LOUD to the student right now, in simple \
+spoken English (B1), 1-2 short sentences, max 45 words, addressed to "you". First react to the actual CONTENT of what \
+they said — mention a specific detail so they feel listened to (e.g. "Oh, so you've been teaching for two years — \
+that sounds rewarding."). If they made grammar mistakes, then add ONE gentle spoken tip with the correct form \
+(e.g. "Just a small thing: we say I have been working, not I am working since."). No lists, markdown or emoji. \
+Leave it empty if "on_topic" is false.
 2. Find the student's GRAMMAR mistakes ONLY (tenses, articles, prepositions, subject-verb agreement, word order, \
 plurals, countable/uncountable nouns, modal verbs, conditionals, pronouns, comparatives, etc.). Ignore vocabulary \
 choice, style, naturalness, pronunciation, filler words, repetitions and punctuation. List at most 6, the most \
@@ -134,7 +155,7 @@ grammar topic name in English (e.g. "Past Simple vs Present Perfect"), "note" = 
 what exactly to repeat. Empty list if there were no grammar mistakes.
 
 Respond STRICTLY as JSON, no markdown:
-{{"student_said": "...", "corrections": [{{"original": "...", "better": "...", "why": "..."}}], \
+{{"student_said": "...", "on_topic": true, "topic_comment": "", "teacher_say": "...", "corrections": [{{"original": "...", "better": "...", "why": "..."}}], \
 "review_topics": [{{"topic": "...", "note": "..."}}]}}
 """
 
@@ -157,10 +178,22 @@ async def check_answer(kind: str, question: str, audio_bytes: bytes, mime_type: 
             _CHECK_PROMPT_TEMPLATE.format(part_desc=_kind_desc(kind), question=question),
         ]
     )
+    student_said = str(data.get("student_said", "")).strip()
+    # Пустая расшифровка — отдельный случай ("не разобрал речь"), он не считается ответом не по теме.
+    on_topic = bool(data.get("on_topic", True)) or not student_said
+    if on_topic:
+        teacher_say = str(data.get("teacher_say", "")).strip()[:400]
+    else:
+        # Не по теме: преподаватель мягко возвращает ученика к вопросу и повторяет его вслух.
+        asked = spoken_question(question, short=True)
+        teacher_say = f"Hold on, you got a little distracted. The question was: {asked}{'' if asked.endswith('?') else '.'} Let's try again."
     return {
-        "student_said": str(data.get("student_said", "")).strip(),
-        "corrections": _text_items(data.get("corrections"), ("original", "better", "why"), 6),
-        "review_topics": _text_items(data.get("review_topics"), ("topic", "note"), 4),
+        "student_said": student_said,
+        "on_topic": on_topic,
+        "topic_comment": "" if on_topic else str(data.get("topic_comment", "")).strip(),
+        "teacher_say": teacher_say,
+        "corrections": _text_items(data.get("corrections"), ("original", "better", "why"), 6) if on_topic else [],
+        "review_topics": _text_items(data.get("review_topics"), ("topic", "note"), 4) if on_topic else [],
     }
 
 
