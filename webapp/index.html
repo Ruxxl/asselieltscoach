@@ -170,6 +170,12 @@
 
   .spacer{flex:1;}
   .bottombar{display:flex; align-items:center; gap:12px; padding-top:14px; border-top:1px solid var(--border); margin-top:auto;}
+  /* Кнопки действия всегда видны внизу экрана, без прокрутки длинного списка */
+  .bottombar.sticky{
+    position:sticky; bottom:0; z-index:5; margin-left:-20px; margin-right:-20px; padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+    background:var(--bg); box-shadow:0 -8px 18px rgba(240,249,255,.9);
+  }
+  .screen:has(.bottombar.sticky){padding-bottom:0;}
   .btn{
     font:600 13px var(--font-sans); letter-spacing:.04em; text-transform:uppercase; border-radius:999px; padding:13px 16px;
     cursor:pointer; border:2px solid transparent; text-align:center;
@@ -855,7 +861,7 @@
     <div id="speakingTopicList"><div class="hint">Загружаю…</div></div>
     <div class="spacer"></div>
     <div class="aiError" id="speakingTopicError" style="display:none; margin-bottom:10px;"></div>
-    <div class="bottombar"><button class="btn btn-primary btn-wide" id="speakingTopicStartBtn" disabled onclick="startSpeakingSession(speakingChoice.topicId)">НАЧАТЬ</button></div>
+    <div class="bottombar sticky"><button class="btn btn-primary btn-wide" id="speakingTopicStartBtn" disabled onclick="startSpeakingSession(speakingChoice.topicId)">НАЧАТЬ</button></div>
   </section>
 
   <!-- 17: speaking practice — один вопрос за раз: подсказка (5-6 фраз) и готовый ответ -> запись своего ответа
@@ -868,7 +874,7 @@
     <div id="speakingStepBody"></div>
     <div class="speakingStatus" id="speakingStatus"></div>
     <div class="spacer"></div>
-    <div class="bottombar" style="flex-direction:column; gap:10px;">
+    <div class="bottombar sticky" style="flex-direction:column; gap:10px;">
       <button class="holdTalkBtn" id="speakingHoldBtn">Нажми <span class="kbd">и говори</span></button>
       <div style="display:flex; gap:10px; width:100%;">
         <button class="btn btn-ghost" id="speakingPrevBtn" onclick="speakingStepMove(-1)" aria-label="Предыдущий вопрос">←</button>
