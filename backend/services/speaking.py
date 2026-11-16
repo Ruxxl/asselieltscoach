@@ -1,73 +1,62 @@
-"""Speaking Practice: пошаговый диалог с ИИ-экзаменатором (не live-аудио стрим).
+"""Speaking Practice: тренировка по одному вопросу (не диалог).
 
-Каждый ход ученика — один аудио-клип, отправленный ОДНИМ мультимодальным запросом в Gemini
-(тот же паттерн, что и reading-check в backend/services/gemini.py): модель расшифровывает речь,
-отвечает как экзаменатор и решает, закончена ли часть. Ответ озвучивается отдельно
-(backend/services/tts.py). Live-версия на LiveKit + Deepgram + Groq была заменена этим на пилот:
-дешевле (один бесплатный Render-сервис вместо двух) и нечему рваться посреди звонка.
+Поток ученика (см. документ преподавателя, лист «проверка speaking»):
+вопрос -> подсказка (5-6 опорных фраз) -> готовый ответ -> ученик записывает свой ответ ->
+грамматический разбор (только грамматика + какие темы повторить) -> по кнопкам: «примерная оценка»
+по 4 критериям IELTS и «улучшить мой ответ» на 1-1.5 балла выше.
+
+Аудио ответа уходит ОДНИМ мультимодальным запросом в Gemini (расшифровка + грамматика), как в
+reading-check (backend/services/gemini.py). Остальное — текстовые запросы по расшифровке.
+Озвучка вопроса — отдельно (backend/services/tts.py).
 """
 
 import json
-import re
 
 import google.generativeai as genai
 
 from backend.config import GEMINI_API_KEY, GEMINI_MODEL
+
+# Ответ на карточку Part 2 — 1-2 минуты речи: аудио длиннее, ответ ИИ тоже — таймаут щедрее.
+_TIMEOUT = 45
 
 
 class GeminiNotConfigured(RuntimeError):
     pass
 
 
-_PART_GUIDANCE = {
-    "part1": (
-        "This is IELTS Speaking Part 1 (Introduction and Interview) practice. After the student names a "
-        "topic they'd like to discuss, ask 3-4 short, simple, everyday questions about it, one at a time. "
-        "(Fallback only — normally the topic and opening question are already chosen for Part 1.)"
-    ),
-    "part2": (
-        "This is IELTS Speaking Part 2 (Individual Long Turn) practice. After the student names a topic, "
-        "give them a short cue-card style prompt on it (the topic plus 2-3 points to cover) and ask them "
-        "to speak for about 1-2 minutes. After their long turn, ask one or two brief natural follow-ups."
-    ),
-    "part3": (
-        "This is IELTS Speaking Part 3 (Two-way Discussion) practice. After the student names a topic, ask "
-        "3-4 deeper, more abstract discussion questions related to it — opinions, comparisons, speculation."
-    ),
+_KIND_LABELS = {
+    "part1": "Part 1 (Introduction and Interview) — short, simple, everyday answers of 2-4 sentences",
+    "part2": "Part 2 (Individual Long Turn) — a 1-2 minute talk built from the cue card",
+    "part3": "Part 3 (Two-way Discussion) — developed opinions of 4-6 sentences with reasons and examples",
 }
 
-
-def build_examiner_instructions(part: str, topic_question: str | None = None) -> str:
-    if part == "part1" and topic_question:
-        guidance = (
-            f'This is IELTS Speaking Part 1 (Introduction and Interview) practice. The topic and opening '
-            f'question are already chosen: "{topic_question}" — ask exactly this question first, then ask '
-            f"2-3 more short, simple, everyday follow-up questions on the same topic, one at a time."
-        )
-    else:
-        guidance = _PART_GUIDANCE.get(part, _PART_GUIDANCE["part1"])
-    return f"""You are Assel, a friendly but professional IELTS Speaking examiner having a turn-by-turn voice \
-conversation with a student, one topic at a time. Your replies are read aloud by text-to-speech. {guidance}
-
-Rules:
-- Speak only in English, in plain spoken sentences — no lists, markdown, emoji or stage directions.
-- Say or ask ONE thing at a time, and keep your own turns short (1-3 sentences) — you are the examiner, not \
-the one being tested.
-- This is practice with a coach: when the student's answer has a mistake (grammar, wrong word, unnatural \
-phrase) or they ask how to say something, start your reply with ONE short, kind correction of the most \
-important issue (e.g. "Small tip: we say 'I live with my parents', not 'I live with my parents together'."), \
-then continue with your next question. No long grammar lectures; skip the tip when the answer was fine.
-- Listen to WHAT the student said, not just how: react to their actual answer in a few words before moving on.
-- If the answer is off-topic, doesn't answer your question, or is just a word or two, do NOT move on: kindly \
-say so and ask the SAME question again (you may rephrase it more simply). Only move to a new question once \
-they have actually answered the current one.
-- After a reasonable number of exchanges for this part (roughly 4-5 turns, or the long turn plus follow-ups \
-for Part 2), wrap up with one short, friendly closing line thanking the student for practicing.
-"""
-
-
-def _history_to_text(history: list[dict]) -> str:
-    return "\n".join(f"{'Student' if t['speaker'] == 'user' else 'Examiner'}: {t['text']}" for t in history)
+# Сжатая версия публичных Band Descriptors IELTS Speaking (таблица из документа преподавателя) —
+# чтобы модель оценивала по тем же формулировкам, что и экзаменатор.
+_BAND_DESCRIPTORS = """IELTS Speaking public band descriptors (condensed):
+- Fluency and Coherence: 9 fluent, hesitation only for content; 8 occasional repetition/self-correction, \
+hesitation mostly for content, coherent topic development; 7 speaks at length without noticeable effort, some \
+hesitation/repetition/self-correction, flexible use of connectives; 6 willing to speak at length but may lose \
+coherence through repetition, self-correction or hesitation, uses a range of connectives imperfectly; 5 usually \
+keeps going but relies on repetition/self-correction/slow speech, over-uses some connectives; 4 cannot respond \
+without noticeable pauses, frequent repetition, simple sentences linked poorly.
+- Lexical Resource: 9 total flexibility, precise idiomatic use; 8 wide vocabulary used readily and flexibly, \
+skilful use of less common/idiomatic items with occasional inaccuracy, effective paraphrase; 7 flexible \
+vocabulary to discuss a variety of topics, some less common and idiomatic items with some awareness of style \
+and collocation, effective paraphrase; 6 wide enough vocabulary to discuss topics at length, generally \
+appropriate even if inaccurate at times, generally successful paraphrase; 5 manages familiar and unfamiliar \
+topics but with limited flexibility, attempts paraphrase with mixed success; 4 basic meanings on familiar topics, \
+limited ability to paraphrase.
+- Grammatical Range and Accuracy: 9 full range, consistently accurate; 8 wide range of structures, majority of \
+sentences error-free, occasional inappropriate usage; 7 a range of complex structures with some flexibility, \
+frequently error-free sentences though some errors persist; 6 mix of short and complex forms with limited \
+flexibility, errors frequent in complex structures but rarely impede communication; 5 basic sentence forms with \
+reasonable accuracy, limited range of complex structures that usually contain errors; 4 basic forms, subordinate \
+clauses rare, errors frequent and may cause misunderstanding.
+- Pronunciation: 9 full range of features, effortless to understand; 8 wide range of features, easy to \
+understand throughout, L1 accent has minimal effect; 7 shows all positive features of band 6 and some of 8; \
+6 uses a range of features with variable control, can generally be understood throughout, mispronunciation \
+reduces clarity at times; 5 all positive features of band 4 and some of 6; 4 limited range of features, \
+mispronunciations frequent and cause some difficulty."""
 
 
 def _model(system_instruction: str | None = None):
@@ -79,226 +68,28 @@ def _model(system_instruction: str | None = None):
     return genai.GenerativeModel(GEMINI_MODEL, system_instruction=system_instruction)
 
 
-# Вопрос отдельным полем — фронтенд выделяет его жирным в карточке и заводит на него
-# карточку Q1/Q2... с подсказкой и примером ответа (как у экзаменаторских тренажёров).
-_QUESTION_FIELD_RULE = (
-    'Also copy the question you are asking the student, word for word from your reply, into "question" '
-    '(empty string if your reply asks no question, e.g. the closing line).'
-)
-
-
-def _question_in(reply: str, question: str | None) -> str:
-    # Возвращаем вопрос ровно так, как он стоит в реплике — фронтенд ищет его там, чтобы
-    # выделить жирным. Модель иногда меняет регистр/обрезает "Now, ..." — ищем без учёта
-    # регистра, а если не нашли, берём последнее предложение реплики со знаком вопроса.
-    question = (question or "").strip()
-    if question:
-        at = reply.lower().find(question.lower())
-        if at >= 0:
-            return reply[at : at + len(question)]
-    asked = re.findall(r"[^.!?]*\?", reply)
-    return asked[-1].strip() if asked else ""
-
-
-def _correction(raw) -> dict | None:
-    if not isinstance(raw, dict):
-        return None
-    better, tip = str(raw.get("better") or "").strip(), str(raw.get("tip") or "").strip()
-    return {"better": better, "tip": tip} if better else None
-
-
-async def start_conversation(part: str, topic_question: str | None = None) -> dict:
-    """Первая реплика экзаменатора — до того, как ученик вообще что-то сказал -> {ai_message, question}."""
-    model = _model(build_examiner_instructions(part, topic_question))
-    opening = (
-        f'Greet the student in one short friendly sentence, then ask exactly this question: "{topic_question}"'
-        if topic_question
-        else "Greet the student in one short friendly sentence and ask what topic they'd like to talk about today."
-    )
-    response = await model.generate_content_async(
-        f"({opening} {_QUESTION_FIELD_RULE} "
-        f'Respond STRICTLY as JSON, no markdown: {{"examiner_reply": "...", "question": "..."}})',
-
+async def _generate_json(parts, timeout: int = _TIMEOUT) -> dict:
+    response = await _model().generate_content_async(
+        parts,
         generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
+        request_options={"timeout": timeout},
     )
     data = json.loads(response.text.strip())
-    reply = data.get("examiner_reply") or (
-        f"Hi! Let's start. {topic_question}" if topic_question else "Hi! What would you like to talk about today?"
-    )
-    return {"ai_message": reply, "question": _question_in(reply, data.get("question"))}
+    return data if isinstance(data, dict) else {}
 
 
-async def continue_conversation(
-    part: str, topic_question: str | None, history: list[dict], audio_bytes: bytes, mime_type: str
-) -> dict:
-    """Один ход: аудио-ответ ученика -> {student_said, ai_message, question, finished}."""
-    model = _model(build_examiner_instructions(part, topic_question))
-    prompt = f"""Conversation so far:
-{_history_to_text(history)}
-
-The attached audio is the student's spoken answer to your last message. Listen to it, then:
-1. Transcribe what the student said, in English. If the audio is silent or unintelligible, say so honestly \
-instead of guessing, and in your reply kindly ask them to repeat.
-2. Give your next reply as the examiner (see your instructions — help with any clear word/phrase gaps, then \
-continue naturally).
-3. Check whether the answer actually addresses your last question. If it is off-topic or too short, follow your \
-rule for that (point it out kindly and ask the same question again) and say so in "correction.tip".
-If the student's answer had mistakes or unnatural phrasing, fill "correction": "better" = their answer \
-rewritten the way a fluent speaker would say it (keep their ideas), "tip" = one short sentence in Russian \
-explaining the main fix (for an off-topic answer: "better" = a short on-topic sample answer, "tip" = that the \
-answer was off-topic). If the answer was fine (or silent/unintelligible), set "correction" to null.
-4. Decide whether this part of the practice should now finish (your reply is then the closing line).
-5. {_QUESTION_FIELD_RULE}
-
-Respond STRICTLY as JSON, no markdown:
-{{"student_said": "...", "correction": {{"better": "...", "tip": "..."}} or null, "examiner_reply": "...", \
-"question": "...", "finished": true/false}}
-"""
-    response = await model.generate_content_async(
-        [{"mime_type": mime_type, "data": audio_bytes}, prompt],
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
-    reply = data.get("examiner_reply", "")
-    return {
-        "student_said": data.get("student_said", ""),
-        "ai_message": reply,
-        "question": _question_in(reply, data.get("question")),
-        "correction": _correction(data.get("correction")),
-        "finished": bool(data.get("finished", False)),
-    }
+def _kind_desc(kind: str) -> str:
+    return _KIND_LABELS.get(kind, _KIND_LABELS["part1"])
 
 
-_PART_LABELS = {
-    "part1": "Part 1 (Introduction and Interview)",
-    "part2": "Part 2 (Individual Long Turn)",
-    "part3": "Part 3 (Two-way Discussion)",
-}
-
-_SCORE_PROMPT_TEMPLATE = """You are an IELTS Speaking examiner writing an official-style band score report.
-Below is the transcript of a Speaking Practice session for {part_desc}.
-
-Transcript (each line is one turn, "Student" or "Examiner"):
-{transcript_text}
-
-If the transcript is empty or far too short to judge (e.g. the student barely said anything), do NOT invent \
-a score — return 0 for every criterion and overall_band, and an honest summary_feedback (in English) \
-explaining there wasn't enough speech to assess, and inviting the student to try again and speak more.
-
-Otherwise, score the STUDENT's speech only (ignore the examiner's lines) on the 4 official IELTS Speaking \
-criteria, each on a 0-9 scale in 0.5 steps:
-- fluency_coherence: Fluency and Coherence
-- lexical_resource: Lexical Resource
-- grammar_accuracy: Grammar Range and Accuracy
-- pronunciation: Pronunciation — you only have a TEXT transcript, not audio, so estimate this cautiously \
-from indirect signs (self-corrections, filler words, broken sentences as transcribed) rather than true \
-acoustic pronunciation; do not overstate confidence in this one criterion.
-
-overall_band = average of the 4 criteria, rounded to the nearest 0.5 (standard IELTS rounding).
-
-All feedback below is in ENGLISH — clear, natural English a B1-B2 learner can follow, warm but honest, \
-written directly to the student ("you"), like a teacher's written feedback.
-summary_feedback: 2-3 sentences — an overall impression (e.g. "Your answer is quite strong! You express your \
-ideas clearly and use some good vocabulary.") and the estimated band.
-criteria_feedback: for EACH of the 4 criteria, 1-3 sentences explaining the band: name one concrete strength \
-and one concrete weakness, quoting the student's exact words in double quotes. Example for lexical_resource: \
-'Good expressions include "meaningful profession" and "creating my own online courses." However, "different \
-types of people" and "different nationalities" overlap in meaning.' For pronunciation, mention briefly that \
-it is estimated from the transcript only.
-tips: 3-5 of the most useful corrections, each fixing something the student actually said: "original" = their \
-exact words, "better" = a more natural / higher-band version, "why" = one short sentence explaining the \
-improvement (e.g. "This fixes the word order and sounds more natural.").
-
-Respond STRICTLY as JSON, no markdown wrapper:
-{{"fluency_coherence": 0-9, "lexical_resource": 0-9, "grammar_accuracy": 0-9, "pronunciation": 0-9, \
-"overall_band": 0-9, "criteria_feedback": {{"fluency_coherence": "...", "lexical_resource": "...", \
-"grammar_accuracy": "...", "pronunciation": "..."}}, "summary_feedback": "...", \
-"tips": [{{"original": "...", "better": "...", "why": "..."}}]}}
-"""
-
-
-_CRITERIA = ("fluency_coherence", "lexical_resource", "grammar_accuracy", "pronunciation")
-
-
-def _tip(raw) -> dict | str:
-    """Исправление {"original", "better", "why"}; строку (если модель ответила по-старому) оставляем как есть."""
-    if isinstance(raw, dict):
-        return {k: str(raw.get(k, "")).strip() for k in ("original", "better", "why")}
-    return str(raw)
-
-
-async def score_session(history: list[dict], part: str) -> dict:
-    model = _model()
-    prompt = _SCORE_PROMPT_TEMPLATE.format(
-        part_desc=_PART_LABELS.get(part, part),
-        transcript_text=_history_to_text(history) or "(пусто — студент ничего не сказал)",
-    )
-    response = await model.generate_content_async(
-        prompt,
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
-    return {
-        "fluency_coherence": float(data.get("fluency_coherence", 0)),
-        "lexical_resource": float(data.get("lexical_resource", 0)),
-        "grammar_accuracy": float(data.get("grammar_accuracy", 0)),
-        "pronunciation": float(data.get("pronunciation", 0)),
-        "overall_band": float(data.get("overall_band", 0)),
-        "criteria_feedback": {
-            key: str(text).strip()
-            for key, text in (data.get("criteria_feedback") or {}).items()
-            if key in _CRITERIA and text
-        },
-        "summary_feedback": data.get("summary_feedback", ""),
-        "tips": [_tip(t) for t in data.get("tips", []) if t],
-    }
-
-
-_CORRECTED_REPORT_PROMPT_TEMPLATE = """You are an IELTS Speaking examiner reviewing a Part 1 practice session.
-Topic question asked: "{topic_question}"
-
-Transcript (each line is one turn, "Student" or "Examiner"):
-{transcript_text}
-
-Take ONLY the student's spoken answers (ignore the examiner's lines) and:
-1. Rewrite them as a single polished, natural-sounding corrected version in English — keep the student's own \
-ideas and level of detail, just fix grammar/word choice/coherence. If the transcript is empty or far too \
-short to judge, return an empty string here.
-2. List 3-5 concrete, specific improvement comments in Russian — short and actionable, each referencing \
-something the student actually said. If there isn't enough material, say so honestly in one comment inviting \
-them to try again and speak more.
-
-Respond STRICTLY as JSON, no markdown wrapper:
-{{"corrected_answer": "...", "improvement_comments": ["...", "..."]}}
-"""
-
-
-async def build_corrected_report(history: list[dict], topic_question: str | None = None) -> dict:
-    model = _model()
-    prompt = _CORRECTED_REPORT_PROMPT_TEMPLATE.format(
-        topic_question=topic_question or "(не указан)",
-        transcript_text=_history_to_text(history) or "(пусто — студент ничего не сказал)",
-    )
-    response = await model.generate_content_async(
-        prompt,
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
-    return {
-        "corrected_answer": data.get("corrected_answer", ""),
-        "improvement_comments": list(data.get("improvement_comments", [])),
-    }
-
+# ---------- подсказка и готовый ответ ----------
 
 _HELP_PROMPT_TEMPLATE = """A student is practicing IELTS Speaking {part_desc} and was asked:
 "{question}"
 
 Give them:
-1. sample: a natural sample answer in English at about IELTS band 7 — {sample_length}, spoken style, first person.
+1. sample: a natural sample answer in English at about IELTS band 7 — {sample_length}, spoken style, first person. \
+For a Part 2 cue card, cover every point of "You should say" in order.
 2. vocabulary: 5-6 useful collocations or phrases (band 7+, natural, not single basic words) that are used in \
 YOUR sample answer, in their dictionary form (e.g. "leave something until the last minute"), each with an \
 accurate Russian translation.
@@ -307,24 +98,152 @@ Respond STRICTLY as JSON, no markdown:
 {{"sample": "...", "vocabulary": [{{"phrase": "...", "translation": "..."}}]}}
 """
 
+_SAMPLE_LENGTH = {"part1": "3-4 sentences", "part2": "10-12 sentences", "part3": "5-6 sentences"}
 
-async def build_question_help(part: str, question: str) -> dict:
-    """Подсказка (5-6 словосочетаний из примера с переводом) и пример ответа на конкретный вопрос экзаменатора."""
-    model = _model()
-    prompt = _HELP_PROMPT_TEMPLATE.format(
-        part_desc=_PART_LABELS.get(part, part),
-        question=question,
-        sample_length="8-10 sentences" if part == "part2" else "3-4 sentences",
+
+async def build_question_help(kind: str, question: str) -> dict:
+    """Подсказка (5-6 фраз из примера с переводом) и готовый ответ на вопрос."""
+    data = await _generate_json(
+        _HELP_PROMPT_TEMPLATE.format(
+            part_desc=_kind_desc(kind), question=question, sample_length=_SAMPLE_LENGTH.get(kind, "3-4 sentences")
+        )
     )
-    response = await model.generate_content_async(
-        prompt,
-        generation_config={"response_mime_type": "application/json"},
-        request_options={"timeout": 25},
-    )
-    data = json.loads(response.text.strip())
     vocabulary = [
         {"phrase": str(v.get("phrase", "")).strip(), "translation": str(v.get("translation", "")).strip()}
         for v in data.get("vocabulary") or []
         if isinstance(v, dict) and v.get("phrase")
     ]
-    return {"vocabulary": vocabulary[:6], "sample": data.get("sample", "")}
+    return {"vocabulary": vocabulary[:6], "sample": str(data.get("sample", "")).strip()}
+
+
+# ---------- ответ ученика: расшифровка + грамматика ----------
+
+_CHECK_PROMPT_TEMPLATE = """A student is practicing IELTS Speaking {part_desc}. The question was:
+"{question}"
+
+The attached audio is the student's spoken answer. Do this:
+1. Transcribe exactly what the student said, in English, with natural punctuation. Keep their mistakes — do NOT \
+correct the transcript. If the audio is silent or unintelligible, set "student_said" to "" and leave the lists empty.
+2. Find the student's GRAMMAR mistakes ONLY (tenses, articles, prepositions, subject-verb agreement, word order, \
+plurals, countable/uncountable nouns, modal verbs, conditionals, pronouns, comparatives, etc.). Ignore vocabulary \
+choice, style, naturalness, pronunciation, filler words, repetitions and punctuation. List at most 6, the most \
+important first, each as: "original" = the student's exact words containing the mistake, "better" = the same words \
+corrected, "why" = one short explanation in RUSSIAN naming the rule.
+3. "review_topics": 1-4 grammar topics the student should revise, based on the mistakes above — "topic" = the \
+grammar topic name in English (e.g. "Past Simple vs Present Perfect"), "note" = one short sentence in RUSSIAN on \
+what exactly to repeat. Empty list if there were no grammar mistakes.
+
+Respond STRICTLY as JSON, no markdown:
+{{"student_said": "...", "corrections": [{{"original": "...", "better": "...", "why": "..."}}], \
+"review_topics": [{{"topic": "...", "note": "..."}}]}}
+"""
+
+
+def _text_items(raw, keys: tuple[str, ...], limit: int) -> list[dict]:
+    items = []
+    for entry in raw or []:
+        if not isinstance(entry, dict):
+            continue
+        item = {k: str(entry.get(k, "")).strip() for k in keys}
+        if item[keys[0]]:
+            items.append(item)
+    return items[:limit]
+
+
+async def check_answer(kind: str, question: str, audio_bytes: bytes, mime_type: str) -> dict:
+    data = await _generate_json(
+        [
+            {"mime_type": mime_type, "data": audio_bytes},
+            _CHECK_PROMPT_TEMPLATE.format(part_desc=_kind_desc(kind), question=question),
+        ]
+    )
+    return {
+        "student_said": str(data.get("student_said", "")).strip(),
+        "corrections": _text_items(data.get("corrections"), ("original", "better", "why"), 6),
+        "review_topics": _text_items(data.get("review_topics"), ("topic", "note"), 4),
+    }
+
+
+# ---------- «примерная оценка» по 4 критериям ----------
+
+_CRITERIA = ("fluency_coherence", "lexical_resource", "grammar_accuracy", "pronunciation")
+
+_ESTIMATE_PROMPT_TEMPLATE = """You are an IELTS Speaking examiner giving an APPROXIMATE band estimate for one answer \
+in a practice session ({part_desc}).
+Question: "{question}"
+Student's answer (transcribed from speech):
+"{answer}"
+
+{descriptors}
+
+Score the answer on the 4 criteria, each 0-9 in 0.5 steps, using the descriptors above. This is a single short \
+answer, so be realistic and cautious. Pronunciation: you only have a TEXT transcript, so estimate it cautiously \
+from indirect signs and say so; do not overstate confidence. overall_band = average of the 4 criteria rounded to \
+the nearest 0.5.
+For EACH criterion write 1-2 sentences of feedback in ENGLISH (clear B1-B2 English, addressed to the student as \
+"you"), naming one concrete strength and one concrete weakness and quoting the student's exact words in double \
+quotes where possible.
+
+Respond STRICTLY as JSON, no markdown:
+{{"fluency_coherence": 0-9, "lexical_resource": 0-9, "grammar_accuracy": 0-9, "pronunciation": 0-9, \
+"overall_band": 0-9, "criteria_feedback": {{"fluency_coherence": "...", "lexical_resource": "...", \
+"grammar_accuracy": "...", "pronunciation": "..."}}}}
+"""
+
+
+def _band(value) -> float:
+    try:
+        return max(0.0, min(9.0, round(float(value) * 2) / 2))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+async def estimate_answer(kind: str, question: str, answer: str) -> dict:
+    data = await _generate_json(
+        _ESTIMATE_PROMPT_TEMPLATE.format(
+            part_desc=_kind_desc(kind), question=question, answer=answer, descriptors=_BAND_DESCRIPTORS
+        )
+    )
+    bands = {key: _band(data.get(key)) for key in _CRITERIA}
+    overall = _band(data.get("overall_band")) or _band(sum(bands.values()) / len(_CRITERIA))
+    feedback = data.get("criteria_feedback") or {}
+    return {
+        **bands,
+        "overall_band": overall,
+        "criteria_feedback": {k: str(feedback.get(k, "")).strip() for k in _CRITERIA if feedback.get(k)},
+    }
+
+
+# ---------- «улучшить мой ответ» на 1-1.5 балла ----------
+
+_IMPROVE_PROMPT_TEMPLATE = """You are an IELTS Speaking coach. A student answered this question ({part_desc}):
+"{question}"
+Student's answer (transcribed from speech):
+"{answer}"
+
+{descriptors}
+
+1. Judge the student's current overall band (0.5 steps) -> "current_band".
+2. Rewrite the answer so it would score 1 to 1.5 bands HIGHER (target_band = current_band + 1 to 1.5, at most 9). \
+Build it ON the student's own answer: keep THEIR ideas, facts, examples and personal details and roughly their \
+structure — do not invent a different story. Upgrade grammar range and accuracy, vocabulary (natural collocations \
+and some less common phrases, not rare show-off words), connectives and development of ideas. Keep a natural \
+spoken style that the student could realistically say, in first person, similar length (a little longer is fine).
+3. Wrap every phrase you upgraded or added in **double asterisks** so the student can see what changed.
+
+Respond STRICTLY as JSON, no markdown:
+{{"current_band": 0-9, "target_band": 0-9, "improved_answer": "..."}}
+"""
+
+
+async def improve_answer(kind: str, question: str, answer: str) -> dict:
+    data = await _generate_json(
+        _IMPROVE_PROMPT_TEMPLATE.format(
+            part_desc=_kind_desc(kind), question=question, answer=answer, descriptors=_BAND_DESCRIPTORS
+        )
+    )
+    return {
+        "current_band": _band(data.get("current_band")),
+        "target_band": _band(data.get("target_band")),
+        "improved_answer": str(data.get("improved_answer", "")).strip(),
+    }

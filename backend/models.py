@@ -153,9 +153,16 @@ class SpeakingTopic(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(128))
+    # part1: первый вопрос темы; part2: текст карточки "Describe..." (для обратной совместимости
+    # со старыми темами с одним вопросом).
     question_text: Mapped[str] = mapped_column(Text)
     order: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
+    # part1 — вопросы темы по одному; part2 — карточка (question_text) + вопросы Part 3 к ней.
+    part: Mapped[str] = mapped_column(String(8), default="part1")
+    category: Mapped[str] = mapped_column(String(16), default="other")  # permanent / new / other
+    # JSON-список вопросов (part1: все вопросы темы; part2: вопросы Part 3). None — только question_text.
+    questions_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 

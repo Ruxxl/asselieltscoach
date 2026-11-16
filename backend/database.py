@@ -46,7 +46,28 @@ async def _add_missing_speaking_session_columns(conn: AsyncConnection) -> None:
             await conn.execute(text(f"ALTER TABLE speaking_sessions ADD COLUMN {column} {coltype}"))
 
 
+_SPEAKING_TOPIC_NEW_COLUMNS = {
+    "part": "VARCHAR(8) DEFAULT 'part1'",
+    "category": "VARCHAR(16) DEFAULT 'other'",
+    "questions_json": "TEXT",
+}
+
+
+async def _add_missing_speaking_topic_columns(conn: AsyncConnection) -> None:
+    if conn.dialect.name != "sqlite":
+        return
+    exists = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='speaking_topics'"))
+    if not exists.first():
+        return
+    result = await conn.execute(text("PRAGMA table_info(speaking_topics)"))
+    existing_columns = {row[1] for row in result.fetchall()}
+    for column, coltype in _SPEAKING_TOPIC_NEW_COLUMNS.items():
+        if column not in existing_columns:
+            await conn.execute(text(f"ALTER TABLE speaking_topics ADD COLUMN {column} {coltype}"))
+
+
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await _add_missing_speaking_session_columns(conn)
+        await _add_missing_speaking_topic_columns(conn)

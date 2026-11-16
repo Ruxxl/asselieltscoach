@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -196,32 +198,6 @@ COURSES = [
 ]
 
 
-# Стартовый набор тем для IELTS Speaking Part 1 (Introduction and Interview) — преподаватель
-# правит формулировки и добавляет/убирает темы через админку, это только затравка на старте.
-SPEAKING_PART1_TOPICS = [
-    ("Family", "Do you have a big family? Can you tell me about them?"),
-    ("Friends", "Who is your best friend, and what do you like doing together?"),
-    ("Hometown", "Can you describe the town or city where you grew up?"),
-    ("Work/Study", "Do you work or are you a student? What do you do?"),
-    ("Free time", "What do you usually do in your free time?"),
-    ("Hobbies", "Do you have a hobby? How did you get interested in it?"),
-    ("Food", "What kind of food do you like? Do you enjoy cooking?"),
-    ("Weather", "What's the weather usually like in your country?"),
-    ("Sport", "Do you play or watch any sports?"),
-    ("Music", "What kind of music do you like listening to?"),
-    ("Films", "Do you often watch films? What kind do you prefer?"),
-    ("Books", "Do you enjoy reading? What was the last book you read?"),
-    ("Technology", "How often do you use your phone or computer?"),
-    ("Health", "What do you do to stay healthy?"),
-    ("Shopping", "Do you enjoy shopping? What do you usually buy?"),
-    ("Weekends", "What do you usually do on weekends?"),
-    ("Childhood", "What did you enjoy doing when you were a child?"),
-    ("Future plans", "What are your plans for the next few years?"),
-    ("Travel", "Do you like traveling? Where would you like to go?"),
-    ("Daily routine", "Can you describe your typical daily routine?"),
-]
-
-
 # Первый стартовый набор был с русскими названиями — на уже засеянной базе переводим только
 # их (точное совпадение), чтобы не затереть темы, которые преподаватель переименовал сам.
 _LEGACY_RU_TOPIC_TITLES = {
@@ -249,19 +225,53 @@ _LEGACY_RU_TOPIC_TITLES = {
 
 
 async def seed_speaking_topics_if_empty(session: AsyncSession) -> None:
-    # Отдельный гейт от seed_if_empty (тот гейтится на пустой Course) — на уже работающем
-    # проде курсы уже есть, общий гейт означал бы, что темы никогда не засеются.
-    existing = await session.execute(select(SpeakingTopic.id).limit(1))
-    if existing.first():
-        legacy = await session.execute(
-            select(SpeakingTopic).where(SpeakingTopic.title.in_(_LEGACY_RU_TOPIC_TITLES))
+    """Темы Speaking из документа преподавателя (backend/speaking_content.py).
+
+    Идемпотентно и безопасно для правок через админку: тема ищется по (part, title); существующей
+    темой, у которой уже есть questions_json, не трогаем ничего — только добавляем отсутствующие.
+    Старые темы с одним вопросом (без questions_json) получают вопросы из документа, если названия совпали.
+    Отдельный гейт от seed_if_empty (тот гейтится на пустой Course) — на уже работающем проде курсы уже есть.
+    """
+    from backend.speaking_content import parse_part1, parse_part23
+
+    # Первый стартовый набор был с русскими названиями — переводим только точные совпадения,
+    # чтобы не затереть темы, которые преподаватель переименовал сам.
+    legacy = await session.execute(select(SpeakingTopic).where(SpeakingTopic.title.in_(_LEGACY_RU_TOPIC_TITLES)))
+    for topic in legacy.scalars():
+        topic.title = _LEGACY_RU_TOPIC_TITLES[topic.title]
+
+    rows = (await session.execute(select(SpeakingTopic))).scalars().all()
+    by_key = {(t.part or "part1", t.title.lower()): t for t in rows}
+    next_order = max((t.order for t in rows), default=-1) + 1
+
+    entries = [
+        {"part": "part1", "title": t["title"], "category": t["category"], "question_text": t["questions"][0], "questions": t["questions"]}
+        for t in parse_part1()
+    ] + [
+        {"part": "part2", "title": c["title"], "category": "other", "question_text": c["cue_card"], "questions": c["questions"]}
+        for c in parse_part23()
+    ]
+    for entry in entries:
+        existing = by_key.get((entry["part"], entry["title"].lower()))
+        if existing:
+            if existing.questions_json is None:
+                existing.question_text = entry["question_text"]
+                existing.questions_json = json.dumps(entry["questions"], ensure_ascii=False)
+                existing.part = entry["part"]
+                existing.category = entry["category"]
+            continue
+        session.add(
+            SpeakingTopic(
+                title=entry["title"],
+                question_text=entry["question_text"],
+                questions_json=json.dumps(entry["questions"], ensure_ascii=False),
+                part=entry["part"],
+                category=entry["category"],
+                order=next_order,
+                is_active=True,
+            )
         )
-        for topic in legacy.scalars():
-            topic.title = _LEGACY_RU_TOPIC_TITLES[topic.title]
-        await session.commit()
-        return
-    for i, (title, question) in enumerate(SPEAKING_PART1_TOPICS):
-        session.add(SpeakingTopic(title=title, question_text=question, order=i, is_active=True))
+        next_order += 1
     await session.commit()
 
 

@@ -83,30 +83,35 @@ class ReadingCheckResult(BaseModel):
 
 
 class SpeakingTopicOut(BaseModel):
+    """Тема Speaking в админке. questions — вопросы Part 1 по одному или вопросы Part 3 к карточке Part 2
+    (карточка — в question_text)."""
+
     id: int
     title: str
     question_text: str
+    questions: list[str] = []
+    part: str = "part1"
+    category: str = "other"
     order: int
     is_active: bool
 
-    class Config:
-        from_attributes = True
-
 
 class SpeakingTopicPublicOut(BaseModel):
-    """То, что видит ученик в списке тем ДО старта звонка — без вопроса (его первым
-    задаёт живой экзаменатор), в том же духе "сюрприза", что и карточки Part 1/2/3."""
+    """Тема в списке выбора у ученика."""
 
     id: int
     title: str
-
-    class Config:
-        from_attributes = True
+    part: str
+    category: str
+    question_count: int
 
 
 class AdminSpeakingTopicIn(BaseModel):
     title: str
     question_text: str
+    questions: list[str] = []
+    part: str = "part1"
+    category: str = "other"
     order: int
     is_active: bool = True
 
@@ -114,38 +119,36 @@ class AdminSpeakingTopicIn(BaseModel):
 class AdminSpeakingTopicPatch(BaseModel):
     title: str | None = None
     question_text: str | None = None
+    questions: list[str] | None = None
+    part: str | None = None
+    category: str | None = None
     order: int | None = None
     is_active: bool | None = None
 
 
 class SpeakingStartRequest(BaseModel):
-    part: str  # part1 / part2 / part3
-    topic_id: int | None = None  # обязателен для part1 (см. backend/routers/speaking.py)
+    topic_id: int
+
+
+class SpeakingStep(BaseModel):
+    index: int
+    kind: str  # part1 / part2 (карточка) / part3
+    question: str
 
 
 class SpeakingStartResult(BaseModel):
     session_id: int
-    ai_message: str
-    question: str = ""  # вопрос дословно из ai_message ("" — если реплика без вопроса)
-    audio_b64: str | None = None  # mp3 реплики; None — фронтенд озвучит speechSynthesis
+    topic_title: str
+    part: str  # part1 / part2 (карточка + вопросы Part 3)
+    steps: list[SpeakingStep]
 
 
-class SpeakingCorrection(BaseModel):
-    better: str  # ответ ученика так, как сказал бы носитель
-    tip: str  # короткое объяснение на русском
+class SpeakingStepRequest(BaseModel):
+    index: int
 
 
-class SpeakingTurnResult(BaseModel):
-    student_said: str
-    ai_message: str
-    question: str = ""
-    correction: SpeakingCorrection | None = None  # как лучше сказать — None, если ответ был без ошибок
-    finished: bool
-    audio_b64: str | None = None
-
-
-class SpeakingHelpRequest(BaseModel):
-    question: str
+class SpeakingSpeakResult(BaseModel):
+    audio_b64: str | None = None  # mp3; None — фронтенд озвучит speechSynthesis
 
 
 class SpeakingVocabItem(BaseModel):
@@ -158,24 +161,36 @@ class SpeakingHelpResult(BaseModel):
     sample: str
 
 
-class SpeakingSessionOut(BaseModel):
-    id: int
-    status: str
-    part: str
-    corrected_answer: str | None = None
-    # Строки — старые сессии; новые — {"original", "better", "why"}.
-    improvement_comments: list[str | dict[str, str]] | None = None
-    criteria_feedback: dict[str, str] | None = None
-    fluency_coherence: float | None = None
-    lexical_resource: float | None = None
-    grammar_accuracy: float | None = None
-    pronunciation: float | None = None
-    overall_band: float | None = None
-    summary_feedback: str | None = None
-    error_message: str | None = None
+class SpeakingCorrectionItem(BaseModel):
+    original: str
+    better: str
+    why: str = ""
 
-    class Config:
-        from_attributes = True
+
+class SpeakingReviewTopic(BaseModel):
+    topic: str
+    note: str = ""
+
+
+class SpeakingAnswerResult(BaseModel):
+    student_said: str
+    corrections: list[SpeakingCorrectionItem]
+    review_topics: list[SpeakingReviewTopic]
+
+
+class SpeakingEstimateResult(BaseModel):
+    fluency_coherence: float
+    lexical_resource: float
+    grammar_accuracy: float
+    pronunciation: float
+    overall_band: float
+    criteria_feedback: dict[str, str] = {}
+
+
+class SpeakingImproveResult(BaseModel):
+    current_band: float
+    target_band: float
+    improved_answer: str
 
 
 class PaymentStartOut(BaseModel):
